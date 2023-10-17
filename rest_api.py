@@ -5,7 +5,6 @@ from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
 import json
 import psycopg2
-import requests
 from contextlib import closing
 from config import config
 import connect_pg
@@ -21,42 +20,73 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
 
-@app.route('/books/get', methods=['GET','POST'])
-def get_books():
-    """ Return all books in JSON format """
-    query = "select * from books order by id asc"
+
+@app.route('/users/get', methods=['GET','POST'])
+def get_users():
+    """ Return all user in JSON format """
+    query = "select * from ent.users order by id asc"
     conn = connect_pg.connect()
     rows = connect_pg.get_query(conn, query)
     returnStatement = []
     for row in rows:
-        returnStatement.append(get_book_statement(row))
-    
+        returnStatement.append(get_user_statement(row))
+
     connect_pg.disconnect(conn)
     return jsonify(returnStatement)
 
-@app.route('/books/get/<bookId>', methods=['GET','POST'])
-def get_one_book(bookId):
-    """ Return book bookId in JSON format """
-    query = "select * from books where id=%(bookId)s order by id asc" % {'bookId':bookId}
-    conn = connect_pg.connect()
-    rows = connect_pg.get_query(conn, query)
-    returnStatement = {}
-    if len(rows) > 0:
-        returnStatement = get_book_statement(rows[0])
-    connect_pg.disconnect(conn)
-    return jsonify(returnStatement)
+@app.route('/users/add', methods=['POST'])
+def add_users():
+    try:
+        jsonObject = request.json
 
-def get_book_statement(row) :
-    """ Book array statement """
+        # Assurez-vous que "datas" est présent dans l'objet JSON
+        if "datas" not in jsonObject:
+            return jsonify({"message": "Missing 'datas' field in JSON"})
+
+        data = jsonObject["datas"]
+
+        # Créez la liste de colonnes et de valeurs
+        columns = list(data.keys())
+        values = list(data.values())
+
+        # Établissez la connexion à la base de données
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+
+        # Créez la requête SQL paramétrée
+        query = f"INSERT INTO ent.users ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+
+        # Exécutez la requête SQL avec les valeurs
+        cursor.execute(query, values)
+
+        # Récupérez l'identifiant de l'utilisateur inséré
+        row = cursor.fetchone()
+
+        # Validez la transaction et fermez la connexion
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "User added", "id": row[0]})
+
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)})
+
+
+
+def get_user_statement(row) :
+    """ User array statement """
     return {
         'id':row[0],
-        'title':row[1],
-        'author':row[2],
-        'editor':row[3],
-        'editPub':row[4],
-        'summary':row[5],
-        'cover':row[6]
+        'username':row[1],
+        'password':row[2],
+        'type':row[3],
+        'last_name':row[4],
+        'first_name':row[5],
+        'email':row[6]
     }
+
+
+
 if __name__ == "__main__":
     # read server parameters
     params = config('config.ini', 'server')

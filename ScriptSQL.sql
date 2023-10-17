@@ -52,7 +52,8 @@ CREATE TABLE Promotions(
     year INTEGER,
     id_Degree BIGINT,
     PRIMARY KEY(id),
-    FOREIGN KEY(id_Degree) REFERENCES Degrees(id)
+    FOREIGN KEY(id_Degree) REFERENCES Degrees(id),
+    CONSTRAINT unique_year_degree_combination UNIQUE (year, id_Degree)
 );
 
 CREATE TABLE Resources(

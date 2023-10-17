@@ -45,6 +45,15 @@ def add_users():
 
         data = jsonObject["datas"]
 
+        username = data.get("username")
+
+        if not username:
+            return jsonify({"message": "Missing 'username' field in JSON"})
+
+        # Vérifiez si le nom d'utilisateur est déjà utilisé
+        if username_exists(username):
+            return jsonify({"message": "Username already in use"})
+
         # Créez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())

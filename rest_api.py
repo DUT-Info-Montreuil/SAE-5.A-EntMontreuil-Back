@@ -8,6 +8,7 @@ import psycopg2
 from contextlib import closing
 from config import config
 import connect_pg
+import hashlib
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -44,7 +45,7 @@ def add_users():
             return jsonify({"message": "Missing 'datas' field in JSON"})
 
         data = jsonObject["datas"]
-
+        password = data.get("password") 
         username = data.get("username")
 
         if not username:
@@ -54,9 +55,11 @@ def add_users():
         if username_exists(username):
             return jsonify({"message": "Username already in use"})
 
+        hashed_password = hashlib.md5(password.encode()).hexdigest()
         # Créez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())
+        values[columns.index("password")] = hashed_password
 
         # Établissez la connexion à la base de données
         conn = connect_pg.connect()
@@ -80,7 +83,14 @@ def add_users():
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)})
 
-
+def username_exists(username):
+    # Fonction pour vérifier si le nom d'utilisateur existe déjà dans la base de données
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE username = %s", (username,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
 
 def get_user_statement(row) :
     """ User array statement """

@@ -47,41 +47,57 @@ def add_users():
         password = data.get("password") 
         username = data.get("username")
         email = data.get("email")
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        # Verifie si tous les attributs sont présents sauf type
         if not username:
             return jsonify({"message": "Missing 'username' field in JSON"})
-        # Vérifiez si le nom d'utilisateur est déjà utilisé
+        if not first_name:
+            return jsonify({"message": "Missing 'first_name' field in JSON"})
+        if not last_name:
+            return jsonify({"message": "Missing 'last_name' field in JSON"})
+        if not email:
+            return jsonify({"message": "Missing 'email' field in JSON"})
+        if not password:
+            return jsonify({"message": "Missing 'password' field in JSON"})
+
+        # Verification username plus de 4 caracteres
+        if len(username) < 4:
+            return jsonify({"message": "Username need to have minimum 4 characters"})
+
+        # Verifiez si le nom d'utilisateur est deja utilise
         if username_exists(username):
             return jsonify({"message": "Username already in use"})
 
         if not is_valid_email(email):
             return jsonify({"message": "Invalid email format"})
 
-        # Vérifiez le mot de passe
+        # Verifiez le mot de passe
         if len(password) < 12 : # plus de 12 caracteres
             return jsonify({"message": "password need to contains minimum 12 characters"})
         if not re.search(r'[A-Z]', password) : # au moins 1 majuscule
             return jsonify({"message": "Password need to contains minimum 1 capital"})
         if not re.search(r'[a-z]', password) : # au moins une minuscule
             return jsonify({"message": "Password need to contains minimum 1 minuscule"})
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractère spécial
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
             return jsonify({"message": "Password need to contains minimum 1 special characters"})
         if not re.search(r'[1-9]', password) : # au moins 1 chiffre
             return jsonify({"message": "Password need to contains minimum 1 number"})
 
 
         hashed_password = hashlib.md5(password.encode()).hexdigest()
-        # Créez la liste de colonnes et de valeurs
+        # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())
         values[columns.index("password")] = hashed_password
-        # Établissez la connexion à la base de données
+        # Etablissez la connexion a la base de donnees
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        # Créez la requête SQL paramétrée
+        # Créez la requête SQL parametree
         query = f"INSERT INTO ent.users ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
-        # Exécutez la requête SQL avec les valeurs
+        # Executez la requête SQL avec les valeurs
         cursor.execute(query, values)
-        # Récupérez l'identifiant de l'utilisateur inséré
+        # Recuperez l'identifiant de l'utilisateur insere
         row = cursor.fetchone()
         # Validez la transaction et fermez la connexion
         conn.commit()
@@ -91,7 +107,7 @@ def add_users():
         return jsonify({"message": "Error", "error": str(e)})
 
 def username_exists(username):
-    # Fonction pour vérifier si le nom d'utilisateur existe déjà dans la base de données
+    # Fonction pour verifier si le nom d'utilisateur existe deja dans la base de donnees
     conn = connect_pg.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM ent.users WHERE username = %s", (username,))
@@ -100,7 +116,7 @@ def username_exists(username):
     return count > 0
 
 def is_valid_email(email):
-    # Utilisez une expression régulière pour vérifier la syntaxe de l'e-mail
+    # Utilisez une expression reguliere pour verifier la syntaxe de l'e-mail
     return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)
 
 def get_user_statement(row) :

@@ -112,6 +112,7 @@ def add_users():
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)})
 
+############  VERIFICATION USERNAME EXIST ################
 def username_exists(username):
     # Fonction pour verifier si le nom d'utilisateur existe deja dans la base de donnees
     conn = connect_pg.connect()
@@ -121,6 +122,7 @@ def username_exists(username):
     conn.close()
     return count > 0
 
+############  VERIFICATION EMAIL SYNTAXE ################
 def is_valid_email(email):
     # Utilisez une expression reguliere pour verifier la syntaxe de l'e-mail
     return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)

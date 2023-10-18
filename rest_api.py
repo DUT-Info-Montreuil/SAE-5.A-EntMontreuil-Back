@@ -46,11 +46,15 @@ def add_users():
         data = jsonObject["datas"]
         password = data.get("password") 
         username = data.get("username")
+        email = data.get("email")
         if not username:
             return jsonify({"message": "Missing 'username' field in JSON"})
         # Vérifiez si le nom d'utilisateur est déjà utilisé
         if username_exists(username):
             return jsonify({"message": "Username already in use"})
+
+        if not is_valid_email(email):
+            return jsonify({"message": "Invalid email format"})
 
         # Vérifiez le mot de passe
         if len(password) < 12 : # plus de 12 caracteres
@@ -94,6 +98,10 @@ def username_exists(username):
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0
+
+def is_valid_email(email):
+    # Utilisez une expression régulière pour vérifier la syntaxe de l'e-mail
+    return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)
 
 def get_user_statement(row) :
     """ User array statement """

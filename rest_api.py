@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# IMPORT
 from flask import Flask, request, jsonify
 from flask_restful import reqparse, abort, Api, Resource
 from flask_cors import CORS
@@ -22,20 +21,33 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
 
-
+############  USERS/GET ################
 @app.route('/users/get', methods=['GET','POST'])
 def get_users():
-    """ Return all user in JSON format """
+    """ Return all users in JSON format """
     query = "select * from ent.users order by id asc"
     conn = connect_pg.connect()
     rows = connect_pg.get_query(conn, query)
     returnStatement = []
     for row in rows:
         returnStatement.append(get_user_statement(row))
-
     connect_pg.disconnect(conn)
     return jsonify(returnStatement)
 
+############  TEACHERS/GET ################
+@app.route('/teachers/get', methods=['GET','POST'])
+def get_teachers():
+    """ Return all teachers in JSON format """
+    query = "select * from ent.teachers order by id asc"
+    conn = connect_pg.connect()
+    rows = connect_pg.get_query(conn, query)
+    returnStatement = []
+    for row in rows:
+        returnStatement.append(get_teacher_statement(row))
+    connect_pg.disconnect(conn)
+    return jsonify(returnStatement)
+
+############  USERS/ADD ################
 @app.route('/users/add', methods=['POST'])
 def add_users():
     try:
@@ -60,18 +72,14 @@ def add_users():
             return jsonify({"message": "Missing 'email' field in JSON"})
         if not password:
             return jsonify({"message": "Missing 'password' field in JSON"})
-
         # Verification username plus de 4 caracteres
         if len(username) < 4:
             return jsonify({"message": "Username need to have minimum 4 characters"})
-
         # Verifiez si le nom d'utilisateur est deja utilise
         if username_exists(username):
             return jsonify({"message": "Username already in use"})
-
         if not is_valid_email(email):
             return jsonify({"message": "Invalid email format"})
-
         # Verifiez le mot de passe
         if len(password) < 12 : # plus de 12 caracteres
             return jsonify({"message": "password need to contains minimum 12 characters"})
@@ -83,8 +91,6 @@ def add_users():
             return jsonify({"message": "Password need to contains minimum 1 special characters"})
         if not re.search(r'[1-9]', password) : # au moins 1 chiffre
             return jsonify({"message": "Password need to contains minimum 1 number"})
-
-
         hashed_password = hashlib.md5(password.encode()).hexdigest()
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
@@ -119,6 +125,8 @@ def is_valid_email(email):
     # Utilisez une expression reguliere pour verifier la syntaxe de l'e-mail
     return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)
 
+
+############  USER STATEMENT ################
 def get_user_statement(row) :
     """ User array statement """
     return {
@@ -131,6 +139,27 @@ def get_user_statement(row) :
         'email':row[6]
     }
 
+############  TEACHER STATEMENT ################
+def get_teacher_statement(row):
+    """ Teacher array statement """
+    teacher_statement = {
+        'id': row[0],
+        'initial': row[1],
+        'desktop': row[2],
+        'timetable_manager': row[3],
+    }
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ent.users WHERE id = %s", (row[4],))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if user :
+        user_statement = get_user_statement(user)  
+        teacher_statement['user'] = user_statement
+    else :
+        teacher_statement['user'] = None  # L'utilisateur n'existe pas
+    return teacher_statement
 
 
 if __name__ == "__main__":

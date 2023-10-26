@@ -48,49 +48,43 @@ def get_teachers():
     return jsonify(returnStatement)
 
 ############  USERS/ADD ################
-@app.route('/users/add', methods=['POST'])
-def add_users():
+def add_users(data):
     try:
-        jsonObject = request.json
-        # Assurez-vous que "datas" est présent dans l'objet JSON
-        if "datas" not in jsonObject:
-            return jsonify({"message": "Missing 'datas' field in JSON"})
-        data = jsonObject["datas"]
-        password = data.get("password") 
-        username = data.get("username")
-        email = data.get("email")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
+        password = data["password"] 
+        username = data["username"] 
+        email = data["email"] 
+        first_name = data["first_name"] 
+        last_name = data["last_name"] 
         # Verifie si tous les attributs sont présents sauf type
         if not username:
-            return jsonify({"message": "Missing 'username' field in JSON"})
+            return jsonify({"error": "Missing 'username' field in JSON"}), 400
         if not first_name:
-            return jsonify({"message": "Missing 'first_name' field in JSON"})
+            return jsonify({"error": "Missing 'first_name' field in JSON"}), 400
         if not last_name:
-            return jsonify({"message": "Missing 'last_name' field in JSON"})
+            return jsonify({"error": "Missing 'last_name' field in JSON"}), 400
         if not email:
-            return jsonify({"message": "Missing 'email' field in JSON"})
+            return jsonify({"error": "Missing 'email' field in JSON"}), 400
         if not password:
-            return jsonify({"message": "Missing 'password' field in JSON"})
+            return jsonify({"error": "Missing 'password' field in JSON"}), 400
         # Verification username plus de 4 caracteres
         if len(username) < 4:
-            return jsonify({"message": "Username need to have minimum 4 characters"})
+            return jsonify({"error": "Username need to have minimum 4 characters"}), 400
         # Verifiez si le nom d'utilisateur est deja utilise
         if username_exists(username):
-            return jsonify({"message": "Username already in use"})
+            return jsonify({"error": f"Username '{username}' already exists"}), 400
         if not is_valid_email(email):
-            return jsonify({"message": "Invalid email format"})
+            return jsonify({"error": "Invalid email format"}), 400
         # Verifiez le mot de passe
         if len(password) < 12 : # plus de 12 caracteres
-            return jsonify({"message": "password need to contains minimum 12 characters"})
+            return jsonify({"error": "password need to contains minimum 12 characters"}), 400
         if not re.search(r'[A-Z]', password) : # au moins 1 majuscule
-            return jsonify({"message": "Password need to contains minimum 1 capital"})
+            return jsonify({"error": "Password need to contains minimum 1 capital"}), 400
         if not re.search(r'[a-z]', password) : # au moins une minuscule
-            return jsonify({"message": "Password need to contains minimum 1 minuscule"})
+            return jsonify({"error": "Password need to contains minimum 1 minuscule"}), 400
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
-            return jsonify({"message": "Password need to contains minimum 1 special characters"})
+            return jsonify({"error": "Password need to contains minimum 1 special characters"}) , 400
         if not re.search(r'[1-9]', password) : # au moins 1 chiffre
-            return jsonify({"message": "Password need to contains minimum 1 number"})
+            return jsonify({"error": "Password need to contains minimum 1 number"}) , 400
         hashed_password = hashlib.md5(password.encode()).hexdigest()
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
@@ -108,9 +102,58 @@ def add_users():
         # Validez la transaction et fermez la connexion
         conn.commit()
         conn.close()
-        return jsonify({"message": "User added", "id": row[0]})
+        return jsonify({"message": "User added", "id": row[0]}) , 200 
     except Exception as e:
-        return jsonify({"message": "Error", "error": str(e)})
+        return jsonify({"message": "ERROR", "error": str(e)}) , 400
+
+
+
+############ TEACHERS/ADD ############
+@app.route('/teachers/add', methods=['POST'])
+def add_teachers():
+    try:
+        jsonObject = request.json
+        if "datas" not in jsonObject:
+            return jsonify({"message": "Missing 'datas' field in JSON"}) , 400
+        data = jsonObject["datas"]
+        if "user" not in data:
+            return jsonify({"message": "Missing 'user' field in JSON"}) , 400
+        user_data = data["user"]
+        if initial_exists(data.get("initial")) :
+            return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
+
+        user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
+        # Si la requette user_add reussi
+        if http_status != 200 :
+            return user_response, http_status 
+        else :
+            user_id = user_response.json.get("id")
+            teacher_data = {
+                "desktop": data.get("desktop"),
+                "initial": data.get("initial"),
+                "timetable_manager": data.get("timetable_manager"),
+                "id_User" : user_id
+            }
+           
+            columns = list(teacher_data.keys())
+            values = list(teacher_data.values())
+            # Etablissez la connexion a la base de donnees
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            # Créez la requête SQL parametree
+            query = f"INSERT INTO ent.teachers ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+            # Executez la requête SQL avec les valeurs
+            cursor.execute(query, values)
+            # Recuperez l'identifiant de l'utilisateur insere
+            row = cursor.fetchone()
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+
+            return jsonify({"message": "Teachers added", "id": row[0]}) , 200  
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 ############  VERIFICATION USERNAME EXIST ################
 def username_exists(username):
@@ -118,6 +161,16 @@ def username_exists(username):
     conn = connect_pg.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM ent.users WHERE username = %s", (username,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
+############  VERIFICATION INITIAL EXIST ################
+def initial_exists(initial):
+    # Fonction pour verifier si le nom d'utilisateur existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.teachers WHERE initial = %s", (initial,))
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0

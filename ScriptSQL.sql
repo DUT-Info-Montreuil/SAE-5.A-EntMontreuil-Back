@@ -25,7 +25,7 @@ CREATE TABLE Admin (
 
 CREATE TABLE Teachers(
     id SERIAL,
-    initital VARCHAR(32),
+    initial VARCHAR(32),
     desktop VARCHAR(32),
     timetable_manager BOOLEAN,
     id_User BIGINT ,

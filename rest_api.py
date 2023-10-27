@@ -47,7 +47,7 @@ def get_teachers():
     connect_pg.disconnect(conn)
     return jsonify(returnStatement)
 
-############  USERS/ADD ################
+############  USERS ADD ################
 def add_users(data):
     try:
         password = data["password"] 
@@ -114,10 +114,10 @@ def add_teachers():
     try:
         jsonObject = request.json
         if "datas" not in jsonObject:
-            return jsonify({"message": "Missing 'datas' field in JSON"}) , 400
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
         data = jsonObject["datas"]
         if "user" not in data:
-            return jsonify({"message": "Missing 'user' field in JSON"}) , 400
+            return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
         if initial_exists(data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
@@ -144,7 +144,6 @@ def add_teachers():
             query = f"INSERT INTO ent.teachers ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
             # Executez la requête SQL avec les valeurs
             cursor.execute(query, values)
-            # Recuperez l'identifiant de l'utilisateur insere
             row = cursor.fetchone()
             # Validez la transaction et fermez la connexion
             conn.commit()
@@ -153,6 +152,43 @@ def add_teachers():
             return jsonify({"message": "Teachers added", "id": row[0]}) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
+
+
+
+############  USERS REMOVE ################
+def remove_user(id_user):
+    try:
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "DELETE FROM ent.users WHERE id = %s"
+        cursor.execute(query, (id_user,))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "User deleted", "id": id_user}) , 200 
+    except Exception as e:
+        return jsonify({"message": "ERROR", "error": str(e)}) , 400
+
+############ TEACHERS/REMOVE/<int:id_teacher> ############
+@app.route('/teachers/remove/<int:id_teacher>', methods=['DELETE'])
+def delete_teacher(id_teacher):
+    try:
+        if teacher_id_exists(id_teacher) :
+            return jsonify({"error": f"id_teacher : '{id_teacher}' not exists"}) , 400
+        id_user = get_user_id(id_teacher)
+        if user_id_exists(id_user) :
+            return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
+
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "DELETE FROM ent.teachers WHERE id = %s"
+        cursor.execute(query, (id_teacher,))
+        conn.commit()
+        conn.close()
+        user_response, http_status = remove_user(id_user)
+        return jsonify({"message": "Teacher deleted", "id": id_teacher}), 200
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 400
+
 
 
 ############  VERIFICATION USERNAME EXIST ################
@@ -167,13 +203,43 @@ def username_exists(username):
 
 ############  VERIFICATION INITIAL EXIST ################
 def initial_exists(initial):
-    # Fonction pour verifier si le nom d'utilisateur existe deja dans la base de donnees
+    # Fonction pour verifier si le les initiales d'un enseignant existe deja dans la base de donnees
     conn = connect_pg.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM ent.teachers WHERE initial = %s", (initial,))
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0
+
+############  VERIFICATION TEACHER ID EXIST PAS ################
+def teacher_id_exists(id):
+    # Fonction pour verifier si l'id d'un enseignant n'existe pas dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.teachers WHERE id = %s", (id,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count == 0
+
+############  RECUPERATION USER ID  ################
+def get_user_id(id):
+    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon un id d'un role
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id_User FROM ent.teachers WHERE id = %s", (id,))
+    id_user = cursor.fetchone()[0]
+    conn.close()
+    return id_user
+
+############  VERIFICATION USER ID EXIST PAS ################
+def user_id_exists(id):
+    # Fonction pour verifier si l'id d'un utilisateur n'existe pas dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE id = %s", (id,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count == 0
 
 ############  VERIFICATION EMAIL SYNTAXE ################
 def is_valid_email(email):

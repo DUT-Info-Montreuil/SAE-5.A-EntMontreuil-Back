@@ -47,6 +47,19 @@ def get_teachers():
     connect_pg.disconnect(conn)
     return jsonify(returnStatement)
 
+############  TEACHERS/GET/TIMETABLE_MANAGER ################
+@app.route('/teachers/ttm', methods=['GET','POST'])
+def get_teachers_timetable_manager():
+    """ Return all teachers who are timetable manager in JSON format """
+    query = "select * from ent.teachers where timetable_manager = true order by id asc"
+    conn = connect_pg.connect()
+    rows = connect_pg.get_query(conn, query)
+    returnStatement = []
+    for row in rows:
+        returnStatement.append(get_teacher_statement(row))
+    connect_pg.disconnect(conn)
+    return jsonify(returnStatement)
+
 ############  USERS ADD ################
 def add_users(data):
     try:

@@ -22,7 +22,7 @@ def after_request(response):
     return response
 
 ############  USERS/GET ################
-@app.route('/users/get', methods=['GET','POST'])
+@app.route('/users', methods=['GET','POST'])
 def get_users():
     """ Return all users in JSON format """
     query = "select * from ent.users order by id asc"
@@ -35,7 +35,7 @@ def get_users():
     return jsonify(returnStatement)
 
 ############  TEACHERS/GET ################
-@app.route('/teachers/get', methods=['GET','POST'])
+@app.route('/teachers', methods=['GET','POST'])
 def get_teachers():
     """ Return all teachers in JSON format """
     query = "select * from ent.teachers order by id asc"
@@ -106,8 +106,6 @@ def add_users(data):
     except Exception as e:
         return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
-
-
 ############ TEACHERS/ADD ############
 @app.route('/teachers/add', methods=['POST'])
 def add_teachers():
@@ -121,7 +119,6 @@ def add_teachers():
         user_data = data["user"]
         if initial_exists(data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
-
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
@@ -134,7 +131,6 @@ def add_teachers():
                 "timetable_manager": data.get("timetable_manager"),
                 "id_User" : user_id
             }
-           
             columns = list(teacher_data.keys())
             values = list(teacher_data.values())
             # Etablissez la connexion a la base de donnees
@@ -148,12 +144,9 @@ def add_teachers():
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-
             return jsonify({"message": "Teachers added", "id": row[0]}) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
-
-
 
 ############  USERS REMOVE ################
 def remove_user(id_user):
@@ -189,6 +182,22 @@ def delete_teacher(id_teacher):
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
 
+############ TEACHERS/GET/<int:id_teacher> ############
+@app.route('/teachers/<int:id_teacher>', methods=['GET', 'POST'])
+def get_teacher(id_teacher):
+    try:
+        if teacher_id_exists(id_teacher) :
+            return jsonify({"error": f"id_teacher : '{id_teacher}' not exists"}) , 400
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "SELECT * FROM ent.teachers WHERE id = %s"
+        cursor.execute(query, (id_teacher,))
+        row = cursor.fetchone()
+        conn.commit()
+        conn.close()
+        return get_teacher_statement(row)
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 400
 
 
 ############  VERIFICATION USERNAME EXIST ################

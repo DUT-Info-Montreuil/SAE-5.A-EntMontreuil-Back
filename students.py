@@ -75,6 +75,27 @@ def add_students():
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
+############ STUDENTS/REMOVE/<int:id_student> ############
+@students_bp.route('/students/remove/<int:id_student>', methods=['DELETE'])
+def delete_students(id_student):
+    try:
+        if student_id_exists(id_student) :
+            return jsonify({"error": f"id_student : '{id_student}' not exists"}) , 400
+        id_user = get_user_id_with_id_student(id_student)
+        if user_id_exists(id_user) :
+            return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
+
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "DELETE FROM ent.students WHERE id = %s"
+        cursor.execute(query, (id_student,))
+        conn.commit()
+        conn.close()
+        user_response, http_status = remove_users(id_user)
+        return jsonify({"message": "Student deleted", "id": id_student}), 200
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 
@@ -89,11 +110,11 @@ def student_id_exists(id):
     return count == 0
 
 ############  RECUPERATION USER ID SELON ID_STUDENT  ################
-def get_user_id_with_id_students(id_students):
-    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon l'id_students
+def get_user_id_with_id_student(id_student):
+    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon l'id_student
     conn = connect_pg.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT id_User FROM ent.students WHERE id = %s", (id_students,))
+    cursor.execute("SELECT id_User FROM ent.students WHERE id = %s", (id_student,))
     id_user = cursor.fetchone()[0]
     conn.close()
     return id_user

@@ -1,10 +1,9 @@
-from flask import jsonify, Blueprint
+from flask import request, jsonify, Blueprint
+import json
 import connect_pg
 from users import *
 
-
 students_bp = Blueprint('students', __name__)
-
 
 #--------------------------------------------------ROUTE--------------------------------------------------#
 
@@ -37,6 +36,45 @@ def get_teacher(id_students):
         return get_student_statement(row)
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
+
+############ STUDENTS/ADD ############
+@students_bp.route('/students/add', methods=['POST'])
+def add_students():
+    try:
+        jsonObject = request.json
+        if "datas" not in jsonObject:
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
+        data = jsonObject["datas"]
+        if "user" not in data:
+            return jsonify({"error": "Missing 'user' field in JSON"}) , 400
+        user_data = data["user"]
+        user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
+        # Si la requette user_add reussi
+        if http_status != 200 :
+            return user_response, http_status 
+        else :
+            user_id = user_response.json.get("id")
+            student_data = {
+                "apprentice": False,
+                "id_User" : user_id
+            }
+            columns = list(student_data.keys())
+            values = list(student_data.values())
+            # Etablissez la connexion a la base de donnees
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            # Créez la requête SQL parametree
+            query = f"INSERT INTO ent.students ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+            # Executez la requête SQL avec les valeurs
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Student added", "id": row[0]}) , 200  
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 

@@ -52,19 +52,22 @@ def get_student_statement(row):
     user_statement = get_user_statement(user)
     student_statement['user'] = user_statement
     #get td
-    cursor.execute("SELECT name FROM ent.td WHERE id = %s", (row[4],))
-    td = cursor.fetchone()
-    student_statement['TD'] = td[0]
+    if row[4] :
+        cursor.execute("SELECT name FROM ent.td WHERE id = %s", (row[4],))
+        td = cursor.fetchone()
+        student_statement['TD'] = td[0]
     # get tp
-    cursor.execute("SELECT name FROM ent.tp WHERE id = %s", (row[3],))
-    tp = cursor.fetchone()
-    student_statement['TP'] = tp[0]
+    if row[3] :
+        cursor.execute("SELECT name FROM ent.tp WHERE id = %s", (row[3],))
+        tp = cursor.fetchone()
+        student_statement['TP'] = tp[0]
     #get promotion
-    cursor.execute("SELECT * FROM ent.promotions WHERE id = %s", (row[5],))
-    promotion = cursor.fetchone()
-    cursor.execute("SELECT name FROM ent.degrees WHERE id = %s", (promotion[2],))
-    degree = cursor.fetchone()
-    student_statement['Promotion'] = f"{degree[0]} BUT {promotion[1]}"
+    if row[5] :
+        cursor.execute("SELECT * FROM ent.promotions WHERE id = %s", (row[5],))
+        promotion = cursor.fetchone()
+        cursor.execute("SELECT name FROM ent.degrees WHERE id = %s", (promotion[2],))
+        degree = cursor.fetchone()
+        student_statement['Promotion'] = f"{degree[0]} BUT {promotion[1]}"
 
     cursor.close()
     conn.close()

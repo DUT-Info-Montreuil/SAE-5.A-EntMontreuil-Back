@@ -156,9 +156,46 @@ def add_teachers():
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
+############ TEACHERS/UPDATE/<int:id_teacher> ############
+@app.route('/teachers/update/<int:id_teacher>', methods=['PATCH'])
+def update_teachers(id_teacher):
+    try:
+        jsonObject = request.json
+        if "datas" not in jsonObject:
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
+        teacher_data = jsonObject["datas"]
+        if "initial" in teacher_data :
+            if initial_exists(teacher_data.get("initial")) :
+                return jsonify({"error": f"Initial '{teacher_data.get('initial')}' already exists"}), 400
+        if "user" in teacher_data:
+            user_data = teacher_data["user"]
+            del teacher_data["user"]
+            if not user_data:
+                return jsonify({"error": "Empty 'user' field in JSON"}), 400
+            id_user = get_user_id_with_id_teacher(id_teacher)
+            user_response, http_status = update_users(user_data, id_user)
+            if http_status != 200 :
+                return user_response, http_status
+        
+
+        if teacher_data :
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            update_clause = ", ".join([f"{key} = %s" for key in teacher_data.keys()])
+            values = list(teacher_data.values())
+            values.append(id_teacher)  # Ajoutez l'ID de l'enseignant à la fin pour identifier l'enregistrement a mettre a jour
+            query = f"UPDATE ent.teachers SET {update_clause} WHERE id = %s"
+            cursor.execute(query, values)
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Teacher update", "id": id_teacher}) , 200 
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 ############  USER UPDATE ################
-def update_user(user_data):
+def update_users(user_data, id_user):
     try:
         if "password" in user_data :
             password = user_data["password"]
@@ -198,7 +235,7 @@ def update_user(user_data):
         return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
 ############  USERS REMOVE ################
-def remove_user(id_user):
+def remove_users(id_user):
     try:
         conn = connect_pg.connect()
         cursor = conn.cursor()
@@ -212,11 +249,11 @@ def remove_user(id_user):
 
 ############ TEACHERS/REMOVE/<int:id_teacher> ############
 @app.route('/teachers/remove/<int:id_teacher>', methods=['DELETE'])
-def delete_teacher(id_teacher):
+def delete_teachers(id_teacher):
     try:
         if teacher_id_exists(id_teacher) :
             return jsonify({"error": f"id_teacher : '{id_teacher}' not exists"}) , 400
-        id_user = get_user_id(id_teacher)
+        id_user = get_user_id_with_id_teacher(id_teacher)
         if user_id_exists(id_user) :
             return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
 
@@ -226,7 +263,7 @@ def delete_teacher(id_teacher):
         cursor.execute(query, (id_teacher,))
         conn.commit()
         conn.close()
-        user_response, http_status = remove_user(id_user)
+        user_response, http_status = remove_users(id_user)
         return jsonify({"message": "Teacher deleted", "id": id_teacher}), 200
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
@@ -279,12 +316,12 @@ def teacher_id_exists(id):
     conn.close()
     return count == 0
 
-############  RECUPERATION USER ID  ################
-def get_user_id(id):
-    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon un id d'un role
+############  RECUPERATION USER ID SELON ID_TEACHER  ################
+def get_user_id_with_id_teacher(id_teacher):
+    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon l'id_teacher
     conn = connect_pg.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT id_User FROM ent.teachers WHERE id = %s", (id,))
+    cursor.execute("SELECT id_User FROM ent.teachers WHERE id = %s", (id_teacher,))
     id_user = cursor.fetchone()[0]
     conn.close()
     return id_user

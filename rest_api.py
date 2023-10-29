@@ -87,18 +87,14 @@ def add_users(data):
             return jsonify({"error": f"Username '{username}' already exists"}), 400
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format"}), 400
+        if data["type"] != "étudiant" or data["type"] != "enseignant" or data["type"] != "responsable_edt" or data["type"] != "admin" or data["type"] != "test" :
+            return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
         # Verifiez le mot de passe
-        if len(password) < 12 : # plus de 12 caracteres
-            return jsonify({"error": "password need to contains minimum 12 characters"}), 400
-        if not re.search(r'[A-Z]', password) : # au moins 1 majuscule
-            return jsonify({"error": "Password need to contains minimum 1 capital"}), 400
-        if not re.search(r'[a-z]', password) : # au moins une minuscule
-            return jsonify({"error": "Password need to contains minimum 1 minuscule"}), 400
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
-            return jsonify({"error": "Password need to contains minimum 1 special characters"}) , 400
-        if not re.search(r'[1-9]', password) : # au moins 1 chiffre
-            return jsonify({"error": "Password need to contains minimum 1 number"}) , 400
-        hashed_password = hashlib.md5(password.encode()).hexdigest()
+        user_response, http_status = is_valid_password(password)  
+        if http_status != 200 :
+            return user_response, http_status 
+        else :
+            hashed_password = hashlib.md5(password.encode()).hexdigest()  
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())
@@ -110,7 +106,6 @@ def add_users(data):
         query = f"INSERT INTO ent.users ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
         # Executez la requête SQL avec les valeurs
         cursor.execute(query, values)
-        # Recuperez l'identifiant de l'utilisateur insere
         row = cursor.fetchone()
         # Validez la transaction et fermez la connexion
         conn.commit()
@@ -160,6 +155,47 @@ def add_teachers():
             return jsonify({"message": "Teachers added", "id": row[0]}) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
+
+
+############  USER UPDATE ################
+def update_user(user_data):
+    try:
+        if "password" in user_data :
+            password = user_data["password"]
+            user_response, http_status = is_valid_password(password)  
+            if http_status != 200 :
+                return user_response, http_status 
+            else :
+                user_data["password"] = hashlib.md5(password.encode()).hexdigest()  
+        if "id" in user_data :
+            return jsonify({"error": "Unable to modify user id, remove id field"}) , 400
+        if "username" in user_data :
+            username = user_data["username"]
+            if username_exists(username):
+                return jsonify({"error": f"Username '{username}' already exists"}), 400
+            if len(username) < 4:
+                return jsonify({"error": "Username need to have minimum 4 characters"}), 400
+        if "email" in user_data :
+            email = user_data["email"]
+            if not is_valid_email(email):
+                return jsonify({"error": "Invalid email format"}), 400
+        if "type" in user_data :
+            if data["type"] != "étudiant" or data["type"] != "enseignant" or data["type"] != "responsable_edt" or data["type"] != "admin" or data["type"] != "test" :
+                return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
+        # Etablissez la connexion a la base de donnees
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        update_clause = ", ".join([f"{key} = %s" for key in user_data.keys()])
+        values = list(user_data.values())
+        values.append(id_user)  # Ajoutez l'ID de l'enseignant à la fin pour identifier l'enregistrement a mettre a jour
+        query = f"UPDATE ent.users SET {update_clause} WHERE id = %s"
+        cursor.execute(query, values)
+        # Validez la transaction et fermez la connexion
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "User update", "id": id_user}) , 200 
+    except Exception as e:
+        return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
 ############  USERS REMOVE ################
 def remove_user(id_user):
@@ -267,6 +303,20 @@ def user_id_exists(id):
 def is_valid_email(email):
     # Utilisez une expression reguliere pour verifier la syntaxe de l'e-mail
     return re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email)
+
+############  VERIFICATION PASSWORD ################
+def is_valid_password(password):
+    if len(password) < 12 : # plus de 12 caracteres
+        return jsonify({"error": "password need to contains minimum 12 characters"}), 400
+    if not re.search(r'[A-Z]', password) : # au moins 1 majuscule
+        return jsonify({"error": "Password need to contains minimum 1 capital"}), 400
+    if not re.search(r'[a-z]', password) : # au moins une minuscule
+        return jsonify({"error": "Password need to contains minimum 1 minuscule"}), 400
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
+        return jsonify({"error": "Password need to contains minimum 1 special characters"}) , 400
+    if not re.search(r'[1-9]', password) : # au moins 1 chiffre
+        return jsonify({"error": "Password need to contains minimum 1 number"}) , 400
+    return True , 200
 
 
 ############  USER STATEMENT ################

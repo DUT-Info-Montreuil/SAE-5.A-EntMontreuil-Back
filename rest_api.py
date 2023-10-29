@@ -1,9 +1,12 @@
-from imports import *
+#FROM
+from flask import Flask
+from flask_cors import CORS
+from config import config
 from users import users_bp
 from teachers import teachers_bp
+
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
-api = Api(app)
 
 app.register_blueprint(users_bp)
 app.register_blueprint(teachers_bp)

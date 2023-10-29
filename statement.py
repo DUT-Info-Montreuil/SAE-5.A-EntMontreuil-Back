@@ -1,4 +1,6 @@
-from imports import *
+from flask import Blueprint
+import connect_pg
+
 
 statement_bp = Blueprint('statement', __name__)
 

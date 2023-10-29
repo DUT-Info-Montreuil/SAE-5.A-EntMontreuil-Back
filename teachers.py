@@ -1,6 +1,8 @@
-from imports import *
+from flask import request, jsonify, Blueprint
+import json
+import connect_pg
 from users import *
-from statement import *
+
 
 teachers_bp = Blueprint('teachers', __name__)
 

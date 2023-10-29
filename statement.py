@@ -32,10 +32,40 @@ def get_teacher_statement(row):
     user = cursor.fetchone()
     cursor.close()
     conn.close()
-    if user :
-        user_statement = get_user_statement(user)  
-        teacher_statement['user'] = user_statement
-    else :
-        teacher_statement['user'] = None  # L'utilisateur n'existe pas
+    user_statement = get_user_statement(user)  
+    teacher_statement['user'] = user_statement
     return teacher_statement
 
+
+############  STUDENT STATEMENT ################
+def get_student_statement(row):
+    """ Student array statement """
+    student_statement = {
+        'id': row[0],
+        'appprentice': row[1],
+    }
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    #get user
+    cursor.execute("SELECT * FROM ent.users WHERE id = %s", (row[2],))
+    user = cursor.fetchone()
+    user_statement = get_user_statement(user)
+    student_statement['user'] = user_statement
+    #get td
+    cursor.execute("SELECT name FROM ent.td WHERE id = %s", (row[4],))
+    td = cursor.fetchone()
+    student_statement['TD'] = td[0]
+    # get tp
+    cursor.execute("SELECT name FROM ent.tp WHERE id = %s", (row[3],))
+    tp = cursor.fetchone()
+    student_statement['TP'] = tp[0]
+    #get promotion
+    cursor.execute("SELECT * FROM ent.promotions WHERE id = %s", (row[5],))
+    promotion = cursor.fetchone()
+    cursor.execute("SELECT name FROM ent.degrees WHERE id = %s", (promotion[2],))
+    degree = cursor.fetchone()
+    student_statement['Promotion'] = f"{degree[0]} BUT {promotion[1]}"
+
+    cursor.close()
+    conn.close()
+    return student_statement

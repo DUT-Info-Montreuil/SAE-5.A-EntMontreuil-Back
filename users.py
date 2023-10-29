@@ -48,7 +48,7 @@ def update_users(user_data, id_user):
             if not is_valid_email(email):
                 return jsonify({"error": "Invalid email format"}), 400
         if "type" in user_data :
-            if data["type"] != "étudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
+            if user_data["type"] != "étudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
                 return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
         # Etablissez la connexion a la base de donnees
         conn = connect_pg.connect()

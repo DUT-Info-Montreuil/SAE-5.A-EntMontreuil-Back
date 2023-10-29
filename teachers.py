@@ -96,8 +96,6 @@ def update_teachers(id_teacher):
             user_response, http_status = update_users(user_data, id_user)
             if http_status != 200 :
                 return user_response, http_status
-        
-
         if teacher_data :
             conn = connect_pg.connect()
             cursor = conn.cursor()
@@ -109,7 +107,7 @@ def update_teachers(id_teacher):
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-            return jsonify({"message": "Teacher update", "id": id_teacher}) , 200 
+        return jsonify({"message": "Teacher update", "id": id_teacher}) , 200 
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 

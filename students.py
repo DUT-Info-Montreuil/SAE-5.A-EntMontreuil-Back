@@ -96,6 +96,38 @@ def delete_students(id_student):
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
 
+############ STUDENTS/UPDATE/<int:id_student> ############
+@students_bp.route('/students/update/<int:id_student>', methods=['PATCH'])
+def update_students(id_student):
+    try:
+        jsonObject = request.json
+        if "datas" not in jsonObject:
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
+        student_data = jsonObject["datas"]
+        if "user" in student_data:
+            user_data = student_data["user"]
+            del student_data["user"]
+            if not user_data:
+                return jsonify({"error": "Empty 'user' field in JSON"}), 400
+            id_user = get_user_id_with_id_student(id_student)
+            user_response, http_status = update_users(user_data, id_user)
+            if http_status != 200 :
+                return user_response, http_status
+        if student_data :
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            update_clause = ", ".join([f"{key} = %s" for key in student_data.keys()])
+            values = list(student_data.values())
+            values.append(id_student)  # Ajoutez l'ID de l'enseignant à la fin pour identifier l'enregistrement a mettre a jour
+            query = f"UPDATE ent.students SET {update_clause} WHERE id = %s"
+            cursor.execute(query, values)
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+        return jsonify({"message": "Student update", "id": id_student}) , 200 
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 

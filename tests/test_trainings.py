@@ -17,6 +17,12 @@ class AddTrainingTestCase(unittest.TestCase):
         response_json = response.json()
         self.assertIn('message', response_json, "JSON response does not contain 'message' key")
         self.assertEqual(response_json['message'], "Données manquantes", "Expected error message 'Données manquantes' not found in the response")
+   
+    def test_add_training_empty_name(self):
+        # Send a POST request with 'name' as an empty string
+        response = requests.post(f'{self.BASE_URL}/trainings/add', json={'datas': {'name': '', 'id_Degree': 1}}, headers={"Content-Type": "application/json"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json().get('message'), "Le nom du parcours est requis")
 
 if __name__ == '__main__':
     unittest.main()

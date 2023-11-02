@@ -44,8 +44,10 @@ CREATE TABLE Trainings(
     name VARCHAR(32),
     id_Degree BIGINT,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_Degree) REFERENCES Degrees(id)
+    FOREIGN KEY (id_Degree) REFERENCES Degrees(id),
+    UNIQUE (id_Degree, name)  -- This enforces the uniqueness of the combination
 );
+
 
 CREATE TABLE Promotions(
     id SERIAL,

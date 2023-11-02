@@ -45,9 +45,9 @@ def add_training():
         return jsonify({"message": "L'identifiant du diplôme doit être un entier"}), 400
 
    
-        """    # Valide l'existence du diplôme référencé par 'id_Degree'
+    # Valide l'existence de la formation référencée par 'id_Degree'
     if not does_entry_exist("Degrees",training_data["id_Degree"]):
-        return jsonify({"message": "Le diplôme spécifié n'existe pas."}), 400"""
+        return jsonify({"message": "La formation spécifiée n'existe pas."}), 400
 
     # Si les validations sont passées, procéder à l'insertion dans la base de données
     try:
@@ -66,9 +66,10 @@ def add_training():
         return jsonify(success_message), 201
 
     except psycopg2.IntegrityError as e:
-        # Ici, vous pouvez gérer les erreurs d'intégrité, comme un nom de parcours déjà existant
-        return jsonify({"message": f"Erreur d'intégrité des données : {str(e)}"}), 409
-
+        # Gère la violation de la contrainte unique pour la combinaison de id_Degree et name
+        if 'trainings_id_degree_name_key' in str(e):
+            return jsonify({"message": "Un parcours avec le même nom existe déjà pour ce diplôme."}), 409
+        
     except Exception as e:
         # Gestion des autres erreurs
         return jsonify({"message": f"Erreur lors de l'ajout du parcours : {str(e)}"}), 500

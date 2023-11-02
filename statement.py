@@ -72,3 +72,4 @@ def get_student_statement(row):
     cursor.close()
     conn.close()
     return student_statement
+

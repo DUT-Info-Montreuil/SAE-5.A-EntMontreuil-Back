@@ -2,6 +2,8 @@ from flask import jsonify, Blueprint
 import connect_pg
 import hashlib
 import re
+import random
+import string
 from statement import *
 
 
@@ -48,7 +50,7 @@ def update_users(user_data, id_user):
             if not is_valid_email(email):
                 return jsonify({"error": "Invalid email format"}), 400
         if "type" in user_data :
-            if user_data["type"] != "étudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
+            if user_data["type"] != "etudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
                 return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
         # Etablissez la connexion a la base de donnees
         conn = connect_pg.connect()
@@ -81,7 +83,15 @@ def remove_users(id_user):
 ############  USERS ADD ################
 def add_users(data):
     try:
-        password = data["password"] 
+        if "password" in data and data["password"] :
+            password = data["password"]
+            # Verifiez le mot de passe
+            user_response, http_status = is_valid_password(password) 
+            if http_status != 200 :
+                return user_response, http_status 
+        else :   
+            data["password"] = generate_password()
+        password = data["password"]
         username = data["username"] 
         email = data["email"] 
         first_name = data["first_name"] 
@@ -95,8 +105,6 @@ def add_users(data):
             return jsonify({"error": "Missing 'last_name' field in JSON"}), 400
         if not email:
             return jsonify({"error": "Missing 'email' field in JSON"}), 400
-        if not password:
-            return jsonify({"error": "Missing 'password' field in JSON"}), 400
         # Verification username plus de 4 caracteres
         if len(username) < 4:
             return jsonify({"error": "Username need to have minimum 4 characters"}), 400
@@ -105,14 +113,9 @@ def add_users(data):
             return jsonify({"error": f"Username '{username}' already exists"}), 400
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format"}), 400
-        if data["type"] != "étudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
+        if data["type"] != "etudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
             return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
-        # Verifiez le mot de passe
-        user_response, http_status = is_valid_password(password)  
-        if http_status != 200 :
-            return user_response, http_status 
-        else :
-            hashed_password = hashlib.md5(password.encode()).hexdigest()  
+        hashed_password = hashlib.md5(password.encode()).hexdigest()  
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())
@@ -128,7 +131,7 @@ def add_users(data):
         # Validez la transaction et fermez la connexion
         conn.commit()
         conn.close()
-        return jsonify({"message": "User added", "id": row[0]}) , 200 
+        return jsonify({"message": "User added", "id": row[0] , "username" : username , "password" : password}) , 200 
     except Exception as e:
         return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
@@ -160,5 +163,17 @@ def is_valid_password(password):
     if not re.search(r'[1-9]', password) : # au moins 1 chiffre
         return jsonify({"error": "Password need to contains minimum 1 number"}) , 400
     return True , 200
+
+############  GENERATE PASSWORD ################
+def generate_password():
+    length = 12
+    characters = string.ascii_letters + string.digits + string.punctuation
+    while True:
+        password = ''.join(random.choice(characters) for _ in range(length))
+        if (any(c.islower() for c in password) and
+            any(c.isupper() for c in password) and
+            any(c.isdigit() for c in password) and
+            any(c in string.punctuation for c in password)):
+            return password
 
 

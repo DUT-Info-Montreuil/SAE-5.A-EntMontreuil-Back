@@ -1,9 +1,12 @@
 from flask import request, jsonify, Blueprint
 import json
 import connect_pg
+import csv
+import os
 from users import *
 
 students_bp = Blueprint('students', __name__)
+
 
 #--------------------------------------------------ROUTE--------------------------------------------------#
 
@@ -48,14 +51,21 @@ def add_students():
         if "user" not in data:
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
+        user_data["type"] = "etudiant"
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
-            return user_response, http_status 
+            return user_response, http_status
         else :
+            #on recupere le password de l'utilisateur ajouter pour  savoir quel est sont mdp si il est generer aleatoirement
+            password = user_response.json.get("password")
+            if "apprentice" in data :
+                apprentice = data["apprentice"]
+            else :
+                apprentice = False
             user_id = user_response.json.get("id")
             student_data = {
-                "apprentice": False,
+                "apprentice": apprentice,
                 "id_User" : user_id
             }
             columns = list(student_data.keys())
@@ -71,7 +81,7 @@ def add_students():
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-            return jsonify({"message": "Student added", "id": row[0]}) , 200  
+            return jsonify({"message": "Student added, save the password for this user it will not be recoverable", "id": row[0], "username" : user_data["username"] , "password" : password }) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
@@ -128,6 +138,32 @@ def update_students(id_student):
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
+############ STUDENTS/ADD/<path:csv_path> ############
+@students_bp.route('/students/add/<path:csv_path>', methods=['GET','POST'])
+def csv_add_students(csv_path):
+    try:   
+        passwords = []
+        data = {
+            "user" : None
+        }
+        #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
+        if not is_csv_file(csv_path) :
+            return jsonify({"error": "Your file is not csv file "}) , 400
+        parts = csv_path.split("/") 
+        filename = parts[-1]
+        with open(csv_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                data["user"] = row
+                add_student_response, http_status = add_students(data)
+                if http_status != 200 :
+                    return add_student_response, http_status
+                json_with_password = add_student_response.json.get("json")
+                passwords.append(json_with_password)
+        return jsonify({"csv file": f"All students add from {filename}" ,"message" : "Saved all passwords for all user they will not be recoverable", "password" : passwords} ) , 200 
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 
@@ -160,3 +196,56 @@ def user_id_exists(id):
     count = cursor.fetchone()[0]
     conn.close()
     return count == 0
+
+############ STUDENTS/ADD ############
+def add_students(student_data):
+    try:
+        if "user" not in student_data:
+            return jsonify({"error": "Missing 'user' field in JSON"}) , 400
+        user_data = student_data["user"]
+        user_data["type"] = "etudiant"
+        user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
+        # Si la requette user_add reussi
+        if http_status != 200 :
+            return user_response, http_status 
+        else :
+            #on recupere le password de l'utilisateur ajouter pour  savoir quel est sont mdp si il est generer aleatoirement
+            reponse_json = user_response.json
+            password = reponse_json.get("password")
+            if "apprentice" in student_data :
+                apprentice = student_data["apprentice"]
+                
+            else :
+                apprentice = False
+            user_id = user_response.json.get("id")
+            student_data = {
+                "apprentice": apprentice,
+                "id_User" : user_id
+            }
+            columns = list(student_data.keys())
+            values = list(student_data.values())
+            # Etablissez la connexion a la base de donnees
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            # Créez la requête SQL parametree
+            query = f"INSERT INTO ent.students ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+            # Executez la requête SQL avec les valeurs
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+            json_response = {
+                "password" : password,
+                "username" : user_data["username"]
+            }
+            return jsonify({"message": "Student added","id" : row[0] ,  "json" : json_response}) , 200  
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
+############ VERIFICATION CSV FILE ############
+def is_csv_file(filename):
+    # Utilisez os.path.splitext pour obtenir l'extension du fichier
+    file_extension = os.path.splitext(filename)[-1].lower()
+    # Comparez l'extension avec ".csv" (en minuscules) pour vérifier s'il s'agit d'un fichier CSV
+    return file_extension == ".csv"

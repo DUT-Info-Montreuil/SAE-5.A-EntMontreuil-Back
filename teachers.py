@@ -45,6 +45,7 @@ def add_teachers():
         if "user" not in data:
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
+        user_data["type"] = "enseignant"
         if initial_exists(data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users

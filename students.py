@@ -142,15 +142,23 @@ def update_students(id_student):
 @students_bp.route('/students/add/<path:csv_path>', methods=['GET','POST'])
 def csv_add_students(csv_path):
     try:   
+        
+        #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
+        if not is_csv_file(csv_path) :
+            return jsonify({"error": "Your file is not csv file "}) , 400
+
+        response, http_status = verification_csv_file(csv_path) 
+        if http_status != 200 :
+            return response, http_status
+
         passwords = []
         data = {
             "user" : None
         }
-        #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
-        if not is_csv_file(csv_path) :
-            return jsonify({"error": "Your file is not csv file "}) , 400
         parts = csv_path.split("/") 
         filename = parts[-1]
+
+
         with open(csv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -243,9 +251,48 @@ def add_students(student_data):
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
-############ VERIFICATION CSV FILE ############
+############ VERIFICATION IS CSV FILE ############
 def is_csv_file(filename):
     # Utilisez os.path.splitext pour obtenir l'extension du fichier
     file_extension = os.path.splitext(filename)[-1].lower()
     # Comparez l'extension avec ".csv" (en minuscules) pour vérifier s'il s'agit d'un fichier CSV
     return file_extension == ".csv"
+
+############ VERIFICATION CSV VALIDE ############
+def verification_csv_file(csv_path):
+    response , http_status = find_duplicate_usernames(csv_path)
+    if http_status != 200 :
+        return response , http_status
+        
+    else : 
+        return True
+
+############ VERIFICATION USERNAME DANS LE CSV ############
+def find_duplicate_usernames(csv_path):
+    usernames = {}  # Utilisez un dictionnaire pour stocker les lignes où chaque nom d'utilisateur apparaît
+
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numéro de ligne à 1
+
+        for row in reader:
+            username = row.get('username')
+            if username in usernames:
+                # Si le nom d'utilisateur existe déjà dans le dictionnaire, ajoutez la ligne actuelle
+                usernames[username].append(line_number)
+            else:
+                # Sinon, initialisez une nouvelle entrée dans le dictionnaire avec le numéro de ligne actuel
+                usernames[username] = [line_number]
+            
+            line_number += 1  # Incrémentez le numéro de ligne pour la ligne suivante
+    
+    # Recherchez les noms d'utilisateur en double et les lignes correspondantes
+    duplicates = {username: lines for username, lines in usernames.items() if len(lines) > 1}
+    
+    if duplicates:
+        duplicate_usernames = []
+        for username, lines in duplicates.items():
+            duplicate_usernames.append(f"duplicates username : {username} at lines : {' , '.join(map(str, lines))}")
+        return jsonify({"message": "Your csv file contains duplicate usernames", "duplicate usernames": duplicate_usernames }) , 400
+    else:
+        return jsonify({"message": "Your csv dont contains duplicate usernames"}) , 200

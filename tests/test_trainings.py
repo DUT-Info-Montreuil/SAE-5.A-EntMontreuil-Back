@@ -56,6 +56,50 @@ class GetTrainingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertIn('Parcours non trouvé', response.json()['message'])
 
+import requests
+import unittest
 
-if __name__ == '__main__':
+class TestUpdateTraining(unittest.TestCase):
+    BASE_URL = "http://localhost:5050/trainings/update"
+
+    def test_update_training_success(self):
+        """ Test de la mise à jour réussie d'un parcours avec des données valides """
+        valid_training_id = 1 
+        valid_degree_id = 1   
+        new_name = "Parcours Mis à Jour"
+        response = requests.put(f"{self.BASE_URL}/{valid_training_id}", json={"datas": {"name": new_name, "id_Degree": valid_degree_id}})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(new_name.lower(), response.json().get("message").lower())
+
+    def test_update_training_not_found(self):
+        """ Test de la mise à jour d'un parcours qui n'existe pas """
+        invalid_training_id = 99999 
+        new_name = "Nom de Parcours Test"
+        response = requests.put(f"{self.BASE_URL}/{invalid_training_id}", json={"datas": {"name": new_name, "id_Degree": 1}})
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("Le parcours spécifié n'existe pas.", response.json().get("message"))
+
+    def test_update_training_invalid_degree(self):
+        """ Test de la mise à jour d'un parcours avec un identifiant de diplôme invalide """
+        valid_training_id = 1 
+        invalid_degree_id = 22222
+        update_data = {
+            "datas": {
+                "name": "Nom de Parcours Mis à Jour",
+                "id_Degree": invalid_degree_id
+            }
+        }
+        response = requests.put(f"{self.BASE_URL}/{valid_training_id}", json=update_data)
+        self.assertEqual(response.status_code, 404)  # Attendre un 404 si le diplôme n'existe pas
+        self.assertIn("La formation spécifiée n'existe pas.", response.json().get("message"))
+
+    def test_update_training_missing_parameters(self):
+        """ Test de la mise à jour d'un parcours avec des paramètres manquants """
+        valid_training_id = 1
+        response = requests.put(f"{self.BASE_URL}/{valid_training_id}", json={"datas": {}})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Le nom du parcours est requis", response.json().get("message"))
+
+
+if __name__ == "__main__":
     unittest.main()

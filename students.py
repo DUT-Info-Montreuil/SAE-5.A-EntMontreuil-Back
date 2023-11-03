@@ -142,23 +142,16 @@ def update_students(id_student):
 @students_bp.route('/students/add/<path:csv_path>', methods=['GET','POST'])
 def csv_add_students(csv_path):
     try:   
-        
         #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
-        if not is_csv_file(csv_path) :
-            return jsonify({"error": "Your file is not csv file "}) , 400
-
         response, http_status = verification_csv_file(csv_path) 
         if http_status != 200 :
             return response, http_status
-
         passwords = []
         data = {
             "user" : None
         }
         parts = csv_path.split("/") 
         filename = parts[-1]
-
-
         with open(csv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
@@ -260,21 +253,34 @@ def is_csv_file(filename):
 
 ############ VERIFICATION CSV VALIDE ############
 def verification_csv_file(csv_path):
-    response , http_status = find_duplicate_usernames(csv_path)
-    if http_status != 200 :
-        return response , http_status
-        
+    # verification duplicate usernames 
+    response_duplicate_username , http_status_u = find_duplicate_usernames(csv_path)
+    if http_status_u != 200 :
+        return response_duplicate_username , http_status_u
+    # verification duplicate emails
+    response_duplicate_emails , http_status_e = find_duplicate_emails(csv_path)
+    if http_status_e != 200 :
+        return response_duplicate_emails , http_status_e
+    # verification csv file
+    if not is_csv_file(csv_path) :
+            return jsonify({"error": "Your file is not csv file "}) , 400
+    # verification username exist in csv
+    response_username_exists_csv , http_status_ue = username_exists_csv(csv_path)
+    if http_status_ue != 200 :
+        return response_username_exists_csv , http_status_ue
+    # verification emails syntaxe in csv
+    response_emails_syntaxe_csv , http_status_es = emails_syntaxe_csv(csv_path)
+    if http_status_es != 200 :
+        return response_emails_syntaxe_csv , http_status_es
     else : 
-        return True
+        return jsonify({"message": "Your csv is valide"}) , 200
 
-############ VERIFICATION USERNAME DANS LE CSV ############
+############ VERIFICATION DUPLICATE USERNAMES DANS LE CSV ############
 def find_duplicate_usernames(csv_path):
     usernames = {}  # Utilisez un dictionnaire pour stocker les lignes où chaque nom d'utilisateur apparaît
-
     with open(csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         line_number = 1  # Initialisez le numéro de ligne à 1
-
         for row in reader:
             username = row.get('username')
             if username in usernames:
@@ -283,12 +289,9 @@ def find_duplicate_usernames(csv_path):
             else:
                 # Sinon, initialisez une nouvelle entrée dans le dictionnaire avec le numéro de ligne actuel
                 usernames[username] = [line_number]
-            
             line_number += 1  # Incrémentez le numéro de ligne pour la ligne suivante
-    
     # Recherchez les noms d'utilisateur en double et les lignes correspondantes
     duplicates = {username: lines for username, lines in usernames.items() if len(lines) > 1}
-    
     if duplicates:
         duplicate_usernames = []
         for username, lines in duplicates.items():
@@ -296,3 +299,52 @@ def find_duplicate_usernames(csv_path):
         return jsonify({"message": "Your csv file contains duplicate usernames", "duplicate usernames": duplicate_usernames }) , 400
     else:
         return jsonify({"message": "Your csv dont contains duplicate usernames"}) , 200
+
+############ VERIFICATION DUPLICATE EMAILS DANS LE CSV ############
+def find_duplicate_emails(csv_path):
+    emails = {}  # Utilisez un dictionnaire pour stocker les lignes où chaque email apparaît
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numéro de ligne à 1
+        for row in reader:
+            email = row.get('email')
+            if email in emails:
+                # Si l'email existe déjà dans le dictionnaire, ajoutez la ligne actuelle
+                emails[email].append(line_number)
+            else:
+                # Sinon, initialisez une nouvelle entrée dans le dictionnaire avec le numéro de ligne actuel
+                emails[email] = [line_number]
+            line_number += 1  # Incrémentez le numéro de ligne pour la ligne suivante
+    # Recherchez les emails en double et les lignes correspondantes
+    duplicates = {email: lines for email, lines in emails.items() if len(lines) > 1}
+    if duplicates:
+        duplicate_emails = []
+        for email, lines in duplicates.items():
+            duplicate_emails.append(f"duplicates email : {email} at lines : {' , '.join(map(str, lines))}")
+        return jsonify({"message": "Your csv file contains duplicate emails", "duplicate emails": duplicate_emails }) , 400
+    else:
+        return jsonify({"message": "Your csv dont contains duplicate emails"}) , 200
+
+############ VERIFICATION USERNAME EXISTES DANS LE CSV ############
+def username_exists_csv(csv_path):
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numéro de ligne à 1
+        for row in reader:
+            username = row.get("username")
+            if username_exists(username) :
+                return jsonify({"message": f"Existing username   : {username} , line {line_number} in CSV"}) , 400
+            line_number += 1
+    return jsonify({"message": "Valide CSV"}) , 200
+
+############ VERIFICATION EMAILS SYNTAXE DANS LE CSV ############
+def emails_syntaxe_csv(csv_path):
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numéro de ligne à 1
+        for row in reader:
+            email = row.get("email")
+            if not is_valid_email(email) :
+                return jsonify({"message": f"Invalid email format for : {email} , line {line_number} in CSV"}) , 400
+            line_number += 1
+    return jsonify({"message": "Valide CSV"}) , 200

@@ -77,6 +77,38 @@ def add_training():
     finally:
         # Nettoyage : fermeture de la connexion à la base de données
         connect_pg.disconnect(conn)
+
+
+@training_bp.route('/trainings/get/<int:id_Training>', methods=['GET'])
+def get_training(id_Training):
+    """
+    Récupère les détails d'un parcours spécifique par son ID.
+
+    :param id_Training: L'identifiant du parcours à récupérer.
+    :return: Un objet JSON contenant les détails du parcours ou un message d'erreur.
+    """
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM ent.Trainings WHERE id = %s", (id_Training,))
+            row = cursor.fetchone()
+            if row:
+                parcours = {
+                    "id": row[0],
+                    "name": row[1],
+                    "id_Degree": row[2]
+                }
+                return jsonify(parcours), 200
+            else:
+                return jsonify({"message": "Parcours non trouvé"}), 404
+    except psycopg2.Error as e:
+        log_error(f"Erreur lors de la récupération du parcours: {e}")
+        return jsonify({"message": "Erreur lors de la récupération des informations du parcours"}), 500
+    finally:
+        if conn:
+            connect_pg.disconnect(conn)
+
+
         
 @training_bp.route('/degrees/get', methods=['GET'])
 def get_degrees():

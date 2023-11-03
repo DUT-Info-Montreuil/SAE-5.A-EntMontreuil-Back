@@ -41,5 +41,21 @@ class AddTrainingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json().get('message'),"La formation spécifiée n'existe pas."),
 
+class GetTrainingTestCase(unittest.TestCase):
+    BASE_URL = "http://localhost:5050/trainings/get"  # Mettez à jour avec l'URL de base de votre API
+
+    def test_get_training_success(self):
+        # Teste le cas où le parcours existe
+        response = requests.get(f"{self.BASE_URL}/1")  # Assurez-vous que le parcours avec l'ID 1 existe dans la base de données pour ce test
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('name', response.json())
+
+    def test_get_training_not_found(self):
+        # Teste le cas où le parcours n'existe pas
+        response = requests.get(f"{self.BASE_URL}/9999")  # Utilisez un ID qui n'existe pas dans la base de données
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('Parcours non trouvé', response.json()['message'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -108,6 +108,56 @@ def get_training(id_Training):
         if conn:
             connect_pg.disconnect(conn)
 
+@training_bp.route('/trainings/update/<int:id_training>', methods=['PUT'])
+def update_training(id_training):
+    """
+    Met à jour un parcours existant dans la base de données par son ID.
+
+    :param id_training: L'identifiant du parcours à mettre à jour.
+    :return: Un objet JSON indiquant le succès de la mise à jour ou un message d'erreur.
+    """
+    json_data = request.json
+    if not json_data or 'datas' not in json_data:
+        return jsonify({"message": "Données manquantes"}), 400
+
+    training_data = json_data['datas']
+    if 'name' not in training_data or not training_data['name']:
+        return jsonify({"message": "Le nom du parcours est requis"}), 400
+
+    if 'id_Degree' not in training_data or not isinstance(training_data['id_Degree'], int):
+        return jsonify({"message": "L'identifiant de la formation doit être un entier"}), 400
+
+    # Vérifie que le parcours à mettre à jour existe
+    if not does_entry_exist("Trainings", id_training):
+        return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
+
+    # Vérifie que la formation liée au parcours existe
+    if not does_entry_exist("Degrees", training_data["id_Degree"]):
+        return jsonify({"message": "La formation spécifiée n'existe pas."}), 404
+
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Mise à jour des informations du parcours
+            cursor.execute(
+                "UPDATE ent.Trainings SET name = %s, id_Degree = %s WHERE id = %s RETURNING id",
+                (training_data["name"], training_data["id_Degree"], id_training)
+            )
+            updated_row = cursor.fetchone()
+            if not updated_row:
+                return jsonify({"message": "Parcours non trouvé ou aucune modification effectuée"}), 404
+
+            return jsonify({"message": "Parcours mis à jour avec succès", "id": updated_row[0]}), 200
+
+    except psycopg2.Error as e:
+        log_error(f"Erreur lors de la mise à jour du parcours: {e}")
+        return jsonify({"message": "Erreur lors de la mise à jour des informations du parcours"}), 500
+    finally:
+        if conn:
+            connect_pg.disconnect(conn)
+
+
+
 
         
 @training_bp.route('/degrees/get', methods=['GET'])

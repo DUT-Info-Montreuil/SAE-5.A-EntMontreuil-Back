@@ -1,9 +1,10 @@
-
+from flask import request, jsonify
 from flask import request, jsonify, Blueprint
 import psycopg2
 import connect_pg
 import json
 import logging
+import datetime
 
 # Création  d'un Blueprint pour les routes liées aux promotions
 training_bp = Blueprint('trainings', __name__)
@@ -167,13 +168,13 @@ def delete_training(id_training):
     if not does_entry_exist("Trainings", id_training):
         return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
     
-    conn = None
     try:
         conn = connect_pg.connect()
         with conn.cursor() as cursor:
             # Suppression du parcours
             cursor.execute("DELETE FROM ent.Trainings WHERE id = %s RETURNING id", (id_training,))
             deleted_row = cursor.fetchone()
+            conn.commit()  # S'assurer que la suppression est commit
 
             if deleted_row:
                 return jsonify({"message": "Parcours supprimé avec succès"}), 200
@@ -181,14 +182,14 @@ def delete_training(id_training):
                 return jsonify({"message": "Parcours non trouvé ou déjà supprimé"}), 404
 
     except psycopg2.Error as e:
-        if conn:
-            conn.rollback()
         log_error(f"Erreur lors de la suppression du parcours: {e}")
         return jsonify({"message": "Erreur lors de la suppression du parcours"}), 500
     finally:
         if conn:
             connect_pg.disconnect(conn)
 
+
+        
 
 
 def does_entry_exist(table_name, entry_id):

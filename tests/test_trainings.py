@@ -56,8 +56,6 @@ class GetTrainingTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertIn('Parcours non trouvé', response.json()['message'])
 
-import requests
-import unittest
 
 class TestUpdateTraining(unittest.TestCase):
     BASE_URL = "http://localhost:5050/trainings/update"
@@ -99,6 +97,43 @@ class TestUpdateTraining(unittest.TestCase):
         response = requests.put(f"{self.BASE_URL}/{valid_training_id}", json={"datas": {}})
         self.assertEqual(response.status_code, 400)
         self.assertIn("Le nom du parcours est requis", response.json().get("message"))
+
+import unittest
+import requests
+
+class DeleteTrainingTestCase(unittest.TestCase):
+    BASE_URL = 'http://localhost:5050/trainings'
+
+    def setUp(self):
+        # Ajout d'un parcours pour le supprimer plus tard
+        add_response = requests.post(
+            f'{self.BASE_URL}/add',
+            json={'datas': {'name': 'Temporary Training', 'id_Degree': 1}},
+            headers={"Content-Type": "application/json"}
+        )
+        if add_response.status_code == 201:
+            self.training_id = add_response.json().get('id')
+        else:
+            self.training_id = None
+
+    def test_delete_training_success(self):
+        # Vérifier si la configuration a été réussie
+        if self.training_id is None:
+            self.skipTest('Training creation failed in setup, skipping deletion test.')
+
+        # Test de suppression d'un parcours existant
+        response = requests.delete(f'{self.BASE_URL}/{self.training_id}')
+        self.assertEqual(response.status_code, 200, "Expected 200 OK status code for successful deletion")
+
+    def test_delete_training_not_found(self):
+        # Test de suppression d'un parcours qui n'existe pas
+        response = requests.delete(f'{self.BASE_URL}/99999999')  # ID très probablement inexistant
+        self.assertEqual(response.status_code, 404, "Expected 404 Not Found status code for a non-existent training")
+
+    def tearDown(self):
+        # Supprimer le parcours si jamais il n'a pas été supprimé pendant le test
+        if self.training_id is not None:
+            requests.delete(f'{self.BASE_URL}/{self.training_id}')
 
 
 if __name__ == "__main__":

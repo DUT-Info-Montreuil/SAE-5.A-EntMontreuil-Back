@@ -157,6 +157,36 @@ def update_training(id_training):
             connect_pg.disconnect(conn)
 
 
+@training_bp.route('/trainings/<int:id_training>', methods=['DELETE'])
+def delete_training(id_training):
+    """
+    Supprime un parcours existant de la base de données par son ID.
+
+    :param id_training: L'identifiant du parcours à supprimer.
+    :return: Un objet JSON indiquant le succès de la suppression ou un message d'erreur.
+    """
+    if not does_entry_exist("Trainings", id_training):
+        return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
+    
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Suppression du parcours
+            cursor.execute("DELETE FROM ent.Trainings WHERE id = %s RETURNING id", (id_training,))
+            deleted_row = cursor.fetchone()
+            conn.commit()  # S'assurer que la suppression est commit
+
+            if deleted_row:
+                return jsonify({"message": "Parcours supprimé avec succès"}), 200
+            else:
+                return jsonify({"message": "Parcours non trouvé ou déjà supprimé"}), 404
+
+    except psycopg2.Error as e:
+        log_error(f"Erreur lors de la suppression du parcours: {e}")
+        return jsonify({"message": "Erreur lors de la suppression du parcours"}), 500
+    finally:
+        if conn:
+            connect_pg.disconnect(conn)
 
 
         

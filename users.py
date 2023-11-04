@@ -70,6 +70,8 @@ def update_users(user_data, id_user):
 ############  USERS REMOVE ################
 def remove_users(id_user):
     try:
+        if not id_exists(id_user) :
+            return jsonify({"error": f"User {id_user} not exist"}) , 400
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = "DELETE FROM ent.users WHERE id = %s"
@@ -141,6 +143,16 @@ def username_exists(username):
     conn = connect_pg.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM ent.users WHERE username = %s", (username,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
+############  VERIFICATION ID_USER EXIST ################
+def id_exists(id_user):
+    # Fonction pour verifier si l'id user existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE id = %s", (id_user,))
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0

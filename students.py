@@ -81,6 +81,7 @@ def add_students():
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
+            
             return jsonify({"message": "Student added, save the password for this user it will not be recoverable", "id": row[0], "username" : user_data["username"] , "password" : password }) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400

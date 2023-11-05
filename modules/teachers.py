@@ -38,6 +38,7 @@ def get_teachers_timetable_manager():
 @teachers_bp.route('/teachers/add', methods=['POST'])
 def add_teachers():
     try:
+        # Verification data et user fields
         jsonObject = request.json
         if "datas" not in jsonObject:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
@@ -46,10 +47,13 @@ def add_teachers():
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
         user_data["type"] = "enseignant"
+        
+        # Verification initial et si il existe
+        if "initial" not in data :
+            return jsonify({"error": "Missing 'initial' field"}), 400
         if initial_exists(data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
-        if "initial" not in data :
-            return jsonify({"error": "Missing 'initial' field"}), 400 
+         
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :

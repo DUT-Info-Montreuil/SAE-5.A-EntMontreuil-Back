@@ -51,7 +51,7 @@ def update_users(user_data, id_user):
                 return jsonify({"error": "Invalid email format"}), 400
         if "type" in user_data :
             if user_data["type"] != "etudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
-                return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
+                return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
         # Etablissez la connexion a la base de donnees
         conn = connect_pg.connect()
         cursor = conn.cursor()
@@ -85,38 +85,49 @@ def remove_users(id_user):
 ############  USERS ADD ################
 def add_users(data):
     try:
+        # Si le password est mentionner 
         if "password" in data and data["password"] :
             password = data["password"]
             # Verifiez le mot de passe
             user_response, http_status = is_valid_password(password) 
             if http_status != 200 :
                 return user_response, http_status 
+        # Si le password n'est pas mentionner il est generer aleatoirement
         else :   
             data["password"] = generate_password()
         password = data["password"]
-        username = data["username"] 
+         
+        
+        # Verifie si tous les attributs sont presents 
+        if "username" not in data:
+            return jsonify({"error": "Missing 'username' field in JSON"}), 400
+        if "first_name" not in data:
+            return jsonify({"error": "Missing 'first_name' field in JSON"}), 400
+        if "last_name" not in data:
+            return jsonify({"error": "Missing 'last_name' field in JSON"}), 400
+        if "email" not in data:
+            return jsonify({"error": "Missing 'email' field in JSON"}), 400
+        if "type" not in data :
+            return jsonify({"error": "Missing 'type' field in JSON"}), 400
+        
+        # Attribution des valeurs
+        username = data["username"]
         email = data["email"] 
         first_name = data["first_name"] 
         last_name = data["last_name"] 
-        # Verifie si tous les attributs sont présents sauf type
-        if not username:
-            return jsonify({"error": "Missing 'username' field in JSON"}), 400
-        if not first_name:
-            return jsonify({"error": "Missing 'first_name' field in JSON"}), 400
-        if not last_name:
-            return jsonify({"error": "Missing 'last_name' field in JSON"}), 400
-        if not email:
-            return jsonify({"error": "Missing 'email' field in JSON"}), 400
-        # Verification username plus de 4 caracteres
+        # Verifiez username taille > 4
         if len(username) < 4:
             return jsonify({"error": "Username need to have minimum 4 characters"}), 400
         # Verifiez si le nom d'utilisateur est deja utilise
         if username_exists(username):
             return jsonify({"error": f"Username '{username}' already exists"}), 400
+        # Verification de la syntaxe de l'email
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format"}), 400
+        # Verification si le type est bien un type existant (etudiant, enseignant, responsable_edt, admin)
         if data["type"] != "etudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
-            return jsonify({"error": "Invalid type, the 4 types available are {étudiant - enseignant - responsable_edt - admin}"}), 400
+            return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
+        # Hashage du password avec md5
         hashed_password = hashlib.md5(password.encode()).hexdigest()  
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())

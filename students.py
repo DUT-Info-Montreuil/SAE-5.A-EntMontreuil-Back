@@ -68,6 +68,8 @@ def add_students():
                 "apprentice": apprentice,
                 "id_User" : user_id
             }
+            if "id" in data :
+                student_data["id"] = data["id"]
             columns = list(student_data.keys())
             values = list(student_data.values())
             # Etablissez la connexion a la base de donnees
@@ -93,8 +95,6 @@ def delete_students(id_student):
         if student_id_exists(id_student) :
             return jsonify({"error": f"id_student : '{id_student}' not exists"}) , 400
         id_user = get_user_id_with_id_student(id_student)
-        if user_id_exists(id_user) :
-            return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
 
         conn = connect_pg.connect()
         cursor = conn.cursor()

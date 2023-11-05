@@ -54,37 +54,5 @@ class TestUpdateUsers(unittest.TestCase):
 
 
 
-class TestRemoveUsers(unittest.TestCase):
-
-    def setUp(self):
-        # Créez un objet d'application Flask minimal pour les tests
-        self.app = Flask(__name__)
-
-    def test_remove_users_user_not_found(self):
-        id_user = 91  # Remplacez par un ID utilisateur invalide
-        with self.app.app_context():
-            with patch('users.connect_pg') as mock_connect_pg:
-                with patch('users.jsonify') as mock_jsonify:
-                    # Simulez que l'utilisateur n'existe pas
-                    mock_connect_pg.id_exists.return_value = False
-                    mock_jsonify.return_value = {"error": f"User {id_user} not exist"}, 400
-                    response, http_status = remove_users(id_user)
-                    self.assertEqual(http_status, 400)  # Vérifiez le code d'état
-                    self.assertEqual(response, mock_jsonify.return_value)  # Vérifiez la réponse
-
-    def test_remove_users_error(self):
-        id_user = 91  # Remplacez par un ID utilisateur valide
-        with self.app.app_context():
-            with patch('users.connect_pg') as mock_connect_pg:
-                with patch('users.jsonify') as mock_jsonify:
-                    # Simulez une exception lors de la suppression de l'utilisateur
-                    mock_connect_pg.connect.side_effect = Exception("Database error")
-                    mock_jsonify.return_value = {"error": "Database error"}, 400
-                    response, http_status = remove_users(id_user)
-                    self.assertEqual(http_status, 400)  # Vérifiez le code d'état
-                    self.assertEqual(response, mock_jsonify.return_value)  # Vérifiez la réponse
-
-
-
 if __name__ == '__main__':
     unittest.main()

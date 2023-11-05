@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 import json
 import connect_pg
-from users import *
+from modules.users import *
 
 
 teachers_bp = Blueprint('teachers', __name__)
@@ -48,18 +48,27 @@ def add_teachers():
         user_data["type"] = "enseignant"
         if initial_exists(data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
+        if "initial" not in data :
+            return jsonify({"error": "Missing 'initial' field"}), 400 
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
             return user_response, http_status 
         else :
             user_id = user_response.json.get("id")
+            if "timetable_manager" in data :
+                timetable_manager = data.get("timetable_manager")
+            else :
+                timetable_manager = False
+            
             teacher_data = {
                 "desktop": data.get("desktop"),
                 "initial": data.get("initial"),
-                "timetable_manager": data.get("timetable_manager"),
+                "timetable_manager": timetable_manager,
                 "id_User" : user_id
             }
+            if "id" in data :
+                teacher_data["id"] = data.get("id")
             columns = list(teacher_data.keys())
             values = list(teacher_data.values())
             # Etablissez la connexion a la base de donnees
@@ -119,8 +128,6 @@ def delete_teachers(id_teacher):
         if teacher_id_exists(id_teacher) :
             return jsonify({"error": f"id_teacher : '{id_teacher}' not exists"}) , 400
         id_user = get_user_id_with_id_teacher(id_teacher)
-        if user_id_exists(id_user) :
-            return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
 
         conn = connect_pg.connect()
         cursor = conn.cursor()

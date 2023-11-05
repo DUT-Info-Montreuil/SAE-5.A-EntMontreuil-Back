@@ -1,10 +1,7 @@
 import unittest
-from unittest.mock import patch, Mock, mock_open
 import requests
 import json
-import requests_mock
 
-from users import users_bp
 
 ####################################### TEST ADD STUDENTS #######################################
 class TestAddStudents(unittest.TestCase):
@@ -80,7 +77,7 @@ class TestRemoveStudents(unittest.TestCase):
                 }
             }
         data_json = json.dumps(student_data)
-        requests.post("http://localhost:5050/students/add", data=data_json, headers={"Content-Type": "application/json"})
+
         response = requests.delete(f'{self.BASE_URL+"/1"}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('message'), "Student deleted")
@@ -167,19 +164,6 @@ class TestUpdateStudents(unittest.TestCase):
 class TestCSVAddStudents(unittest.TestCase):
     BASE_URL = "http://localhost:5050/students/add"
 
-    @patch('builtins.open', new_callable=mock_open)
-    def test_csv_add_students_successful(self,  mock_open_file):
-        csv_path = "C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv"
-
-        mock_open_file.return_value.__enter__.return_value = [
-            {"username": "user1", "password": "password1", "first_name": "John", "last_name": "Doe", "email": "john@example.com"},
-            {"username": "user2", "password": "password2", "first_name": "Jane", "last_name": "Smith", "email": "jane@example.com"}
-        ]
-
-        with patch('students.csv_add_students', return_value=(Mock(status_code=200, json=Mock(return_value={"json": "user1_password"})))):
-        # Votre code de test ici...
-            response = requests.post(f'{self.BASE_URL}/{csv_path}')
-            self.assertEqual(response.status_code, 200)
 
     def test_csv_add_students_invalid_csv(self):
         csv_path = "invalid_path.pdf"

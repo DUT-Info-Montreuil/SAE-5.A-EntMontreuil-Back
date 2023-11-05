@@ -3,7 +3,7 @@ import json
 import connect_pg
 import csv
 import os
-from users import *
+from modules.users import *
 
 students_bp = Blueprint('students', __name__)
 

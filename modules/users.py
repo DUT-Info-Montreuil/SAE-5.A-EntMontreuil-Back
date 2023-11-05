@@ -4,7 +4,7 @@ import hashlib
 import re
 import random
 import string
-from statement import *
+from modules.statement import *
 
 
 users_bp = Blueprint('users', __name__)

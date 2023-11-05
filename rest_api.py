@@ -2,9 +2,9 @@
 from flask import Flask
 from flask_cors import CORS
 from config import config
-from users import users_bp
-from teachers import teachers_bp
-from students import students_bp
+from modules.users import users_bp
+from modules.teachers import teachers_bp
+from modules.students import students_bp
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})

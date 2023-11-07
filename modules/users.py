@@ -25,6 +25,24 @@ def get_users():
     connect_pg.disconnect(conn)
     return jsonify(returnStatement)
 
+############  USERS/GET/<int:id_user> ################
+@users_bp.route('/users/<int:id_user>', methods=['GET','POST'])
+def get_users_with_id(id_user):
+    """ Return one user in JSON format """
+    try :
+        if not id_exists(id_user) :
+            return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "select * from ent.users where id = %s"
+        cursor.execute(query, (id_user,))
+        row = cursor.fetchone()
+        conn.commit()
+        conn.close()
+        return get_user_statement(row)
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 400
+
 #--------------------------------------------------FONCTION--------------------------------------------------#
 
 ############  USER UPDATE ################

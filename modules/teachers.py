@@ -59,20 +59,29 @@ def add_teachers():
         if http_status != 200 :
             return user_response, http_status 
         else :
+            # Recuperation du password (si il est generer aleatoirement)
+            password = user_response.json.get("password")
+            # Recuperation du user id
             user_id = user_response.json.get("id")
+            # Si timetable_manager est present alors prend sa valeur sinon prend la valeur false par defaut
             if "timetable_manager" in data :
                 timetable_manager = data.get("timetable_manager")
             else :
                 timetable_manager = False
-            
+            # Construction json de teacher_data
             teacher_data = {
                 "desktop": data.get("desktop"),
                 "initial": data.get("initial"),
                 "timetable_manager": timetable_manager,
                 "id_User" : user_id
             }
+            # Si data est present
             if "id" in data :
-                teacher_data["id"] = data.get("id")
+                if id_exists(data["id"]) :
+                    return jsonify({"error": f"Id for teacher '{data.get('id')}' already exist"}), 400
+                else :
+                    
+                    teacher_data["id"] = data.get("id")
             columns = list(teacher_data.keys())
             values = list(teacher_data.values())
             # Etablissez la connexion a la base de donnees
@@ -86,7 +95,7 @@ def add_teachers():
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-            return jsonify({"message": "Teachers added", "id": row[0]}) , 200  
+            return jsonify({"message": "Teachers added, save the password for this user it will not be recoverable", "id": row[0], "username" : user_data["username"] , "password" : password}) , 200  
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
@@ -94,22 +103,36 @@ def add_teachers():
 @teachers_bp.route('/teachers/update/<int:id_teacher>', methods=['PATCH'])
 def update_teachers(id_teacher):
     try:
+        # Recuperation du json
         jsonObject = request.json
+        # Si il n'y a pas de champ datas
         if "datas" not in jsonObject:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
         teacher_data = jsonObject["datas"]
+        # Si initial est present
         if "initial" in teacher_data :
+            # Verification initial existe deja
             if initial_exists(teacher_data.get("initial")) :
                 return jsonify({"error": f"Initial '{teacher_data.get('initial')}' already exists"}), 400
+        # Si id est present
+        if "id" in teacher_data :
+            return jsonify({"error": "Unable to modify user id, remove id field"}), 400
+        # Si user est present
         if "user" in teacher_data:
             user_data = teacher_data["user"]
+            # Supprimer les user data pour avoir que les data du teacher
             del teacher_data["user"]
+            # Si user data est vide
             if not user_data:
                 return jsonify({"error": "Empty 'user' field in JSON"}), 400
+            # Recuperation de l'id utilisateur
             id_user = get_user_id_with_id_teacher(id_teacher)
+            # Update de user
             user_response, http_status = update_users(user_data, id_user)
+            # Si erreur dans l'update du user
             if http_status != 200 :
                 return user_response, http_status
+        # Si teacher data n'est pas vide
         if teacher_data :
             conn = connect_pg.connect()
             cursor = conn.cursor()
@@ -203,3 +226,13 @@ def user_id_exists(id):
     count = cursor.fetchone()[0]
     conn.close()
     return count == 0
+
+############  VERIFICATION ID_TEACHER EXIST ################
+def id_exists(id_teacher):
+    # Fonction pour verifier si l'id user existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.teachers WHERE id = %s", (id_teacher,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0

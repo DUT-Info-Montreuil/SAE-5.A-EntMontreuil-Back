@@ -48,26 +48,37 @@ def get_users_with_id(id_user):
 ############  USER UPDATE ################
 def update_users(user_data, id_user):
     try:
+        # Si le password est present
         if "password" in user_data :
             password = user_data["password"]
+            # Verification du password
             user_response, http_status = is_valid_password(password)  
             if http_status != 200 :
                 return user_response, http_status 
             else :
-                user_data["password"] = hashlib.md5(password.encode()).hexdigest()  
+                # Hashage du password
+                user_data["password"] = hashlib.md5(password.encode()).hexdigest() 
+        # Si id est présent 
         if "id" in user_data :
             return jsonify({"error": "Unable to modify user id, remove id field"}) , 400
+        # Si username est présent
         if "username" in user_data :
             username = user_data["username"]
+            # Verification username existe deja
             if username_exists(username):
                 return jsonify({"error": f"Username '{username}' already exists"}), 400
+            # Verification username plus de 4 caracteres
             if len(username) < 4:
                 return jsonify({"error": "Username need to have minimum 4 characters"}), 400
+        # Si email est present
         if "email" in user_data :
             email = user_data["email"]
+            # Verification email
             if not is_valid_email(email):
                 return jsonify({"error": "Invalid email format"}), 400
+        # Si type est present
         if "type" in user_data :
+            # Si type est bien = etudiant ou enseignant ou responsable_edt ou admin
             if user_data["type"] != "etudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
                 return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
         # Etablissez la connexion a la base de donnees
@@ -88,6 +99,7 @@ def update_users(user_data, id_user):
 ############  USERS REMOVE ################
 def remove_users(id_user):
     try:
+        # Verification si id_user existe bien
         if not id_exists(id_user) :
             return jsonify({"error": f"User {id_user} not exist"}) , 400
         conn = connect_pg.connect()
@@ -132,7 +144,11 @@ def add_users(data):
         username = data["username"]
         email = data["email"] 
         first_name = data["first_name"] 
-        last_name = data["last_name"] 
+        last_name = data["last_name"]
+        # Verification si id est deja utiliser
+        if "id" in data :
+            if id_exists(data["id"]) :
+                return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
         # Verifiez username taille > 4
         if len(username) < 4:
             return jsonify({"error": "Username need to have minimum 4 characters"}), 400
@@ -207,6 +223,7 @@ def is_valid_password(password):
 
 ############  GENERATE PASSWORD ################
 def generate_password():
+    # Genere des password aleatoirement
     length = 12
     characters = string.ascii_letters + string.digits + string.punctuation
     while True:

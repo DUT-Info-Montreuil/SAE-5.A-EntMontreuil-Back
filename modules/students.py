@@ -27,6 +27,7 @@ def get_students():
 @students_bp.route('/students/<int:id_students>', methods=['GET', 'POST'])
 def get_teacher(id_students):
     try:
+        # Verification id student existe
         if student_id_exists(id_students) :
             return jsonify({"error": f"id_students : '{id_students}' not exists"}) , 400
         conn = connect_pg.connect()
@@ -45,9 +46,11 @@ def get_teacher(id_students):
 def add_students():
     try:
         jsonObject = request.json
+        # Si il manque datas renvoie une erreur
         if "datas" not in jsonObject:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
         data = jsonObject["datas"]
+        # Si il manque user renvoie une erreur
         if "user" not in data:
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
@@ -64,15 +67,20 @@ def add_students():
                 apprentice = data["apprentice"]
             else :
                 apprentice = False
-            
+            # Recuperation du user id
             user_id = user_response.json.get("id")
+            # Creation du student data json
             student_data = {
                 "apprentice": apprentice,
                 "id_User" : user_id
             }
-            
+            # Si id est present
             if "id" in data :
-                student_data["id"] = data["id"]
+                # Verification si id existe deja
+                if id_exists(data["id"]) :
+                    return jsonify({"error": f"Id for student '{data.get('id')}' already exist"}), 400
+                else :
+                    student_data["id"] = data["id"]
             columns = list(student_data.keys())
             values = list(student_data.values())
             # Etablissez la connexion a la base de donnees
@@ -95,8 +103,10 @@ def add_students():
 @students_bp.route('/students/remove/<int:id_student>', methods=['DELETE'])
 def delete_students(id_student):
     try:
+        # Si id student n'existe pas
         if student_id_exists(id_student) :
             return jsonify({"error": f"id_student : '{id_student}' not exists"}) , 400
+        
         id_user = get_user_id_with_id_student(id_student)
 
         conn = connect_pg.connect()
@@ -115,24 +125,33 @@ def delete_students(id_student):
 def update_students(id_student):
     try:
         jsonObject = request.json
+        # Si il manque datas renvoie une erreur
         if "datas" not in jsonObject:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
         student_data = jsonObject["datas"]
+        if "id" in student_data :
+            return jsonify({"error": "Unable to modify user id, remove id field"}), 400
+        # Si il manque user renvoie une erreur
         if "user" in student_data:
             user_data = student_data["user"]
+            # Supression du champ user pour garder les datas de l'etudiant
             del student_data["user"]
+            # Si user data est vide
             if not user_data:
                 return jsonify({"error": "Empty 'user' field in JSON"}), 400
+            # Recuperation du user id
             id_user = get_user_id_with_id_student(id_student)
             user_response, http_status = update_users(user_data, id_user)
+            # Si user update echoue
             if http_status != 200 :
                 return user_response, http_status
+        # Si student data n'est pas vide
         if student_data :
             conn = connect_pg.connect()
             cursor = conn.cursor()
             update_clause = ", ".join([f"{key} = %s" for key in student_data.keys()])
             values = list(student_data.values())
-            values.append(id_student)  # Ajoutez l'ID de l'enseignant à la fin pour identifier l'enregistrement a mettre a jour
+            values.append(id_student)  # Ajoutez l'ID de l'etudiant à la fin pour identifier l'enregistrement a mettre a jour
             query = f"UPDATE ent.students SET {update_clause} WHERE id = %s"
             cursor.execute(query, values)
             # Validez la transaction et fermez la connexion
@@ -147,22 +166,29 @@ def update_students(id_student):
 def csv_add_students(csv_path):
     try:   
         #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
+        # Verification fichier valide
         response, http_status = verification_csv_file(csv_path) 
         if http_status != 200 :
             return response, http_status
+        # Tableau de tout les mdp des user ajouter
         passwords = []
+        # Creation du json
         data = {
             "user" : None
         }
+        # Recuperation du nom du fichier
         parts = csv_path.split("/") 
         filename = parts[-1]
+        
         with open(csv_path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
+            # Pour chaque ligne ajoute l'etudiant
             for row in reader:
                 data["user"] = row
                 add_student_response, http_status = add_students(data)
                 if http_status != 200 :
                     return add_student_response, http_status
+                # Recuperation des password des students ajouter
                 json_with_password = add_student_response.json.get("json")
                 passwords.append(json_with_password)
         return jsonify({"csv file": f"All students add from {filename}" ,"message" : "Saved all passwords for all user they will not be recoverable", "password" : passwords} ) , 200 
@@ -352,3 +378,13 @@ def emails_syntaxe_csv(csv_path):
         return jsonify({"error": invalid_email}) , 400
     else :
         return jsonify({"message": "Valide CSV"}) , 200
+    
+############  VERIFICATION ID_STUDENT EXIST ################
+def id_exists(id_student):
+    # Fonction pour verifier si l'id user existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.students WHERE id = %s", (id_student,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0

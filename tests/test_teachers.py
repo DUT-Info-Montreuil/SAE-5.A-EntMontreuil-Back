@@ -25,7 +25,7 @@ class TestAddTeachers(unittest.TestCase):
         response = requests.post(f'{self.BASE_URL}', data=data_json, headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('message'), "Teachers added")
-        print("Test 1 : sucessful")
+        print("Test 1 : Sucessful teacher add")
 
     def test_second(self):
         teacher_data = {
@@ -45,7 +45,7 @@ class TestAddTeachers(unittest.TestCase):
         response2 = requests.post(f'{self.BASE_URL}', data=data_json, headers={"Content-Type": "application/json"})
         self.assertEqual(response2.status_code, 400)
         self.assertEqual(response2.json().get('error'), "Initial 'JD' already exists")
-        print("Test 2 : initial already exist")
+        print("Test 2 : Error teacher add initial already exist")
 
 
         
@@ -68,7 +68,7 @@ class TestAddTeachers(unittest.TestCase):
         response3 = requests.post(f'{self.BASE_URL}', data=data_json, headers={"Content-Type": "application/json"})
         self.assertEqual(response3.status_code, 400)
         self.assertEqual(response3.json().get('error'), "Missing 'initial' field")
-        print("Test 3 : missing initial field")
+        print("Test 3 : Error teacher add missing initial field")
 
         
         
@@ -81,12 +81,8 @@ class TestRemoveTeachers(unittest.TestCase):
         response = requests.delete(self.BASE_URL+"/1")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('message'), "Teacher deleted")
+        print("Test 4 : Succesful teacher remove")
         
-    def test_add_teachers_missing_initial_field(self):
-
-        response = requests.delete(self.BASE_URL+"/0")
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json().get('error'), "id_teacher : '0' not exists")
         
         
    

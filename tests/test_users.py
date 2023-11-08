@@ -10,6 +10,7 @@ class UsersGetTestCase(unittest.TestCase):
     def test_get_users(self):
         response = requests.get(f'{self.BASE_URL}')
         self.assertEqual(response.status_code, 200)
+        print("Test 1 : Get all users succesful")
         
         
 

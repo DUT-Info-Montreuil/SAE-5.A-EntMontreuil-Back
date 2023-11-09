@@ -39,6 +39,61 @@ def get_admin(id_admin):
         return jsonify({"message": "Error", "error": str(e)}), 400
 
 
+############ ADMINS/ADD ############
+@admins_bp.route('/admins/add', methods=['POST'])
+def add_admins():
+    try:
+        jsonObject = request.json
+        # Si il manque datas renvoie une erreur
+        if "datas" not in jsonObject:
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
+        data = jsonObject["datas"]
+        # Si il manque user renvoie une erreur
+        if "user" not in data:
+            return jsonify({"error": "Missing 'user' field in JSON"}) , 400
+        user_data = data["user"]
+        user_data["type"] = "admin"
+        user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
+        # Si la requette user_add reussi
+        if http_status != 200 :
+            return user_response, http_status
+        else :
+            #on recupere le password de l'utilisateur ajouter pour savoir quel est sont mdp si il est generer aleatoirement
+            password = user_response.json.get("password")
+            # Recuperation du user id
+            user_id = user_response.json.get("id")
+            # Creation du student data json
+            admin_data = {
+                "id_User" : user_id
+            }
+            # Si id est present
+            if "id" in data :
+                # Verification si id existe deja
+                if admin_id_exists(data["id"]) :
+                    return jsonify({"error": f"Id for admin '{data.get('id')}' already exist"}), 400
+                else :
+                    admin_data["id"] = data["id"]
+            columns = list(admin_data.keys())
+            values = list(admin_data.values())
+            # Etablissez la connexion a la base de donnees
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            # Créez la requête SQL parametree
+            query = f"INSERT INTO ent.admins ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+            # Executez la requête SQL avec les valeurs
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+            json_response = {
+                "password" : password,
+                "username" : user_data["username"]
+            }
+            return jsonify({"message": "Admin added","id" : row[0] ,  "json" : json_response}) , 200  
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 

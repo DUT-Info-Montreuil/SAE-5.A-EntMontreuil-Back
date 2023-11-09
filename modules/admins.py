@@ -62,7 +62,7 @@ def add_admins():
             password = user_response.json.get("password")
             # Recuperation du user id
             user_id = user_response.json.get("id")
-            # Creation du student data json
+            # Creation du admin data json
             admin_data = {
                 "id_User" : user_id
             }
@@ -95,8 +95,31 @@ def add_admins():
         return jsonify({"message": "Error", "error": str(e)}) , 400
 
 
+
+############ ADMINS/REMOVE/<int:id_admin> ############
+@admins_bp.route('/admins/remove/<int:id_admin>', methods=['DELETE'])
+def delete_admin(id_admin):
+    try:
+        # Si id admin n'existe pas
+        if admin_id_exists(id_admin) :
+            return jsonify({"error": f"id_admin : '{id_admin}' not exists"}) , 400
+        # Recuperation de l'id du user associer a l'admin
+        id_user = get_user_id_with_id_admin(id_admin)
+
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = "DELETE FROM ent.admins WHERE id = %s"
+        cursor.execute(query, (id_admin,))
+        conn.commit()
+        conn.close()
+        user_response, http_status = remove_users(id_user)
+        return jsonify({"message": "Admin deleted", "id": id_admin}), 200
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 400
+
 #--------------------------------------------------FONCTION--------------------------------------------------#
 
+############ VERIFICATION ADMIN ID ############
 def admin_id_exists(id_admin) :
     # Fonction pour verifier si l'id d'un admin n'existe pas dans la base de donnees
     conn = connect_pg.connect()
@@ -105,3 +128,13 @@ def admin_id_exists(id_admin) :
     count = cursor.fetchone()[0]
     conn.close()
     return count == 0
+
+############ RECUPERATION ID USER WITH ID ADMIN ############
+def get_user_id_with_id_admin(id_admin):
+    # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon l'id_student
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id_User FROM ent.admin WHERE id = %s", (id_admin,))
+    id_user = cursor.fetchone()[0]
+    conn.close()
+    return id_user

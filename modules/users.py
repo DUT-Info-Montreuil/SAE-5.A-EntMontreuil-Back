@@ -223,13 +223,16 @@ def is_valid_password(password):
 
 ############  GENERATE PASSWORD ################
 def generate_password():
-    # Genere des password aleatoirement
+    # Generate a password with at least one uppercase letter, one special character, two digits, and the rest lowercase letters
     length = 12
-    characters = string.ascii_letters + string.digits + string.punctuation
-    while True:
-        password = ''.join(random.choice(characters) for _ in range(length))
-        if (any(c.islower() for c in password) and
-            any(c.isupper() for c in password) and
-            any(c.isdigit() for c in password) and
-            any(c in string.punctuation for c in password)):
-            return password
+    uppercase_letter = random.choice(string.ascii_uppercase)
+    special_character = random.choice(string.punctuation)
+    digits = ''.join(random.choices(string.digits, k=2))
+    lowercase_letters = ''.join(random.choices(string.ascii_lowercase, k=length-4))
+
+    # Shuffle the characters to create the final password
+    password_list = list(uppercase_letter + special_character + digits + lowercase_letters)
+    random.shuffle(password_list)
+    password = ''.join(password_list)
+
+    return password

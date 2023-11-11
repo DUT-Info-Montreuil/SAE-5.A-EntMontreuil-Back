@@ -1,6 +1,7 @@
-from flask import jsonify, Blueprint
+from flask import jsonify, Blueprint, request
 import json
 import connect_pg
+from modules.users import *
 
 admins_bp = Blueprint('admins', __name__)
 
@@ -134,7 +135,7 @@ def get_user_id_with_id_admin(id_admin):
     # Fonction pour recuperer l'id d'un utilisateur dans la base de donnees selon l'id_student
     conn = connect_pg.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT id_User FROM ent.admin WHERE id = %s", (id_admin,))
+    cursor.execute("SELECT id_User FROM ent.admins WHERE id = %s", (id_admin,))
     id_user = cursor.fetchone()[0]
     conn.close()
     return id_user

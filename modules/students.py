@@ -62,13 +62,13 @@ def add_students():
             return jsonify({"error": "Missing 'student_number' field in JSON"}) , 400
         # INE deja existant
         if ine_exists(data["ine"]) :
-            return jsonify({"error": f"Ine {data["ine"]} already exist"}) , 400
+            return jsonify({"error": f"Ine '{data.get('ine')}' already exist"}) , 400
         # student_number deja existant
         if student_number_exists(data["student_number"]) :
-            return jsonify({"error": f"Student_number {data["student_number"]} already exist"}) , 400
+            return jsonify({"error": f"Student_number {data.get('student_number')} already exist"}) , 400
         # email deja existant
         if email_exists(user_data["email"]) :
-            return jsonify({"error": f"email {user_data["email"]} already exist"}) , 400
+            return jsonify({"error": f"email {data.get('email')} already exist"}) , 400
         user_data["type"] = "etudiant"
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
@@ -255,13 +255,13 @@ def add_students(student_data):
         
         # INE deja existant
         if ine_exists(student_data["ine"]) :
-            return jsonify({"error": f"Ine {student_data["ine"]} already exist"}) , 400
+            return jsonify({"error": f"Ine {student_data.get('ine')} already exist"}) , 400
         # student_number deja existant
         if student_number_exists(student_data["student_number"]) :
-            return jsonify({"error": f"Student_number {student_data["student_number"]} already exist"}) , 400
+            return jsonify({"error": f"Student_number {student_data.get('student_number')} already exist"}) , 400
         # email deja existant
         if email_exists(user_data["email"]) :
-            return jsonify({"error": f"email {user_data["email"]} already exist"}) , 400
+            return jsonify({"error": f"email {student_data.get('email')} already exist"}) , 400
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :

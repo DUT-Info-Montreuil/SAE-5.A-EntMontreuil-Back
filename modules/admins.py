@@ -117,6 +117,36 @@ def delete_admin(id_admin):
         return jsonify({"message": "Admin deleted", "id": id_admin}), 200
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
+    
+    
+############ ADMINS/UPDATE/<int:id_admin> ############
+@admins_bp.route('/admins/update/<int:id_admin>', methods=['PATCH'])
+def update_admins(id_admin):
+    try:
+        jsonObject = request.json
+        # Si il manque datas renvoie une erreur
+        if "datas" not in jsonObject:
+            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
+        admins_data = jsonObject["datas"]
+        if "id" in admins_data :
+            return jsonify({"error": "Unable to modify user id, remove id field"}), 400
+        # Si user dans admin_data
+        if "user" in admins_data:
+            user_data = admins_data["user"]
+            # Si user data est vide
+            if not user_data:
+                return jsonify({"error": "Empty 'user' field in JSON"}), 400
+            # Recuperation du user id
+            id_user = get_user_id_with_id_admin(id_admin)
+            user_response, http_status = update_users(user_data, id_user)
+            # Si user update echoue
+            if http_status != 200 :
+                return user_response, http_status
+            else :   
+                return jsonify({"message": "Admin update", "id": id_admin}) , 200 
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}) , 400
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 

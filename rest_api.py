@@ -1,20 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from flask import Flask, request, jsonify
-from flask_restful import reqparse, abort, Api, Resource
+from flask import Flask
 from flask_cors import CORS
-import json
-import psycopg2
-import requests
-from contextlib import closing
 from config import config
-import connect_pg
 from modules.training import training_bp
 from modules.admins import admins_bp
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
-api = Api(app)
 app.register_blueprint(training_bp)
 app.register_blueprint(admins_bp)
 

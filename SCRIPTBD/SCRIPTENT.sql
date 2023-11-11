@@ -126,19 +126,20 @@ CREATE TABLE Courses(
 );
 
 
-CREATE TABLE Students(
+CREATE TABLE Students (
     id SERIAL,
     apprentice BOOLEAN,
-    id_User BIGINT ,
-    id_Td  BIGINT ,
-    id_Tp  BIGINT ,
-    id_Promotion BIGINT ,
+    id_User BIGINT,
+    id_Td BIGINT,
+    id_Tp BIGINT,
+    id_Promotion BIGINT,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_User) REFERENCES Users(id),
-    FOREIGN KEY (id_Td) REFERENCES TD(id),
-    FOREIGN KEY (id_Tp) REFERENCES TP(id),
-    FOREIGN KEY (id_Promotion) REFERENCES Promotions(id)
+    FOREIGN KEY (id_User) REFERENCES Users (id),
+    FOREIGN KEY (id_Td) REFERENCES TD (id) ON DELETE SET NULL,
+    FOREIGN KEY (id_Tp) REFERENCES TP (id) ON DELETE SET NULL,
+    FOREIGN KEY (id_Promotion) REFERENCES Promotions (id) ON DELETE SET NULL
 );
+
 
 
 CREATE TABLE Absences(

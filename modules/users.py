@@ -2,6 +2,7 @@ from flask import jsonify, Blueprint
 import connect_pg
 import hashlib
 import re
+import bcrypt
 import random
 import string
 from modules.statements import *
@@ -161,8 +162,9 @@ def add_users(data):
         # Verification si le type est bien un type existant (etudiant, enseignant, responsable_edt, admin)
         if data["type"] != "etudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
             return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
-        # Hashage du password avec md5
-        hashed_password = hashlib.md5(password.encode()).hexdigest()  
+        # Hashage du password avec md5 + salt password with bcrypt
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
         # Creez la liste de colonnes et de valeurs
         columns = list(data.keys())
         values = list(data.values())

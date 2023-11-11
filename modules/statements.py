@@ -21,3 +21,15 @@ def get_admin_statement(row):
     admin_statement['user'] = user_statement
     return admin_statement
 
+############  USER STATEMENT ################
+def get_user_statement(row) :
+    """ User array statement """
+    return {
+        'id':row[0],
+        'username':row[1],
+        'password':row[2],
+        'type':row[3],
+        'last_name':row[4],
+        'first_name':row[5],
+        'email':row[6]
+    }

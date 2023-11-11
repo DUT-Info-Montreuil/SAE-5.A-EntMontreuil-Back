@@ -54,6 +54,21 @@ def add_students():
         if "user" not in data:
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
+        # Si il manque ine renvoie une erreur
+        if "ine" not in data : 
+            return jsonify({"error": "Missing 'ine' field in JSON"}) , 400
+        # Si il manque student_number renvoie une erreur
+        if "student_number" not in data : 
+            return jsonify({"error": "Missing 'student_number' field in JSON"}) , 400
+        # INE deja existant
+        if ine_exists(data["ine"]) :
+            return jsonify({"error": f"Ine {data["ine"]} already exist"}) , 400
+        # student_number deja existant
+        if student_number_exists(data["student_number"]) :
+            return jsonify({"error": f"Student_number {data["student_number"]} already exist"}) , 400
+        # email deja existant
+        if email_exists(user_data["email"]) :
+            return jsonify({"error": f"email {user_data["email"]} already exist"}) , 400
         user_data["type"] = "etudiant"
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
@@ -72,7 +87,9 @@ def add_students():
             # Creation du student data json
             student_data = {
                 "apprentice": apprentice,
-                "id_User" : user_id
+                "id_User" : user_id,
+                "ine" : data["ine"],
+                "student_number" : data["student_number"]
             }
             # Si id est present
             if "id" in data :
@@ -235,6 +252,16 @@ def add_students(student_data):
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = student_data["user"]
         user_data["type"] = "etudiant"
+        
+        # INE deja existant
+        if ine_exists(student_data["ine"]) :
+            return jsonify({"error": f"Ine {student_data["ine"]} already exist"}) , 400
+        # student_number deja existant
+        if student_number_exists(student_data["student_number"]) :
+            return jsonify({"error": f"Student_number {student_data["student_number"]} already exist"}) , 400
+        # email deja existant
+        if email_exists(user_data["email"]) :
+            return jsonify({"error": f"email {user_data["email"]} already exist"}) , 400
         user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
@@ -299,19 +326,19 @@ def verification_csv_file(csv_path):
 
 ############ VERIFICATION DUPLICATE USERNAMES DANS LE CSV ############
 def find_duplicate_usernames(csv_path):
-    usernames = {}  # Utilisez un dictionnaire pour stocker les lignes où chaque nom d'utilisateur apparaît
+    usernames = {}  # Utilisez un dictionnaire pour stocker les lignes ou chaque nom d'utilisateur apparaît
     with open(csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
-        line_number = 1  # Initialisez le numéro de ligne à 1
+        line_number = 1  # Initialisez le numero de ligne a 1
         for row in reader:
             username = row.get('username')
             if username in usernames:
-                # Si le nom d'utilisateur existe déjà dans le dictionnaire, ajoutez la ligne actuelle
+                # Si le nom d'utilisateur existe deja dans le dictionnaire, ajoutez la ligne actuelle
                 usernames[username].append(line_number)
             else:
-                # Sinon, initialisez une nouvelle entrée dans le dictionnaire avec le numéro de ligne actuel
+                # Sinon, initialisez une nouvelle entree dans le dictionnaire avec le numero de ligne actuel
                 usernames[username] = [line_number]
-            line_number += 1  # Incrémentez le numéro de ligne pour la ligne suivante
+            line_number += 1  # Incrementez le numero de ligne pour la ligne suivante
     # Recherchez les noms d'utilisateur en double et les lignes correspondantes
     duplicates = {username: lines for username, lines in usernames.items() if len(lines) > 1}
     if duplicates:
@@ -352,7 +379,7 @@ def username_exists_csv(csv_path):
     with open(csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         username_exist = []
-        line_number = 1  # Initialisez le numéro de ligne à 1
+        line_number = 1  # Initialisez le numero de ligne à 1
         for row in reader:
             username = row.get("username")
             if username_exists(username) :
@@ -368,7 +395,7 @@ def emails_syntaxe_csv(csv_path):
     with open(csv_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         invalid_email = []
-        line_number = 1  # Initialisez le numéro de ligne à 1
+        line_number = 1  # Initialisez le numero de ligne à 1
         for row in reader:
             email = row.get("email")
             if not is_valid_email(email) :
@@ -388,3 +415,83 @@ def id_exists(id_student):
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0
+
+############  VERIFICATION INE EXIST ################
+def ine_exists(ine):
+    # Fonction pour verifier si l'ine de l'etudiant existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.students WHERE ine = %s", (ine,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
+############  VERIFICATION NUMERO ETUDIANT EXIST ################
+def student_number_exists(student_number):
+    # Fonction pour verifier si le numero etudiant existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.students WHERE student_number = %s", (student_number,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
+############  VERIFICATION EMAIL EXIST ################
+def email_exists(email):
+    # Fonction pour verifier si l'email existe deja dans la base de donnees
+    conn = connect_pg.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE email = %s", (email,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
+############ VERIFICATION DUPLICATE INE DANS LE CSV ############
+def find_duplicate_ines(csv_path):
+    ines = {}  # Utilisez un dictionnaire pour stocker les lignes ou chaque ine apparaît
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numero de ligne a 1
+        for row in reader:
+            ine = row.get('ine')
+            if ine in ines:
+                # Si l'ine existe deja dans le dictionnaire, ajoutez la ligne actuelle
+                ines[ine].append(line_number)
+            else:
+                # Sinon, initialisez une nouvelle entree dans le dictionnaire avec le numero de ligne actuel
+                ines[ine] = [line_number]
+            line_number += 1  # Incrementez le numero de ligne pour la ligne suivante
+    # Recherchez les ine en double et les lignes correspondantes
+    duplicates = {ine: lines for ine, lines in ines.items() if len(lines) > 1}
+    if duplicates:
+        duplicate_ines = []
+        for ine, lines in duplicates.items():
+            duplicate_ines.append(f"duplicates ine : '{ine}' at lines : {' , '.join(map(str, lines))}")
+        return jsonify({"message": "Your csv file contains duplicate ine", "duplicate ine": duplicate_ines }) , 400
+    else:
+        return jsonify({"message": "Your csv dont contains duplicate ine"}) , 200
+    
+############ VERIFICATION DUPLICATE NUMERO ETUDIANT DANS LE CSV ############
+def find_duplicate_student_number(csv_path):
+    student_numbers = {}  # Utilisez un dictionnaire pour stocker les lignes ou chaque student_number apparaît
+    with open(csv_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        line_number = 1  # Initialisez le numero de ligne a 1
+        for row in reader:
+            student_number = row.get('student_number')
+            if student_number in student_numbers:
+                # Si student_number existe deja dans le dictionnaire, ajoutez la ligne actuelle
+                student_numbers[student_number].append(line_number)
+            else:
+                # Sinon, initialisez une nouvelle entree dans le dictionnaire avec le numero de ligne actuel
+                student_numbers[student_number] = [line_number]
+            line_number += 1  # Incrementez le numero de ligne pour la ligne suivante
+    # Recherchez les student_numbers en double et les lignes correspondantes
+    duplicates = {student_number: lines for student_number, lines in student_numbers.items() if len(lines) > 1}
+    if duplicates:
+        duplicate_student_numbers = []
+        for student_number, lines in duplicates.items():
+            duplicate_student_numbers.append(f"duplicates student numbers : '{student_number}' at lines : {' , '.join(map(str, lines))}")
+        return jsonify({"message": "Your csv file contains duplicate student numbers", "duplicate student numbers": duplicate_student_numbers }) , 400
+    else:
+        return jsonify({"message": "Your csv dont contains duplicate ine"}) , 200

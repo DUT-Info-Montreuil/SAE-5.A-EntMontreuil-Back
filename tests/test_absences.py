@@ -70,7 +70,7 @@ class TestAbsencesRoutes(unittest.TestCase):
 
     def test_delete_user_course_absence_failure(self):
         # Test de suppression d'une absence inexistante (échec)
-        response = requests.delete(f'{self.BASE_URL}/absences/student/2/course/9999', headers={"Content-Type": "application/json"})
+        response = requests.delete(f'{self.BASE_URL}/absences/student/2/course/9999/delete', headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 404)
         response_data = response.json()
         self.assertIn('message', response_data)

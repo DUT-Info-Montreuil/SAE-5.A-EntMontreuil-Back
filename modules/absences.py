@@ -114,7 +114,7 @@ def add_student_course_absence(id_student, id_course):
         if conn:
             connect_pg.disconnect(conn)
 
-@absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['DELETE'])
+@absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/delete', methods=['DELETE'])
 def delete_student_course_absence(id_student, id_course):
     try:
         conn = connect_pg.connect()

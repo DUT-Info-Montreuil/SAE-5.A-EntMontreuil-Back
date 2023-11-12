@@ -53,11 +53,19 @@ class AbsencesService:
             conn.close()
 
 
-    def get_all_absences(self, output_format="DTO"):
+    def get_all_absences(self, justified=None, output_format="DTO"):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id")
+                # Construisez la requête SQL en fonction de la justification
+                sql_query = "SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id"
+                if justified is not None:
+                    if justified == 1:
+                        sql_query += " WHERE A.justify = true"
+                    elif justified == 0:
+                        sql_query += " WHERE A.justify = false"
+
+                cursor.execute(sql_query)
                 rows = cursor.fetchall()
                 absences_list = []
 

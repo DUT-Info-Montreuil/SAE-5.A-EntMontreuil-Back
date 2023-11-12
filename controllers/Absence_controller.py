@@ -14,20 +14,23 @@ absences_service = AbsencesService()
 
 @absences_bp.route('/absences/dto', methods=['GET'])
 def get_all_absences_dto():
+    justified = request.args.get('justified', default=None, type=int)
+    
     try:
-        absences_list = absences_service.get_all_absences(output_format="DTO")
-        return absences_list, 200
+        absences_list = absences_service.get_all_absences(justified=justified, output_format="DTO")
+        return jsonify(absences_list), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
 @absences_bp.route('/absences/model', methods=['GET'])
 def get_all_absences_model():
+    justified = request.args.get('justified', default=None, type=int)
+    
     try:
-        absences_list = absences_service.get_all_absences(output_format="model")
-        return absences_list, 200
+        absences_list = absences_service.get_all_absences(justified=justified, output_format="model")
+        return jsonify(absences_list), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-
 #--------------------Récuperer toutes les absences d'un étudiant via son id--------------------------------------#
 
 @absences_bp.route('/absences/student/<int:id_student>/dto', methods=['GET'])

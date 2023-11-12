@@ -1,6 +1,6 @@
-class CoursesModel:
-    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher,
-                 resource_name, tp_name, td_name, promotion_year, teacher_last_name, teacher_first_name):
+class CourseModel:
+    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom,
+                 resource_name, tp_name, td_name, promotion_year, teacher_last_name, teacher_first_name, classroom_name):
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
@@ -11,6 +11,7 @@ class CoursesModel:
         self.id_Td = id_Td
         self.id_Promotion = id_Promotion
         self.id_Teacher = id_Teacher
+        self.id_classroom = id_classroom
 
         # resource
         self.resource_name = resource_name
@@ -28,8 +29,11 @@ class CoursesModel:
         self.teacher_last_name = teacher_last_name
         self.teacher_first_name = teacher_first_name
 
+        # classroom
+        self.classroom_name = classroom_name
+
     def __str__(self):
-        return f"Course id: {self.id}, start time: {self.startTime}, end time: {self.endTime}"
+        return f"Course id: {self.id}, startTime: {self.startTime}, endTime: {self.endTime}"
 
     def jsonify(self):
         return {
@@ -43,10 +47,12 @@ class CoursesModel:
             "id_Td": self.id_Td,
             "id_Promotion": self.id_Promotion,
             "id_Teacher": self.id_Teacher,
+            "id_classroom": self.id_classroom,
             "resource_name": self.resource_name,
             "tp_name": self.tp_name,
             "td_name": self.td_name,
             "promotion_year": self.promotion_year,
             "teacher_last_name": self.teacher_last_name,
-            "teacher_first_name": self.teacher_first_name
+            "teacher_first_name": self.teacher_first_name,
+            "classroom_name": self.classroom_name
         }

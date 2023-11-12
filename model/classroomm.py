@@ -1,14 +1,13 @@
 class ClassroomModel:
-    def __init__(self, id, name, capacity, equipment, id_Course, course_start_time, course_end_time):
+    def __init__(self, id, name, capacity, id_Material, material_name, material_quantity):
         self.id = id
         self.name = name
         self.capacity = capacity
-        self.equipment = equipment
-        self.id_Course = id_Course
+        self.id_Material = id_Material
 
-        # course
-        self.course_start_time = course_start_time
-        self.course_end_time = course_end_time
+        # material
+        self.material_name = material_name
+        self.material_quantity = material_quantity
 
     def __str__(self):
         return f"Classroom id: {self.id}, name: {self.name}"
@@ -18,8 +17,7 @@ class ClassroomModel:
             "id": self.id,
             "name": self.name,
             "capacity": self.capacity,
-            "equipment": self.equipment,
-            "id_Course": self.id_Course,
-            "course_start_time": str(self.course_start_time),
-            "course_end_time": str(self.course_end_time)
+            "id_Material": self.id_Material,
+            "material_name": self.material_name,
+            "material_quantity": self.material_quantity
         }

@@ -1,4 +1,4 @@
-class Students:
+class Student:
     def __init__(self, id, apprentice, id_User, id_Td, id_Tp, id_Promotion):
         self.id = id
         self.apprentice = apprentice
@@ -19,4 +19,3 @@ class Students:
             "id_Tp": self.id_Tp,
             "id_Promotion": self.id_Promotion
         }
-

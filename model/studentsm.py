@@ -1,4 +1,4 @@
-class StudentsModel:
+class StudentModel:
     def __init__(self, id, apprentice, id_User, id_Td, id_Tp, id_Promotion, user_last_name, user_first_name,
                  td_name, tp_name, promotion_year):
         self.id = id

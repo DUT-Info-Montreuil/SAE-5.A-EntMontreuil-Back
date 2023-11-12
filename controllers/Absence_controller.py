@@ -9,6 +9,27 @@ absences_bp = Blueprint('absences', __name__)
 # Instanciation du service d'absences
 absences_service = AbsencesService()
 
+
+#--------------------Récuperer toutes les absences--------------------------------------#
+
+@absences_bp.route('/absences/dto', methods=['GET'])
+def get_all_absences_dto():
+    try:
+        absences_list = absences_service.get_all_absences(output_format="DTO")
+        return absences_list, 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+@absences_bp.route('/absences/model', methods=['GET'])
+def get_all_absences_model():
+    try:
+        absences_list = absences_service.get_all_absences(output_format="model")
+        return absences_list, 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+#--------------------Récuperer toutes les absences d'un étudiant via son id--------------------------------------#
+
 @absences_bp.route('/absences/student/<int:id_student>/dto', methods=['GET'])
 def get_student_absences_dto(id_student):
     justified = request.args.get('justified', default=None, type=int)
@@ -37,7 +58,7 @@ def get_student_absences_model(id_student):
         return jsonify({"message": str(e)}), 500
 
 
-
+#--------------------Modifier une  absence--------------------------------------#
 
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['PUT'])
 def update_student_course_absence(id_student, id_course):
@@ -67,7 +88,8 @@ def update_student_course_absence(id_student, id_course):
         return jsonify({"message": message})
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-
+    
+#--------------------ajouter  une  absence--------------------------------------#
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/add', methods=['POST'])
 def add_student_course_absence(id_student, id_course):
     try:
@@ -105,23 +127,7 @@ def add_student_course_absence(id_student, id_course):
         return jsonify({"message": str(e)}), 500
     
 
-@absences_bp.route('/absences/dto', methods=['GET'])
-def get_all_absences_dto():
-    try:
-        absences_list = absences_service.get_all_absences(output_format="DTO")
-        return absences_list, 200
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
-
-@absences_bp.route('/absences/model', methods=['GET'])
-def get_all_absences_model():
-    try:
-        absences_list = absences_service.get_all_absences(output_format="model")
-        return absences_list, 200
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
-
-
+#-------------------- Supprimer une  absence--------------------------------------#
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/delete', methods=['DELETE'])
 def delete_student_course_absence(id_student, id_course):
     data = {

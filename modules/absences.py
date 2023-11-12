@@ -2,8 +2,9 @@ from flask import request, jsonify, Blueprint
 import psycopg2
 import connect_pg
 import logging
+import time
 from DTO.absences import Absences
-
+from model.absencesm import AbsencesModel
 # Création d'un Blueprint pour les routes liées aux absences
 absences_bp = Blueprint('absences', __name__)
 
@@ -21,18 +22,32 @@ def get_student_absences(id_student):
     try:
         conn = connect_pg.connect()
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM ent.Absences WHERE id_Student = %s", (id_student,))
+            cursor.execute("SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id WHERE A.id_Student = %s", (id_student,))
             rows = cursor.fetchall()
-            absences = [Absences(row[0], row[1], row[2], row[3]) for row in rows]
-            return jsonify([absence.jsonify() for absence in absences]), 200
-
-    except psycopg2.Error as e:
-        log_error(f"Erreur lors de la récupération des absences : {e}")
-        return jsonify({"message": "Erreur lors de la récupération des absences"}), 500
-
+            print(rows)
+            
+            absences_list = []
+            
+            for row in rows:
+                absence = AbsencesModel(
+                    id_Student=row[0],
+                    id_Course=row[1],
+                    reason=row[2],
+                    justify=row[3],
+                    student_last_name=row[7],
+                    student_first_name=row[8],
+                    course_start_time=row[5],
+                    course_end_time=row[6]
+                )
+                absences_list.append(absence.jsonify())
+            
+            return jsonify(absences_list), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
     finally:
-        if conn:
-            connect_pg.disconnect(conn)
+        conn.close()
+
+
 
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['PUT'])
 def update_student_course_absence(id_student, id_course):

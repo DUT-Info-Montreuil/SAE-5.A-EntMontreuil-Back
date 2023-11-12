@@ -2,9 +2,6 @@ import psycopg2
 import connect_pg
 from entities.model.absencesm import AbsencesModel
 from entities.DTO.absences import   Absences
-class AbsencesService:
-    def __init__(self):
-        pass
 
 class AbsencesService:
     def __init__(self):

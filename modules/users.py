@@ -5,7 +5,7 @@ import re
 import bcrypt
 import random
 import string
-from modules.statements import *
+from model.usersm import UsersModel
 
 
 users_bp = Blueprint('users', __name__)
@@ -20,27 +20,29 @@ def get_users():
     query = "select * from ent.users order by id asc"
     conn = connect_pg.connect()
     rows = connect_pg.get_query(conn, query)
-    returnStatement = []
+    users = []
     for row in rows:
-        returnStatement.append(get_user_statement(row))
+        user = UsersModel(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
+        users.append(user)
     connect_pg.disconnect(conn)
-    return jsonify(returnStatement)
+    return jsonify([u.jsonify() for u in users])
 
 ############  USERS/GET/<int:id_user> ################
 @users_bp.route('/users/<int:id_user>', methods=['GET','POST'])
 def get_users_with_id(id_user):
     """ Return one user in JSON format """
     try :
-        if not id_exists(id_user) :
+        if not field_exists('id' , id_user) :
             return jsonify({"error": f"id_user : '{id_user}' not exists"}) , 400
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = "select * from ent.users where id = %s"
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
+        user = UsersModel(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
         conn.commit()
         conn.close()
-        return get_user_statement(row)
+        return user.jsonify()
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
 
@@ -57,8 +59,10 @@ def update_users(user_data, id_user):
             if http_status != 200 :
                 return user_response, http_status 
             else :
-                # Hashage du password
-                user_data["password"] = hashlib.md5(password.encode()).hexdigest() 
+                # Hashage + salage du password 
+                salt = bcrypt.gensalt()
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
+                user_data["password"] = hashed_password
         # Si id est présent 
         if "id" in user_data :
             return jsonify({"error": "Unable to modify user id, remove id field"}) , 400
@@ -66,7 +70,7 @@ def update_users(user_data, id_user):
         if "username" in user_data :
             username = user_data["username"]
             # Verification username existe deja
-            if username_exists(username):
+            if field_exists('username' , username):
                 return jsonify({"error": f"Username '{username}' already exists"}), 400
             # Verification username plus de 4 caracteres
             if len(username) < 4:
@@ -79,9 +83,10 @@ def update_users(user_data, id_user):
                 return jsonify({"error": "Invalid email format"}), 400
         # Si type est present
         if "type" in user_data :
-            # Si type est bien = etudiant ou enseignant ou responsable_edt ou admin
-            if user_data["type"] != "etudiant" and user_data["type"] != "enseignant" and user_data["type"] != "responsable_edt" and user_data["type"] != "admin" and user_data["type"] != "test" :
-                return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
+            # Si type est bien = student ou admin ou teacher ou timetable_manager
+            valid_type = ['student' , 'admin' , 'teacher' , 'timetable_manager']
+            if user_data["type"] not in valid_type :
+                return jsonify({"error": f"Invalid type : {user_data.get('type')}, the 4 types available are [student - admin - teacher - timetable_manager]"}), 400
         # Etablissez la connexion a la base de donnees
         conn = connect_pg.connect()
         cursor = conn.cursor()
@@ -101,8 +106,8 @@ def update_users(user_data, id_user):
 def remove_users(id_user):
     try:
         # Verification si id_user existe bien
-        if not id_exists(id_user) :
-            return jsonify({"error": f"User {id_user} not exist"}) , 400
+        if not field_exists('id' , id_user) :
+            return jsonify({"error": f"User '{id_user}' not exist"}) , 400
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = "DELETE FROM ent.users WHERE id = %s"
@@ -128,19 +133,11 @@ def add_users(data):
             data["password"] = generate_password()
         password = data["password"]
          
-        
-        # Verifie si tous les attributs sont presents 
-        if "username" not in data:
-            return jsonify({"error": "Missing 'username' field in JSON"}), 400
-        if "first_name" not in data:
-            return jsonify({"error": "Missing 'first_name' field in JSON"}), 400
-        if "last_name" not in data:
-            return jsonify({"error": "Missing 'last_name' field in JSON"}), 400
-        if "email" not in data:
-            return jsonify({"error": "Missing 'email' field in JSON"}), 400
-        if "type" not in data :
-            return jsonify({"error": "Missing 'type' field in JSON"}), 400
-        
+        # Verifie si tous les attributs sont presents
+        required_fields = ['username' , 'first_name' , 'last_name' , 'email' , 'type']
+        for field in required_fields : 
+            if field not in data :
+                return jsonify({"error": f"Missing '{field}' field in JSON"}), 400
         # Attribution des valeurs
         username = data["username"]
         email = data["email"] 
@@ -148,20 +145,21 @@ def add_users(data):
         last_name = data["last_name"]
         # Verification si id est deja utiliser
         if "id" in data :
-            if id_exists(data["id"]) :
+            if field_exists('id' , data["id"]) :
                 return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
         # Verifiez username taille > 4
         if len(username) < 4:
             return jsonify({"error": "Username need to have minimum 4 characters"}), 400
         # Verifiez si le nom d'utilisateur est deja utilise
-        if username_exists(username):
+        if field_exists('username', username):
             return jsonify({"error": f"Username '{username}' already exists"}), 400
         # Verification de la syntaxe de l'email
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format"}), 400
-        # Verification si le type est bien un type existant (etudiant, enseignant, responsable_edt, admin)
-        if data["type"] != "etudiant" and data["type"] != "enseignant" and data["type"] != "responsable_edt" and data["type"] != "admin" and data["type"] != "test" :
-            return jsonify({"error": "Invalid type, the 4 types available are {etudiant - enseignant - responsable_edt - admin}"}), 400
+        # Verification si le type est bien un type existant (student - admin - teacher - timetable_manager)
+        valid_type = ['student' , 'admin' , 'teacher' , 'timetable_manager']
+        if data["type"] not in valid_type :
+                return jsonify({"error": f"Invalid type : {data.get('type')}, the 4 types available are [student - admin - teacher - timetable_manager]"}), 400
         # Hashage du password avec md5 + salt password with bcrypt
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
@@ -184,22 +182,13 @@ def add_users(data):
     except Exception as e:
         return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
-############  VERIFICATION USERNAME EXIST ################
-def username_exists(username):
-    # Fonction pour verifier si le nom d'utilisateur existe deja dans la base de donnees
+############  VERIFICATION FIELD EXIST ################
+    # Fonction pour verifier un champ existe deja dans la base de donnees
+def field_exists(field,data):
     conn = connect_pg.connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE username = %s", (username,))
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count > 0
-
-############  VERIFICATION ID_USER EXIST ################
-def id_exists(id_user):
-    # Fonction pour verifier si l'id user existe deja dans la base de donnees
-    conn = connect_pg.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM ent.users WHERE id = %s", (id_user,))
+    query = f"SELECT COUNT(*) FROM ent.users WHERE {field} = %s"
+    cursor.execute(query, (data,))
     count = cursor.fetchone()[0]
     conn.close()
     return count > 0

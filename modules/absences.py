@@ -14,16 +14,14 @@ logging.basicConfig(filename='app_errors.log', level=logging.ERROR)
 def log_error(message):
     logging.error(message)
 
-@absences_bp.route('/absences/user/<int:id_user>', methods=['GET'])
-def get_user_absences(id_user):
-    if not does_entry_exist("Students", id_user):
-            return jsonify({"message": "L'utilisateur spécifié n'existe pas."}), 404
+@absences_bp.route('/absences/student/<int:id_student>', methods=['GET'])
+def get_student_absences(id_student):
+    if not does_entry_exist("Students", id_student):
+        return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 404
     try:
-                # Vérifie que l'utilisateur spécifié par 'id_user' existe
-      
         conn = connect_pg.connect()
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM ent.Absences WHERE id_Student = %s", (id_user,))
+            cursor.execute("SELECT * FROM ent.Absences WHERE id_Student = %s", (id_student,))
             rows = cursor.fetchall()
             absences = [Absences(row[0], row[1], row[2], row[3]) for row in rows]
             return jsonify([absence.jsonify() for absence in absences]), 200
@@ -36,8 +34,8 @@ def get_user_absences(id_user):
         if conn:
             connect_pg.disconnect(conn)
 
-@absences_bp.route('/absences/user/<int:id_user>/course/<int:id_course>', methods=['PUT'])
-def update_user_course_absence(id_user, id_course):
+@absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['PUT'])
+def update_student_course_absence(id_student, id_course):
     json_data = request.json
     if not json_data or 'datas' not in json_data:
         return jsonify({"message": "Données manquantes"}), 400
@@ -51,13 +49,13 @@ def update_user_course_absence(id_user, id_course):
         with conn.cursor() as cursor:
             cursor.execute(
                 "UPDATE ent.Absences SET reason = %s, justify = %s WHERE id_Student = %s AND id_Course = %s RETURNING id_Student, id_Course",
-                (absence_data["reason"], absence_data["justify"], id_user, id_course)
+                (absence_data["reason"], absence_data["justify"], id_student, id_course)
             )
             updated_row = cursor.fetchone()
             conn.commit()
 
             if updated_row:
-                return jsonify({"message": f"Absence mise à jour pour l'utilisateur {updated_row[0]} et le cours {updated_row[1]}"})
+                return jsonify({"message": f"Absence mise à jour pour l'étudiant {updated_row[0]} et le cours {updated_row[1]}"})
             else:
                 return jsonify({"message": "Absence non trouvée ou aucune modification effectuée"}), 404
 
@@ -69,9 +67,8 @@ def update_user_course_absence(id_user, id_course):
         if conn:
             connect_pg.disconnect(conn)
 
-
-@absences_bp.route('/absences/user/<int:id_user>/course/<int:id_course>/add', methods=['POST'])
-def add_user_course_absence(id_user, id_course):
+@absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/add', methods=['POST'])
+def add_student_course_absence(id_student, id_course):
     try:
         json_data = request.json
 
@@ -87,9 +84,9 @@ def add_user_course_absence(id_user, id_course):
             if field not in absence_data:
                 return jsonify({"message": f"Le champ '{field}' est requis"}), 400
 
-        # Vérifie que l'utilisateur spécifié par 'id_user' existe
-        if not does_entry_exist("Students", id_user):
-            return jsonify({"message": "L'utilisateur spécifié n'existe pas."}), 400
+        # Vérifie que l'étudiant spécifié par 'id_student' existe
+        if not does_entry_exist("Students", id_student):
+            return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 400
 
         # Vérifie que le cours spécifié par 'id_course' existe
         if not does_entry_exist("Courses", id_course):
@@ -98,14 +95,14 @@ def add_user_course_absence(id_user, id_course):
         # Insère l'absence dans la base de données
         conn = connect_pg.connect()
         query = "INSERT INTO ent.Absences (id_Student, id_Course, reason, justify) VALUES (%s, %s, %s, %s) RETURNING id_Student, id_Course"
-        data = (id_user, id_course, absence_data["reason"], absence_data["justify"])
+        data = (id_student, id_course, absence_data["reason"], absence_data["justify"])
 
         with conn, conn.cursor() as cursor:
             cursor.execute(query, data)
-            inserted_user_id, inserted_course_id = cursor.fetchone()
+            inserted_student_id, inserted_course_id = cursor.fetchone()
 
         success_message = {
-            "message": f"Absence ajoutée avec succès pour l'utilisateur {inserted_user_id} lors du cours {inserted_course_id}"
+            "message": f"Absence ajoutée avec succès pour l'étudiant {inserted_student_id} lors du cours {inserted_course_id}"
         }
         return jsonify(success_message), 201
 
@@ -116,19 +113,18 @@ def add_user_course_absence(id_user, id_course):
     finally:
         if conn:
             connect_pg.disconnect(conn)
-            
 
-@absences_bp.route('/absences/user/<int:id_user>/course/<int:id_course>', methods=['DELETE'])
-def delete_user_course_absence(id_user, id_course):
+@absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['DELETE'])
+def delete_student_course_absence(id_student, id_course):
     try:
         conn = connect_pg.connect()
         with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM ent.Absences WHERE id_Student = %s AND id_Course = %s RETURNING id_Student, id_Course", (id_user, id_course))
+            cursor.execute("DELETE FROM ent.Absences WHERE id_Student = %s AND id_Course = %s RETURNING id_Student, id_Course", (id_student, id_course))
             deleted_row = cursor.fetchone()
             conn.commit()
 
             if deleted_row:
-                return jsonify({"message": f"Absence supprimée pour l'utilisateur {deleted_row[0]} et le cours {deleted_row[1]}"})
+                return jsonify({"message": f"Absence supprimée pour l'étudiant {deleted_row[0]} et le cours {deleted_row[1]}"})
             else:
                 return jsonify({"message": "Absence non trouvée ou déjà supprimée"}), 404
 

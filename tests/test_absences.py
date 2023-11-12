@@ -7,7 +7,7 @@ class TestAbsencesRoutes(unittest.TestCase):
 
     def test_get_user_absences_success(self):
         # Test de récupération des absences de l'utilisateur 2 (succès)
-        response = requests.get(f'{self.BASE_URL}/absences/student/2', headers={"Content-Type": "application/json"})
+        response = requests.get(f'{self.BASE_URL}/absences/student/2/dto', headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 200)
         absences = response.json()
         self.assertIsInstance(absences, list)
@@ -19,7 +19,7 @@ class TestAbsencesRoutes(unittest.TestCase):
 
     def test_get_user_absences_failure(self):
         # Test de récupération des absences d'un utilisateur inexistant (échec)
-        response = requests.get(f'{self.BASE_URL}/absences/student/9999', headers={"Content-Type": "application/json"})
+        response = requests.get(f'{self.BASE_URL}/absences/student/9999/dto', headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 404)
         response_data = response.json()
         self.assertIn('message', response_data)
@@ -67,10 +67,9 @@ class TestAbsencesRoutes(unittest.TestCase):
         self.assertIn('message', response_data)
         self.assertTrue(response_data['message'].startswith("Absence ajoutée avec succès"))
 
-
     def test_delete_user_course_absence_failure(self):
         # Test de suppression d'une absence inexistante (échec)
-        response = requests.delete(f'{self.BASE_URL}/absences/student/2/course/9999/delete', headers={"Content-Type": "application/json"})
+        response = requests.delete(f'{self.BASE_URL}/absences/student/2/course/2333/delete', headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 404)
         response_data = response.json()
         self.assertIn('message', response_data)

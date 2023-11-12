@@ -3,6 +3,11 @@ import connect_pg
 from entities.model.absencesm import AbsencesModel
 from entities.DTO.absences import   Absences
 
+class AbsencesService:
+    def __init__(self):
+        pass
+
+
     def get_student_absences(self, id_student, justified=None, output_format="DTO"):
         try:
             conn = connect_pg.connect()

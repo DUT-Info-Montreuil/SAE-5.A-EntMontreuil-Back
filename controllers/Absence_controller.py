@@ -1,8 +1,6 @@
 from flask import request, jsonify, Blueprint
 import psycopg2
-from services.absences_service import AbsencesService
-from entities.DTO.absences import Absences
-from entities.model.absencesm import AbsencesModel
+from services.absences import AbsencesService
 import connect_pg
 
 # Création d'un Blueprint pour les routes liées aux absences

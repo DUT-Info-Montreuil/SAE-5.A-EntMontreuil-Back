@@ -6,15 +6,56 @@ class AbsencesService:
     def __init__(self):
         pass
 
-class AbsencesService:
-    def __init__(self):
-        pass
-
-    def get_student_absences(self, id_student, output_format="DTO"):
+    def get_student_absences(self, id_student, justified=None, output_format="DTO"):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id WHERE A.id_Student = %s", (id_student,))
+                # Construisez la requête SQL en fonction de la justification
+                sql_query = "SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id WHERE A.id_Student = %s"
+                if justified is not None:
+                    if justified == 1:
+                        sql_query += " AND A.justify = true"
+                    elif justified == 0:
+                        sql_query += " AND A.justify = FALSE"
+             
+                cursor.execute(sql_query, (id_student,))
+                rows = cursor.fetchall()
+                absences_list = []
+
+                for row in rows:
+                    if output_format == "DTO":
+                        absence = Absences(
+                            id_Student=row[0],
+                            id_Course=row[1],
+                            reason=row[2],
+                            justify=row[3]
+                        )
+                        absences_list.append(absence.jsonify())
+                    elif output_format == "model":
+                        absence = AbsencesModel(
+                            id_Student=row[0],
+                            id_Course=row[1],
+                            reason=row[2],
+                            justify=row[3],
+                            student_last_name=row[7],
+                            student_first_name=row[8],
+                            course_start_time=row[5],
+                            course_end_time=row[6]
+                        )
+                        absences_list.append(absence.jsonify())
+
+                return absences_list
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+
+
+    def get_all_absences(self, output_format="DTO"):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id")
                 rows = cursor.fetchall()
                 absences_list = []
 

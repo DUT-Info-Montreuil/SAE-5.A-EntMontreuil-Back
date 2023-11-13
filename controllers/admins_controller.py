@@ -8,45 +8,35 @@ admins_bp = Blueprint('admins', __name__)
 # Instanciation du service
 admins_service = AdminsService()
 
-#-----------get all admins dto--------------
-@admins_bp.route('/admins/dto', methods=['GET'])
-def get_all_admins_dto():
+#-----------get all admins--------------
+@admins_bp.route('/admins', methods=['GET'])
+def get_all_admins():
     try:
-        all_admins = admins_service.get_all_admins('DTO').json
+        output_format = request.args.get('output_format' , default='dto' , type=str)
+        valid_format = ['dto' , 'model']
+        if output_format not in valid_format :
+            return jsonify({'error': "Invalid output_format (valid output_format is model & dto)"}), 400
+        all_admins = admins_service.get_all_admins(output_format).json
         return jsonify(all_admins)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-#-----------get all admins model--------------
-@admins_bp.route('/admins/model', methods=['GET'])
-def get_all_admins_model():
-    try:
-        all_admins = admins_service.get_all_admins('model').json
-        return jsonify(all_admins)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
     
-#-----------get one admin dto--------------
-@admins_bp.route('/admins/<int:id>/dto', methods=['GET'])
-def get_one_admin_dto(id):
+#-----------get one admin--------------
+@admins_bp.route('/admins/<int:id>', methods=['GET'])
+def get_one_admin(id):
     try:
-        admin = admins_service.get_admin(id,'DTO')
+        output_format = request.args.get('output_format' , default='dto' , type=str)
+        valid_format = ['dto' , 'model']
+        if output_format not in valid_format :
+            return jsonify({'error': "Invalid output_format (valid output_format is model & dto)"}), 400
+        admin = admins_service.get_admin(id,output_format)
         return jsonify(admin)
     except ValidationError as e :
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-#-----------get one admin model--------------
-@admins_bp.route('/admins/<int:id>/model', methods=['GET'])
-def get_one_admin_model(id):
-    try:
-        admin = admins_service.get_admin(id,'model')
-        return jsonify(admin)
-    except ValidationError as e :
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
     
 #----------------add admins------------
 @admins_bp.route('/admins/add', methods=['POST'])

@@ -21,7 +21,7 @@ class AdminsService :
         rows = connect_pg.get_query(conn, query)
         admins = []
         for row in rows:
-            if output_format == 'DTO' :
+            if output_format == 'dto' :
                 admin = Admins(row[0] , row[1])
             if output_format == 'model' :
                 admin = AdminModel(row[0] , row[1] ,row[3] ,row[5] ,row[6] ,row[7] ,row[8])
@@ -41,7 +41,7 @@ class AdminsService :
         row = cursor.fetchone()
         conn.commit()
         conn.close()
-        if output_format == 'DTO' :
+        if output_format == 'dto' :
             admin = Admins(row[0] , row[1])
         if output_format == 'model' :
             admin = AdminModel(row[0] , row[1] ,row[3] ,row[5] ,row[6] ,row[7] ,row[8])

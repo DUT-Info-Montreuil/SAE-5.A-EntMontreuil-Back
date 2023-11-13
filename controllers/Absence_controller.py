@@ -133,29 +133,19 @@ def add_student_course_absence(id_student, id_course):
 #-------------------- Supprimer une  absence--------------------------------------#
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/delete', methods=['DELETE'])
 def delete_student_course_absence(id_student, id_course):
-    data = {
-        "id_student": id_student,
-        "id_course": id_course
-    }
+    # Instanciation du service d'absences
+    absences_service = AbsencesService()
 
     # Vérification que l'étudiant existe
     if not connect_pg.does_entry_exist("Students", id_student):
         return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 404
 
+    # Utilisation du service pour supprimer l'absence
     try:
-        conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM ent.Absences WHERE id_Student = %s AND id_Course = %s RETURNING id_Student, id_Course", (data["id_student"], data["id_course"]))
-            deleted_row = cursor.fetchone()
-            conn.commit()
-
-            if deleted_row:
-                return jsonify({"message": f"Absence supprimée pour l'étudiant {deleted_row[0]} et le cours {deleted_row[1]}"})
-            else:
-                return jsonify({"message": "Absence non trouvée ou déjà supprimée"}), 404
-    except psycopg2.Error as e:
+        message = absences_service.delete_student_course_absence({"id_student": id_student, "id_course": id_course})
+        if "supprimée" in message:
+            return jsonify({"message": message}), 200
+        else:
+            return jsonify({"message": message}), 404
+    except Exception as e:
         return jsonify({"message": str(e)}), 500
-    finally:
-        if conn:
-            connect_pg.disconnect(conn)
-

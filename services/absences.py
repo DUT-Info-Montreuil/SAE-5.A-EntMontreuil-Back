@@ -7,7 +7,7 @@ class AbsencesService:
     def __init__(self):
         pass
 
-
+#-------------------- récuperer les abences d'un étudiant --------------------------------------#
     def get_student_absences(self, id_student, justified=None, output_format="DTO"):
         try:
             conn = connect_pg.connect()
@@ -52,7 +52,7 @@ class AbsencesService:
         finally:
             conn.close()
 
-
+#-------------------- Récuperer toutes les absences --------------------------------------#
     def get_all_absences(self, justified=None, output_format="DTO"):
         try:
             conn = connect_pg.connect()
@@ -97,6 +97,8 @@ class AbsencesService:
         finally:
             conn.close()
 
+#-------------------- Mettre à jour  une  absence--------------------------------------#
+
     def update_student_course_absence(self, data):
         try:
             conn = connect_pg.connect()
@@ -118,6 +120,8 @@ class AbsencesService:
             if conn:
                 connect_pg.disconnect(conn)
 
+#-------------------- Ajouter une Absence--------------------------------------#
+
     def add_student_course_absence(self, data):
         try:
             conn = connect_pg.connect()
@@ -135,7 +139,7 @@ class AbsencesService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
-
+#-------------------- Supprimer une  absence--------------------------------------#
     def delete_student_course_absence(self, data):
         try:
             conn = connect_pg.connect()

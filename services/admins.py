@@ -1,7 +1,8 @@
 from flask import jsonify, Blueprint, request
 import json
 import connect_pg
-from modules.users import *
+from services.users import *
+from services.statements import *
 
 admins_bp = Blueprint('admins', __name__)
 
@@ -54,7 +55,7 @@ def add_admins():
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
         user_data["type"] = "admin"
-        user_response, http_status = add_users(user_data)  # Appel de la fonction add_users
+        user_response, http_status = UsersFonction.add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
             return user_response, http_status
@@ -113,7 +114,7 @@ def delete_admin(id_admin):
         cursor.execute(query, (id_admin,))
         conn.commit()
         conn.close()
-        user_response, http_status = remove_users(id_user)
+        user_response, http_status = UsersFonction.remove_users(id_user)
         return jsonify({"message": "Admin deleted", "id": id_admin}), 200
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 400
@@ -138,7 +139,7 @@ def update_admins(id_admin):
                 return jsonify({"error": "Empty 'user' field in JSON"}), 400
             # Recuperation du user id
             id_user = get_user_id_with_id_admin(id_admin)
-            user_response, http_status = update_users(user_data, id_user)
+            user_response, http_status = UsersFonction.update_users(user_data, id_user)
             # Si user update echoue
             if http_status != 200 :
                 return user_response, http_status

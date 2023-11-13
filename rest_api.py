@@ -1,15 +1,12 @@
 from flask import Flask
+from flask_restful import Api
 from flask_cors import CORS
 from config import config
-from modules.training import training_bp
-from modules.admins import admins_bp
-from modules.users import users_bp
+
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
-app.register_blueprint(training_bp)
-app.register_blueprint(admins_bp)
-app.register_blueprint(users_bp)
+api = Api(app)
 
 @app.after_request
 def after_request(response):

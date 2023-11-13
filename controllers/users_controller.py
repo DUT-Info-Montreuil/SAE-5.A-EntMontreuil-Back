@@ -8,12 +8,21 @@ users_bp = Blueprint('users', __name__)
 # Instanciation du service d'absences
 users_service = UsersServices()
 
-
-@users_bp.route('/users/model', methods=['GET'])
-def get_all_users_model():
+#-----------get all users--------------
+@users_bp.route('/users/dto', methods=['GET'])
+def get_all_users_dto():
     try:
-        all_users = users_service.get_users()
+        all_users = users_service.get_users().json
         return jsonify(all_users)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+#------------get one user with id-------------
+@users_bp.route('/users/<int:id>/dto', methods=['GET'])
+def get_one_users_dto(id):
+    try:
+        user = users_service.get_users_with_id(id)
+        return jsonify(user)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

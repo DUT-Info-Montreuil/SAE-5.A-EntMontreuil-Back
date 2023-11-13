@@ -5,7 +5,7 @@ import re
 import bcrypt
 import random
 import string
-from entities.model.usersm import UsersModel
+from entities.DTO.users import Users
 
 class UsersServices :
 
@@ -21,10 +21,10 @@ class UsersServices :
         users = []
 
         for row in rows:
-            user = UsersModel(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
-            users.append(user)
+            user = Users(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
+            users.append(user.jsonify())
         connect_pg.disconnect(conn)
-        return users
+        return jsonify(users)
 
     ############ GET /USERS/<int:id_user> ################
     def get_users_with_id(self, id_user):
@@ -37,7 +37,7 @@ class UsersServices :
         query = "select * from ent.users where id = %s"
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
-        user = UsersModel(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
+        user = Users(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
         conn.commit()
         conn.close()
         return user.jsonify()
@@ -183,7 +183,7 @@ class UsersFonction :
 
     ############  VERIFICATION FIELD EXIST ################
         # Fonction pour verifier un champ existe deja dans la base de donnees
-    def field_exists(self, field,data):
+    def field_exists( field,data):
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = f"SELECT COUNT(*) FROM ent.users WHERE {field} = %s"

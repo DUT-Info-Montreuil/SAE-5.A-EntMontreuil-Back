@@ -182,7 +182,7 @@ class UsersFonction :
             return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
     ############  VERIFICATION FIELD EXIST ################
-        # Fonction pour verifier un champ existe deja dans la base de donnees
+    # Fonction pour verifier un champ existe deja dans la base de donnees
     def field_exists( field,data):
         conn = connect_pg.connect()
         cursor = conn.cursor()

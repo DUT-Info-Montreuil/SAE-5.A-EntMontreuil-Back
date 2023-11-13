@@ -19,11 +19,12 @@ class UsersServices :
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []
+
         for row in rows:
             user = UsersModel(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
             users.append(user)
         connect_pg.disconnect(conn)
-        return jsonify([u.jsonify() for u in users])
+        return users
 
     ############ GET /USERS/<int:id_user> ################
     def get_users_with_id(self, id_user):

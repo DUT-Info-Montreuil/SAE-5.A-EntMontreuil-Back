@@ -2,11 +2,14 @@ from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
 from config import config
+from controllers.users_controller import users_bp
+
 
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
+app.register_blueprint(users_bp)
 
 @app.after_request
 def after_request(response):

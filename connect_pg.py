@@ -53,5 +53,36 @@ def get_query(conn, query):
         if conn is not None:
             return rows
 
+
+
+
+def does_entry_exist(table_name, entry_id):
+    """
+    Vérifie si une entrée existe dans la table spécifiée en fonction de son ID.
+
+    :param table_name: Le nom de la table dans laquelle effectuer la vérification.
+    :param entry_id: L'identifiant de l'entrée à vérifier.
+    :return: True si l'entrée existe, False autrement.
+    """
+    valid_tables = ['Users', 'Admin', 'Teachers', 'Degrees', 'Trainings', 'Promotions', 'Resources',
+                    'TD', 'TP', 'Materials', 'Classroom', 'Courses', 'Students', 'Absences', 'Historique']
+    if table_name not in valid_tables:
+        raise ValueError(f"Invalid table name: {table_name}")
+
+    conn = None
+    try:
+        conn = connect()  # Utilisation de la fonction connect du module
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT EXISTS(SELECT 1 FROM ent.{} WHERE id = %s)".format(table_name), (entry_id,))
+            return cursor.fetchone()[0]
+    except psycopg2.Error as e:
+        print(f"Erreur lors de la vérification de l'existence de l'entrée: {e}")
+        return False
+    finally:
+        if conn:
+            disconnect(conn)
+
+
 if __name__ == '__main__':
     connect()

@@ -9,12 +9,14 @@ import requests
 from contextlib import closing
 from config import config
 import connect_pg
-from modules.training import training_bp
+#from modules.training import training_bp
+from controllers.Absence_controller import absences_bp
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
-app.register_blueprint(training_bp)
 
+#register the absence
+app.register_blueprint(absences_bp)
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')

@@ -79,7 +79,7 @@ def update_student_course_absence(id_student, id_course):
 
     try:
         message = absences_service.update_student_course_absence(data)
-        return jsonify({"message": message})
+        return jsonify(message)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     

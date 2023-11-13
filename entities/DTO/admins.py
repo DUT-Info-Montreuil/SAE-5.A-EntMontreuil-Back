@@ -1,4 +1,4 @@
-class Admin:
+class Admins:
     def __init__(self, id, id_User):
         self.id = id
         self.id_User = id_User

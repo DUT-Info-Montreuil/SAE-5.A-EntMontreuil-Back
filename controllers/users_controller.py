@@ -9,7 +9,7 @@ users_bp = Blueprint('users', __name__)
 users_service = UsersServices()
 
 #-----------get all users--------------
-@users_bp.route('/users/dto', methods=['GET'])
+@users_bp.route('/users', methods=['GET'])
 def get_all_users_dto():
     try:
         all_users = users_service.get_users().json
@@ -18,7 +18,7 @@ def get_all_users_dto():
         return jsonify({'error': str(e)}), 500
     
 #------------get one user with id-------------
-@users_bp.route('/users/<int:id>/dto', methods=['GET'])
+@users_bp.route('/users/<int:id>', methods=['GET'])
 def get_one_users_dto(id):
     try:
         user = users_service.get_users_with_id(id)

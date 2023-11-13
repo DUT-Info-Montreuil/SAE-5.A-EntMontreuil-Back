@@ -37,7 +37,7 @@ CREATE TABLE Degrees(
     id SERIAL,
     name VARCHAR(32),
     PRIMARY KEY(id)
-)
+);
 
 CREATE TABLE Trainings(
     id SERIAL,
@@ -158,5 +158,5 @@ CREATE TABLE Historique(
     modification VARCHAR(100),
     PRIMARY KEY (id),
     FOREIGN KEY (id_User) REFERENCES Users(id)
-)
+);
 

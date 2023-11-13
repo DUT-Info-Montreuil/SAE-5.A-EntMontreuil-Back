@@ -1,5 +1,4 @@
 from flask import request, jsonify, Blueprint
-import psycopg2
 from services.absences import AbsencesService
 import connect_pg
 
@@ -12,25 +11,17 @@ absences_service = AbsencesService()
 
 #--------------------Récuperer toutes les absences--------------------------------------#
 
-@absences_bp.route('/absences/dto', methods=['GET'])
-def get_all_absences_dto():
+@absences_bp.route('/absences', methods=['GET'])
+def get_all_absences():
     justified = request.args.get('justified', default=None, type=int)
+    output_format = request.args.get('output_format', default='DTO', type=str)
     
     try:
-        absences_list = absences_service.get_all_absences(justified=justified, output_format="DTO")
+        absences_list = absences_service.get_all_absences(justified=justified, output_format=output_format)
         return jsonify(absences_list), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-@absences_bp.route('/absences/model', methods=['GET'])
-def get_all_absences_model():
-    justified = request.args.get('justified', default=None, type=int)
-    
-    try:
-        absences_list = absences_service.get_all_absences(justified=justified, output_format="model")
-        return jsonify(absences_list), 200
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
 #--------------------Récuperer toutes les absences d'un étudiant via son id--------------------------------------#
 
 @absences_bp.route('/absences/student/<int:id_student>/dto', methods=['GET'])

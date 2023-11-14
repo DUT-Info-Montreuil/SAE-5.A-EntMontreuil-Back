@@ -5,6 +5,12 @@ CREATE SCHEMA ent;
 -- Définissez le schéma "ent" comme schéma par défaut
 SET search_path TO ent;
 
+CREATE TABLE Roles(
+    id SERIAL,
+    name VARCHAR(32),
+    PRIMARY KEY (id),
+)
+
 CREATE TABLE Users(
     id SERIAL,
     username VARCHAR(32),
@@ -12,6 +18,7 @@ CREATE TABLE Users(
     last_name VARCHAR(32),
     first_name VARCHAR(32),
     email VARCHAR(32),
+    isAdmin BOOLEAN,
     id_Role BIGINT,
     PRIMARY KEY(id)
     FOREIGN KEY (id_Role) REFERENCES Roles(id)
@@ -21,7 +28,6 @@ CREATE TABLE Teachers(
     id SERIAL, 
     initital VARCHAR(32),
     desktop VARCHAR(32),
-    timetable_manager BOOLEAN,
     id_User BIGINT ,
     PRIMARY KEY(id),
     FOREIGN KEY(id_User) REFERENCES Users(id)
@@ -46,6 +52,7 @@ CREATE TABLE Trainings(
 CREATE TABLE Promotions(
     id SERIAL,
     year INTEGER,
+    level INTEGER CHECK (level >= 1 AND level <= 3),
     id_Degree BIGINT,
     PRIMARY KEY(id),
     FOREIGN KEY(id_Degree) REFERENCES Degrees(id),
@@ -147,19 +154,11 @@ CREATE TABLE Absences(
     FOREIGN KEY (id_Course) REFERENCES Courses(id)
 );
 
-CREATE TABLE Historique(
+CREATE TABLE Logs(
     id SERIAL,
     id_User BIGINT,
     modification VARCHAR(100),
+    modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (id_User) REFERENCES Users(id)
 );
-
-CREATE TABLE Roles(
-    id SERIAL,
-    name VARCHAR(32),
-    isAdmin BOOLEAN,
-    id_User BIGINT,
-    PRIMARY KEY (id),
-    FOREIGN KEY (id_User) REFERENCES Users(id)
-)

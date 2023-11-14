@@ -1,7 +1,8 @@
 class PromotionModel:
-    def __init__(self, id, year, id_Degree, degree_name):
+    def __init__(self, id, year, level, id_Degree, degree_name):
         self.id = id
         self.year = year
+        self.level = level
         self.id_Degree = id_Degree
         self.degree_name = degree_name
 
@@ -12,6 +13,7 @@ class PromotionModel:
         return {
             "id": self.id,
             "year": self.year,
+            "level": self.level,
             "id_Degree": self.id_Degree,
             "degree_name": self.degree_name,
         }

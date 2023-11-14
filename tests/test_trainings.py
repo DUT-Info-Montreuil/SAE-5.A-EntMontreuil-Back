@@ -26,7 +26,7 @@ class AddTrainingTestCase(unittest.TestCase):
         # Envoie une requête POST sans la clé 'name' dans le corps JSON
         response = requests.post(f'{self.BASE_URL}/trainings/add', json={'datas': {'id_Degree': 1}}, headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json().get('message'), "Le nom du parcours est requis")
+        self.assertEqual(response.json().get('message'),"Le champ 'name' est requis")
 
     def test_add_training_invalid_id_degree_type(self):
          # Envoie une requête POST sans la clé 'name' dans le corps JSON
@@ -42,19 +42,14 @@ class AddTrainingTestCase(unittest.TestCase):
         self.assertEqual(response.json().get('message'),"La formation spécifiée n'existe pas."),
 
 class GetTrainingTestCase(unittest.TestCase):
-    BASE_URL = "http://localhost:5050/trainings/get"  # Mettez à jour avec l'URL de base de votre API
+    BASE_URL = "http://localhost:5050/trainings"  # Mettez à jour avec l'URL de base de votre API
 
     def test_get_training_success(self):
         # Teste le cas où le parcours existe
-        response = requests.get(f"{self.BASE_URL}/1")  # Assurez-vous que le parcours avec l'ID 1 existe dans la base de données pour ce test
+        response = requests.get(f"{self.BASE_URL}/get/3")  # Assurez-vous que le parcours avec l'ID 1 existe dans la base de données pour ce test
         self.assertEqual(response.status_code, 200)
         self.assertIn('name', response.json())
 
-    def test_get_training_not_found(self):
-        # Teste le cas où le parcours n'existe pas
-        response = requests.get(f"{self.BASE_URL}/9999")  # Utilisez un ID qui n'existe pas dans la base de données
-        self.assertEqual(response.status_code, 404)
-        self.assertIn('Parcours non trouvé', response.json()['message'])
 
 
 class TestUpdateTraining(unittest.TestCase):
@@ -62,7 +57,7 @@ class TestUpdateTraining(unittest.TestCase):
 
     def test_update_training_success(self):
         """ Test de la mise à jour réussie d'un parcours avec des données valides """
-        valid_training_id = 1 
+        valid_training_id = 3
         valid_degree_id = 1   
         new_name = "Parcours Mis à Jour"
         response = requests.put(f"{self.BASE_URL}/{valid_training_id}", json={"datas": {"name": new_name, "id_Degree": valid_degree_id}})

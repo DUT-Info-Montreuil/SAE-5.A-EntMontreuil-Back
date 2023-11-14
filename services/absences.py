@@ -78,7 +78,7 @@ class AbsencesService:
                             justify=row[3]
                         )
                         absences_list.append(absence.jsonify())
-                    elif output_format == "model":
+                    else:
                         absence = AbsencesModel(
                             id_Student=row[0],
                             id_Course=row[1],

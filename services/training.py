@@ -1,222 +1,188 @@
 from flask import request, jsonify
-from flask import request, jsonify, Blueprint
 import psycopg2
 import connect_pg
-import json
-import logging
-import datetime
+from entities.DTO.trainings import Training
+from entities.model.trainingsm import TrainingModel
 
-# Création  d'un Blueprint pour les routes liées aux promotions
-training_bp = Blueprint('trainings', __name__)
+class TrainingService:
+    def __init__(self):
+        pass
 
-# Configuration du journal pour enregistrer les messages d'erreur dans un fichier
-logging.basicConfig(filename='app_errors.log', level=logging.ERROR)
+#------------------ Récuperer tous les parcours --------------------------------#
+    def get_all_trainings(self, output_format="DTO", id_Degree=None):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = "SELECT T.id, T.name, T.id_Degree, D.name FROM ent.Trainings T INNER JOIN ent.Degrees D ON T.id_Degree = D.id"
+                
+                # Si id_Degree est passé en paramètre, ajoute une clause WHERE pour filtrer par ID de diplôme
+                if id_Degree is not None:
+                    sql_query += " WHERE T.id_Degree = %s"
+                    cursor.execute(sql_query, (id_Degree,))
+                else:
+                    cursor.execute(sql_query)
+                    
+                rows = cursor.fetchall()
+                trainings_list = []
 
-# Fonction utilitaire pour enregistrer les erreurs dans le journal
+                for row in rows:
+                    if output_format == "DTO":
+                        training = Training(
+                            id=row[0],
+                            name=row[1],
+                            id_Degree=row[2]
+                        )
+                        trainings_list.append(training.jsonify())
+                    else:
+                        training = TrainingModel(
+                            id=row[0],
+                            name=row[1],
+                            id_Degree=row[2],
+                            degree_name=row[3]
+                        )
+                        trainings_list.append(training.jsonify())
 
-
-def log_error(message):
-    logging.error(message)
-
-@training_bp.route('/trainings/add', methods=['POST'])
-def add_training():
-    """
-    Ajoute un nouveau parcours à la base de données.
-
-    La fonction extrait les données de la requête, valide leur présence et leur format,
-    puis insère le nouveau parcours dans la base de données. Les erreurs sont gérées
-    et renvoyées sous forme de réponse JSON.
-    """
-    json_data = request.json
-
-  
-    # Vérifie la présence des données JSON et de la clé 'datas'
-    if not json_data or 'datas' not in json_data:
-        return jsonify({"message": "Données manquantes"}), 400
-
-    training_data = json_data['datas']
-   
-    # Valide le nom du parcours et s'assure qu'il n'est pas vide
-    if 'name' not in training_data or not training_data['name']:
-        return jsonify({"message": "Le nom du parcours est requis"}), 400
-    
-    # Valide que le 'id_Degree' est présent et est un entier
-    if 'id_Degree' not in training_data or not isinstance(training_data['id_Degree'], int):
-        return jsonify({"message": "L'identifiant du diplôme doit être un entier"}), 400
-
-   
-    # Valide l'existence de la formation référencée par 'id_Degree'
-    if not does_entry_exist("Degrees",training_data["id_Degree"]):
-        return jsonify({"message": "La formation spécifiée n'existe pas."}), 400
-
-    # Si les validations sont passées, procéder à l'insertion dans la base de données
-    try:
-        conn = connect_pg.connect()
-        query = "INSERT INTO ent.Trainings (name, id_Degree) VALUES (%s, %s) RETURNING id"
-        data = (training_data["name"], training_data["id_Degree"])
-
-        with conn, conn.cursor() as cursor:
-            cursor.execute(query, data)
-            new_training_id = cursor.fetchone()[0]  # Récupère l'ID du parcours ajouté
-
-        success_message = {
-            "message": f"Le parcours '{training_data['name']}' a été ajouté avec succès.",
-            "id": new_training_id
-        }
-        return jsonify(success_message), 201
-
-    except psycopg2.IntegrityError as e:
-        # Gère la violation de la contrainte unique pour la combinaison de id_Degree et name
-        if 'trainings_id_degree_name_key' in str(e):
-            return jsonify({"message": "Un parcours avec le même nom existe déjà pour ce diplôme."}), 409
-        
-    except Exception as e:
-        # Gestion des autres erreurs
-        return jsonify({"message": f"Erreur lors de l'ajout du parcours : {str(e)}"}), 500
-
-    finally:
-        # Nettoyage : fermeture de la connexion à la base de données
-        connect_pg.disconnect(conn)
+                return trainings_list
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
 
 
-@training_bp.route('/trainings/get/<int:id_Training>', methods=['GET'])
-def get_training(id_Training):
-    """
-    Récupère les détails d'un parcours spécifique par son ID.
+#---------------------- Ajouter un parcours --------------------------------#
+    def add_training(self, training):
+        try:
+            conn = connect_pg.connect()
+            query = "INSERT INTO ent.Trainings (name, id_Degree) VALUES (%s, %s) RETURNING id"
+            data = (training.name, training.id_Degree)
 
-    :param id_Training: L'identifiant du parcours à récupérer.
-    :return: Un objet JSON contenant les détails du parcours ou un message d'erreur.
-    """
-    try:
-        conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM ent.Trainings WHERE id = %s", (id_Training,))
-            row = cursor.fetchone()
-            if row:
-                parcours = {
-                    "id": row[0],
-                    "name": row[1],
-                    "id_Degree": row[2]
-                }
-                return jsonify(parcours), 200
-            else:
-                return jsonify({"message": "Parcours non trouvé"}), 404
-    except psycopg2.Error as e:
-        log_error(f"Erreur lors de la récupération du parcours: {e}")
-        return jsonify({"message": "Erreur lors de la récupération des informations du parcours"}), 500
-    finally:
-        if conn:
+            with conn, conn.cursor() as cursor:
+                cursor.execute(query, data)
+                new_training_id = cursor.fetchone()[0]
+
+            success_message = {
+                "message": f"Le parcours '{training.name}' a été ajouté avec succès.",
+                "id": new_training_id
+            }
+            return success_message
+
+        except psycopg2.IntegrityError as e:
+            if 'trainings_id_degree_name_key' in str(e):
+                return {"message": "Un parcours avec le même nom existe déjà pour ce diplôme."}
+
+        except Exception as e:
+            return {"message": f"Erreur lors de l'ajout du parcours : {str(e)}"}
+
+        finally:
             connect_pg.disconnect(conn)
 
-@training_bp.route('/trainings/update/<int:id_training>', methods=['PUT'])
-def update_training(id_training):
-    """
-    Met à jour un parcours existant dans la base de données par son ID.
+#---------------------- Récuperer un parcours par son id --------------------------------#
+    def get_training(self, id_training,output_format="model"):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT * FROM ent.Trainings T INNER JOIN ent.Degrees D ON T.id_Degree = D.id WHERE T.id = %s", (id_training,))
+                row = cursor.fetchone()
+                if row:
+                      if output_format == "DTO":
+                            
+                            training = Training(
+                                id=row[0],
+                                name=row[1],
+                                id_Degree=row[2]
+                            )
+                          
+                      else :
+                             training = TrainingModel(
+                                id=row[0],
+                                name=row[1],
+                                id_Degree=row[2],
+                                degree_name=row[3]
+                            )
+                
+                return training.jsonify()
 
-    :param id_training: L'identifiant du parcours à mettre à jour.
-    :return: Un objet JSON indiquant le succès de la mise à jour ou un message d'erreur.
-    """
-    json_data = request.json
-    if not json_data or 'datas' not in json_data:
-        return jsonify({"message": "Données manquantes"}), 400
+        except Exception as e:
+            return None  
 
-    training_data = json_data['datas']
-    if 'name' not in training_data or not training_data['name']:
-        return jsonify({"message": "Le nom du parcours est requis"}), 400
+        finally:
+            connect_pg.disconnect(conn)
+#---------------------- Modifier un parcours par son id --------------------------------#
+    def update_training(self, training):
+        """
+        Met à jour un parcours existant dans la base de données par son ID.
 
-    if 'id_Degree' not in training_data or not isinstance(training_data['id_Degree'], int):
-        return jsonify({"message": "L'identifiant de la formation doit être un entier"}), 400
+        Cette méthode effectue une mise à jour des informations d'un parcours existant dans la base de données.
+        Elle utilise une transaction pour garantir la cohérence des données en cas de succès ou d'échec de la mise à jour.
 
-    # Vérifie que le parcours à mettre à jour existe
-    if not does_entry_exist("Trainings", id_training):
-        return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
+        Args:
+            training (Training): Un objet Training DTO contenant les nouvelles informations du parcours.
 
-    # Vérifie que la formation liée au parcours existe
-    if not does_entry_exist("Degrees", training_data["id_Degree"]):
-        return jsonify({"message": "La formation spécifiée n'existe pas."}), 404
+        Returns:
+            dict: Un dictionnaire contenant un message de résultat et un code d'état HTTP (200 en cas de succès).
 
-    try:
-        conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            # Mise à jour des informations du parcours
-            cursor.execute(
-                "UPDATE ent.Trainings SET name = %s, id_Degree = %s WHERE id = %s RETURNING id",
-                (training_data["name"], training_data["id_Degree"], id_training)
-            )
-            updated_row = cursor.fetchone()
-            if not updated_row:
-                return jsonify({"message": "Parcours non trouvé ou aucune modification effectuée"}), 404
-
-            return jsonify({"message": "Parcours mis à jour avec succès", "id": updated_row[0]}), 200
-
-    except psycopg2.Error as e:
-        log_error(f"Erreur lors de la mise à jour du parcours: {e}")
-        return jsonify({"message": "Erreur lors de la mise à jour des informations du parcours"}), 500
-    finally:
-        if conn:
+        Raises:
+            Exception: En cas d'erreur lors de la mise à jour du parcours.
+        """       
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE ent.Trainings SET name = %s, id_Degree = %s WHERE id = %s RETURNING ID",
+                    (training.name, training.id_Degree, training.id)
+                )
+                updated_row = cursor.fetchone()
+                if updated_row:
+                    conn.commit()  # Valide la transaction si la mise à jour réussit
+                    return {"message": f"Le parcours avec l'ID {training.id} a été mis à jour avec succès."},200
+                else:
+                    return {"message": f"Le parcours avec l'ID {training.id} n'a pas pu être mis à jour."}, 404
+        except Exception as e:
+            conn.rollback()  # Annule la transaction en cas d'erreur
+            return {"message": f"Erreur lors de la mise à jour du parcours : {str(e)}"}, 500
+        finally:
             connect_pg.disconnect(conn)
 
 
-@training_bp.route('/trainings/<int:id_training>', methods=['DELETE'])
-def delete_training(id_training):
-    """
-    Supprime un parcours existant de la base de données par son ID.
 
-    :param id_training: L'identifiant du parcours à supprimer.
-    :return: Un objet JSON indiquant le succès de la suppression ou un message d'erreur.
-    """
-    if not does_entry_exist("Trainings", id_training):
-        return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
-    
-    try:
+    def delete_training(self, id_training):
+        """
+            Supprime un parcours existant de la base de données par son ID.
+
+            Args:
+                id_training (int): L'identifiant unique du parcours à supprimer.
+
+            Returns:
+                dict: Un dictionnaire contenant un message de résultat et un code d'état HTTP.
+
+            Raises:
+                Exception: En cas d'erreur lors de la suppression du parcours.
+
+            Example:
+                Pour supprimer un parcours avec l'ID 1, envoyez une requête DELETE à l'URL correspondante.
+        """
         conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            # Suppression du parcours
-            cursor.execute("DELETE FROM ent.Trainings WHERE id = %s RETURNING id", (id_training,))
-            deleted_row = cursor.fetchone()
-            conn.commit()  # S'assurer que la suppression est commit
+        try:
+            with conn:
+                with conn.cursor() as cursor:
 
-            if deleted_row:
-                return jsonify({"message": "Parcours supprimé avec succès"}), 200
-            else:
-                return jsonify({"message": "Parcours non trouvé ou déjà supprimé"}), 404
+                    cursor.execute(
+                        "DELETE FROM ent.Trainings WHERE id = %s RETURNING id", (id_training,))
+                    deleted_row = cursor.fetchone()
 
-    except psycopg2.Error as e:
-        log_error(f"Erreur lors de la suppression du parcours: {e}")
-        return jsonify({"message": "Erreur lors de la suppression du parcours"}), 500
-    finally:
-        if conn:
-            connect_pg.disconnect(conn)
+                    # Si la suppression a réussi, valide la transaction
+                    if deleted_row:
+                        conn.commit()
+                        return {"message": f"Le parcours avec l'ID {id_training} a été supprimé avec succès."}, 200
+                    else:
+                        # Si la suppression a échoué, annule la transaction
+                        conn.rollback()
+                        return {"message": f"Le parcours avec l'ID {id_training} n'a pas pu être trouvé."}, 404
 
+        except Exception as e:
+            # En cas d'erreur, annule la transaction
+            conn.rollback()
+            return {"message": f"Erreur lors de la suppression du parcours : {str(e)}"}, 500
 
-        
-
-
-def does_entry_exist(table_name, entry_id):
-    """
-    Vérifie si une entrée existe dans la table spécifiée en fonction de son ID.
-
-    :param table_name: Le nom de la table dans laquelle effectuer la vérification.
-    :param entry_id: L'identifiant de l'entrée à vérifier.
-    :return: True si l'entrée existe, False autrement.
-    """
-    valid_tables = ['Users', 'Admin', 'Teachers', 'Degrees', 'Trainings', 'Promotions', 'Resources',
-                    'TD', 'TP', 'Materials', 'Classroom', 'Courses', 'Students', 'Absences', 'Historique']
-    if table_name not in valid_tables:
-        raise ValueError(f"Invalid table name: {table_name}")
-
-    conn = None
-    try:
-        conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            # La table est maintenant vérifiée et sécurisée contre les injections SQL.
-            cursor.execute(
-                "SELECT EXISTS(SELECT 1 FROM ent.{} WHERE id = %s)".format(table_name), (entry_id,))
-            return cursor.fetchone()[0]
-    except psycopg2.Error as e:
-        print(
-            f"Erreur lors de la vérification de l'existence de l'entrée: {e}")
-        return False
-    finally:
-        if conn:
+        finally:
             connect_pg.disconnect(conn)

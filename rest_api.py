@@ -4,12 +4,14 @@ from flask_cors import CORS
 from config import config
 from controllers.teachers_controllers import teachers_bp
 from controllers.users_controllers import users_bp
+from controllers.role_controllers import role_bp
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 
 app.register_blueprint(users_bp)
 app.register_blueprint(teachers_bp)
+app.register_blueprint(role_bp)
 
 @app.after_request
 def after_request(response):

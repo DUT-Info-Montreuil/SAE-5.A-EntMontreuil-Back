@@ -6,6 +6,7 @@ import bcrypt
 import random
 import string
 from entities.DTO.users import Users
+from entities.model.usersm import UsersModel
 
 class UsersServices :
 
@@ -13,15 +14,20 @@ class UsersServices :
         pass
 
     ############ GET /USERS ################
-    def get_users(self):
+    def get_users(self , output_format):
         """ Return all users in JSON format """
-        query = "select * from ent.users order by id asc"
+        query = "select * from ent.users u inner join ent.role r on u.id_role = r.id order by u.id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []
 
         for row in rows:
-            user = Users(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
+            if output_format == 'dto' :
+                user = Users(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+            elif output_format == 'model' :
+                user = UsersModel(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+            else :
+                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             users.append(user.jsonify())
         connect_pg.disconnect(conn)
         return jsonify(users)
@@ -34,10 +40,15 @@ class UsersServices :
             raise ValidationError(f"id_user : '{id_user}' not exists")
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = "select * from ent.users where id = %s"
+        query = "select * from ent.users u inner join ent.role r on u.id_role = r.id where u.id = %s"
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
-        user = Users(id = row[0], username = row[1], type = row[3], last_name = row[4], first_name=row[5], email=row[6])
+        if output_format == 'dto' :
+            user = Users(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+        elif output_format == 'model' :
+            user = UsersModel(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+        else :
+            raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         conn.commit()
         conn.close()
         return user.jsonify()
@@ -133,7 +144,7 @@ class UsersFonction :
             password = data["password"]
             
             # Verifie si tous les attributs sont presents
-            required_fields = ['username' , 'first_name' , 'last_name' , 'email' , 'type']
+            required_fields = ['username' , 'first_name' , 'last_name' , 'email' , 'role']
             for field in required_fields : 
                 if field not in data :
                     return jsonify({"error": f"Missing '{field}' field in JSON"}), 400
@@ -142,6 +153,11 @@ class UsersFonction :
             email = data["email"] 
             first_name = data["first_name"] 
             last_name = data["last_name"]
+            # isAdmin false par defaut
+            if "isAdmin" not in data :
+                data["isAdmin"] = False
+            # if role existe pas 
+
             # Verification si id est deja utiliser
             if "id" in data :
                 if UsersFonction.field_exists('id' , data["id"]) :
@@ -155,10 +171,6 @@ class UsersFonction :
             # Verification de la syntaxe de l'email
             if not UsersFonction.is_valid_email(email):
                 return jsonify({"error": "Invalid email format"}), 400
-            # Verification si le type est bien un type existant (student - admin - teacher - timetable_manager)
-            valid_type = ['student' , 'admin' , 'teacher' , 'timetable_manager']
-            if data["type"] not in valid_type :
-                    return jsonify({"error": f"Invalid type : {data.get('type')}, the 4 types available are [student - admin - teacher - timetable_manager]"}), 400
             # Hashage du password avec md5 + salt password with bcrypt
             salt = bcrypt.gensalt()
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
@@ -191,6 +203,17 @@ class UsersFonction :
         count = cursor.fetchone()[0]
         conn.close()
         return count > 0
+    
+    ############  VERIFICATION role EXIST ################
+    # Fonction pour verifier un role existe deja dans la base de donnees
+    def role_exists( role):
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = f"SELECT COUNT(*) FROM ent.role WHERE name = %s"
+        cursor.execute(query, (role,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
 
     ############  VERIFICATION EMAIL SYNTAXE ################
     def is_valid_email(email):
@@ -213,6 +236,22 @@ class UsersFonction :
 
     ############  GENERATE PASSWORD ################
     def generate_password():
+        # Generate a password with at least one uppercase letter, one special character, two digits, and the rest lowercase letters
+        length = 12
+        uppercase_letter = random.choice(string.ascii_uppercase)
+        special_character = random.choice(string.punctuation)
+        digits = ''.join(random.choices(string.digits, k=2))
+        lowercase_letters = ''.join(random.choices(string.ascii_lowercase, k=length-4))
+
+        # Shuffle the characters to create the final password
+        password_list = list(uppercase_letter + special_character + digits + lowercase_letters)
+        random.shuffle(password_list)
+        password = ''.join(password_list)
+
+        return password
+    
+    ############  GENERATE PASSWORD ################
+    def get_all_role_name():
         # Generate a password with at least one uppercase letter, one special character, two digits, and the rest lowercase letters
         length = 12
         uppercase_letter = random.choice(string.ascii_uppercase)

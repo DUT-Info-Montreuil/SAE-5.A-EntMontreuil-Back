@@ -5,32 +5,34 @@ CREATE SCHEMA ent;
 -- Définissez le schéma "ent" comme schéma par défaut
 SET search_path TO ent;
 
+
+CREATE TABLE Role (
+    id SERIAL ,
+    name VARCHAR(32),
+    PRIMARY KEY(id)
+);
+
+
 CREATE TABLE Users(
     id SERIAL,
     username VARCHAR(32),
     password VARCHAR(200),
-    type VARCHAR(32),
     last_name VARCHAR(32),
     first_name VARCHAR(32),
     email VARCHAR(32),
-    PRIMARY KEY(id)
-);
-
-CREATE TABLE Admin (
-    id SERIAL ,
-    id_User BIGINT, 
+    id_Role BIGINT,
     PRIMARY KEY(id),
-    FOREIGN KEY (id_User) REFERENCES Users(id) 
+    isAdmin BOOLEAN,
+    FOREIGN KEY(id_Role) REFERENCES Role(id)
 );
 
 CREATE TABLE Teachers(
     id SERIAL,
     initial VARCHAR(32),
     desktop VARCHAR(32),
-    timetable_manager BOOLEAN,
     id_User BIGINT ,
     PRIMARY KEY(id),
-    FOREIGN KEY(id_User) REFERENCES Users(id)
+    FOREIGN KEY (id_User) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Degrees(
@@ -44,7 +46,8 @@ CREATE TABLE Trainings(
     name VARCHAR(32),
     id_Degree BIGINT,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_Degree) REFERENCES Degrees(id)
+    FOREIGN KEY (id_Degree) REFERENCES Degrees(id),
+    UNIQUE (id_Degree, name)
 );
 
 CREATE TABLE Promotions(
@@ -71,7 +74,8 @@ CREATE TABLE TD(
     id_Training BIGINT,
     PRIMARY KEY(id),
     FOREIGN KEY(id_Promotion) REFERENCES Promotions(id),
-    FOREIGN KEY(id_Training) REFERENCES Trainings(id)
+    FOREIGN KEY(id_Training) REFERENCES Trainings(id),
+    CONSTRAINT unique_name_promotion_combination UNIQUE (name, id_Promotion)
   
 );
 
@@ -80,7 +84,8 @@ CREATE TABLE TP(
     name VARCHAR(32),
     id_Td BIGINT,
     PRIMARY KEY(id),
-    FOREIGN KEY(id_Td) REFERENCES TD(id)
+    FOREIGN KEY(id_Td) REFERENCES TD(id),
+    CONSTRAINT unique_name_td_combination UNIQUE (name, id_Td)
 );
 
 CREATE TABLE Materials(
@@ -124,12 +129,14 @@ CREATE TABLE Courses(
 CREATE TABLE Students(
     id SERIAL,
     apprentice BOOLEAN,
+    ine VARCHAR(32),
+    nip VARCHAR(32),
     id_User BIGINT ,
     id_Td  BIGINT ,
     id_Tp  BIGINT ,
     id_Promotion BIGINT ,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_User) REFERENCES Users(id),
+    FOREIGN KEY (id_User) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (id_Td) REFERENCES TD(id),
     FOREIGN KEY (id_Tp) REFERENCES TP(id),
     FOREIGN KEY (id_Promotion) REFERENCES Promotions(id)
@@ -146,11 +153,39 @@ CREATE TABLE Absences(
     FOREIGN KEY (id_Course) REFERENCES Courses(id)
 );
 
-CREATE TABLE Historique(
+CREATE TABLE Logs(
     id SERIAL,
     id_User BIGINT,
     modification VARCHAR(100),
+    modification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (id_User) REFERENCES Users(id)
 )
 
+
+-- Création du déclencheur
+CREATE OR REPLACE FUNCTION delete_absences_on_student_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM Absences WHERE id_Student = OLD.id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER delete_absences_trigger
+BEFORE DELETE ON Students
+FOR EACH ROW
+EXECUTE FUNCTION delete_absences_on_student_delete();
+
+CREATE OR REPLACE FUNCTION delete_courses_on_teacher_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM Courses WHERE id_Teacher = OLD.id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER delete_courses_trigger
+BEFORE DELETE ON Teachers
+FOR EACH ROW
+EXECUTE FUNCTION delete_courses_on_teacher_delete();

@@ -9,22 +9,16 @@ CREATE TABLE Users(
     id SERIAL,
     username VARCHAR(32),
     password VARCHAR(200),
-    type VARCHAR(32),
     last_name VARCHAR(32),
     first_name VARCHAR(32),
     email VARCHAR(32),
+    id_Role BIGINT,
     PRIMARY KEY(id)
-);
-
-CREATE TABLE Admin (
-    id SERIAL ,
-    id_User BIGINT, 
-    PRIMARY KEY(id),
-    FOREIGN KEY (id_User) REFERENCES Users(id) 
+    FOREIGN KEY (id_Role) REFERENCES Roles(id)
 );
 
 CREATE TABLE Teachers(
-    id SERIAL,
+    id SERIAL, 
     initital VARCHAR(32),
     desktop VARCHAR(32),
     timetable_manager BOOLEAN,
@@ -128,6 +122,7 @@ CREATE TABLE Courses(
 
 CREATE TABLE Students (
     id SERIAL,
+    numero INTEGER UNIQUE,
     apprentice BOOLEAN,
     id_User BIGINT,
     id_Td BIGINT,
@@ -156,6 +151,15 @@ CREATE TABLE Historique(
     id SERIAL,
     id_User BIGINT,
     modification VARCHAR(100),
+    PRIMARY KEY (id),
+    FOREIGN KEY (id_User) REFERENCES Users(id)
+);
+
+CREATE TABLE Roles(
+    id SERIAL,
+    name VARCHAR(32),
+    isAdmin BOOLEAN,
+    id_User BIGINT,
     PRIMARY KEY (id),
     FOREIGN KEY (id_User) REFERENCES Users(id)
 )

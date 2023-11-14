@@ -28,28 +28,10 @@ def get_all_teachers():
         return jsonify({'error': str(e)}), 500
     
     
-#-----------get all teachers timetable_manager--------------
-@teachers_bp.route('/teachers/ttm', methods=['GET'])
-def get_teachers_timetable_manager():
-    try:
-        # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
-        output_format = request.args.get('output_format', default='dto')
-
-        # Utilisez la fonction du service pour récupérer les enseignants
-        teachers_data = teachers_service.get_teachers_timetable_manager(output_format).json
-
-        # Retournez les enseignants au format JSON
-        return jsonify(teachers_data)
-    except ValueError as ve:
-        # Gérez les erreurs liées à des valeurs incorrectes
-        return jsonify({'error': str(ve)}), 400
-    except Exception as e:
-        # Gérez les autres erreurs
-        return jsonify({'error': str(e)}), 500
     
 #-----------add teachers--------------
 # Définissez la route pour ajouter des enseignants
-@teachers_bp.route('/teachers/add', methods=['POST'])
+@teachers_bp.route('/teachers', methods=['POST'])
 def add_teachers():
     try:
         # Obtenez les données JSON de la requête
@@ -66,7 +48,7 @@ def add_teachers():
     
 #-----------update teachers--------------
 # Définissez la route pour mettre à jour un enseignant
-@teachers_bp.route('/teachers/update/<int:id_teacher>', methods=['PATCH'])
+@teachers_bp.route('/teachers/<int:id_teacher>', methods=['PATCH'])
 def update_teachers(id_teacher):
     try:
         # Obtenez les données JSON de la requête
@@ -83,7 +65,7 @@ def update_teachers(id_teacher):
     
 #-----------delete teachers--------------
 # Définissez la route pour supprimer un enseignant
-@teachers_bp.route('/teachers/remove/<int:id_teacher>', methods=['DELETE'])
+@teachers_bp.route('/teachers/<int:id_teacher>', methods=['DELETE'])
 def delete_teachers(id_teacher):
     try:
         # Utilisez la fonction du service pour supprimer un enseignant

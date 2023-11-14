@@ -167,25 +167,25 @@ CREATE TABLE Logs(
 CREATE OR REPLACE FUNCTION delete_absences_on_student_delete()
 RETURNS TRIGGER AS $$
 BEGIN
-    DELETE FROM Absences WHERE id_Student = OLD.id;
+    DELETE FROM ent.Absences WHERE id_Student = OLD.id;
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER delete_absences_trigger
-BEFORE DELETE ON Students
+CREATE OR REPLACE TRIGGER delete_absences_trigger
+BEFORE DELETE ON ent.Students
 FOR EACH ROW
 EXECUTE FUNCTION delete_absences_on_student_delete();
 
 CREATE OR REPLACE FUNCTION delete_courses_on_teacher_delete()
 RETURNS TRIGGER AS $$
 BEGIN
-    DELETE FROM Courses WHERE id_Teacher = OLD.id;
+    DELETE FROM ent.Courses WHERE id_Teacher = OLD.id;
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER delete_courses_trigger
-BEFORE DELETE ON Teachers
+CREATE OR REPLACE TRIGGER delete_courses_trigger
+BEFORE DELETE ON ent.Teachers
 FOR EACH ROW
 EXECUTE FUNCTION delete_courses_on_teacher_delete();

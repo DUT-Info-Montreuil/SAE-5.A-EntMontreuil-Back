@@ -31,24 +31,6 @@ class TeachersService :
         connect_pg.disconnect(conn)
         return jsonify(returnStatement)
 
-  ############  TEACHERS/GET/TIMETABLE_MANAGER ################
-    def get_teachers_timetable_manager(self, output_format):
-        """ Return all teachers who are timetable manager in JSON format """
-        query = "select * from ent.teachers t inner join ent.users u on u.id = t.id_User where timetable_manager = true order by t.id asc"
-        conn = connect_pg.connect()
-        rows = connect_pg.get_query(conn, query)
-        returnStatement = []
-        for row in rows:
-            if output_format == 'dto':
-                teacher_instance = Teachers(row[0], row[1], row[2], row[3])
-            elif output_format == 'model':
-                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11])
-            else:
-                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
-            returnStatement.append(teacher_instance.jsonify())
-        connect_pg.disconnect(conn)
-        return jsonify(returnStatement)
-
     ############ TEACHERS/ADD ############
     def add_teachers(self, datas):
         # Verification data et user fields
@@ -69,6 +51,7 @@ class TeachersService :
         if "id" in data :
             if TeachersFonction.field_exists('id', data["id"]) :
                 return jsonify({"error": f"Id for teacher '{data.get('id')}' already exist"}), 400
+            
                 
         
         user_response, http_status = UsersFonction.add_users(user_data)  # Appel de la fonction add_users
@@ -86,7 +69,9 @@ class TeachersService :
                 "initial": data.get("initial"),
                 "id_User" : user_id
             }
-            teacher_data["id"] = data.get("id")
+            if "id" in data : 
+                teacher_data["id"] = data.get("id")
+            
             columns = list(teacher_data.keys())
             values = list(teacher_data.values())
             # Etablissez la connexion a la base de donnees
@@ -104,14 +89,17 @@ class TeachersService :
 
     ############ TEACHERS/UPDATE/<int:id_teacher> ############
     def update_teachers(self, id_teacher, datas):
+        
         # Si il n'y a pas de champ datas
         if "datas" not in datas:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
         teacher_data = datas["datas"]
         # Si initial est present
         if "initial" in teacher_data :
+            
             # Verification initial existe deja
-            if TeachersFonction.field_exists('initial' , teacher_data.get("initial")) :
+            if TeachersFonction.field_exists('initial' , teacher_data.get('initial')) :
+                
                 return jsonify({"error": f"Initial '{teacher_data.get('initial')}' already exists"}), 400
         # Si id est present
         if "id" in teacher_data :

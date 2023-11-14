@@ -93,11 +93,11 @@ class UsersFonction :
                 if not UsersFonction.is_valid_email(email):
                     return jsonify({"error": "Invalid email format"}), 400
             if "role" in user_data :
-                if not RoleFontion.name_exist(data["role"]) :
-                    return jsonify({"error": f"Role name '{data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
-                id_role = get_role_id_by_name(data["role"])
-                del data["role"]  # Supprimez le champ du nom du rôle
-                data["id_Role"] = id_role
+                if not RoleFonction.name_exists(user_data["role"]) :
+                    return jsonify({"error": f"Role name '{user_data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
+                id_role = UsersFonction.get_role_id_by_name(user_data["role"])
+                del user_data["role"]  # Supprimez le champ du nom du rôle
+                user_data["id_Role"] = id_role
 
             # Etablissez la connexion a la base de donnees
             conn = connect_pg.connect()
@@ -159,10 +159,10 @@ class UsersFonction :
             if "isAdmin" not in data :
                 data["isAdmin"] = False
             # if role existe pas
-            if not RoleFontion.name_exist(data["role"]) :
-                 return jsonify({"error": f"Role name not exist '{UsersFonction.get_all_role_name()}' "}), 400
+            if not RoleFonction.name_exists(data["role"]) :
+                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
              
-            id_role = get_role_id_by_name(data["role"])
+            id_role = UsersFonction.get_role_id_by_name(data["role"])
             del data["role"]  # Supprimez le champ du nom du rôle
             data["id_Role"] = id_role
 
@@ -250,16 +250,16 @@ class UsersFonction :
 
 
     def get_all_role_name():
-        conn = connect()  # Établir une connexion à la base de données
+        conn =connect_pg.connect()  # Établir une connexion à la base de données
         cursor = conn.cursor()
-        query = "SELECT name FROM Role"
+        query = "SELECT name FROM ent.role"
         cursor.execute(query)
         role_names = [row[0] for row in cursor.fetchall()]  # Récupérer tous les noms de rôles
         conn.close()  # Fermer la connexion à la base de données
         return ", ".join(role_names)  # Retourner les noms de rôles sous forme d'une chaîne de caractères séparés par des virgules
     
     def get_role_id_by_name(role_name):
-            conn = connect()  # Établir une connexion à la base de données
+            conn = connect_pg.connect()# Établir une connexion à la base de données
             cursor = conn.cursor()
 
             # Exécutez une requête pour obtenir l'ID du rôle en fonction de son nom

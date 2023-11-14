@@ -7,6 +7,7 @@ import random
 import string
 from entities.DTO.users import Users
 from entities.model.usersm import UsersModel
+from services.role import RoleFonction
 
 class UsersServices :
 
@@ -91,12 +92,10 @@ class UsersFonction :
                 # Verification email
                 if not UsersFonction.is_valid_email(email):
                     return jsonify({"error": "Invalid email format"}), 400
-            # Si type est present
-            if "type" in user_data :
-                # Si type est bien = student ou admin ou teacher ou timetable_manager
-                valid_type = ['student' , 'admin' , 'teacher' , 'timetable_manager']
-                if user_data["type"] not in valid_type :
-                    return jsonify({"error": f"Invalid type : {user_data.get('type')}, the 4 types available are [student - admin - teacher - timetable_manager]"}), 400
+            if "role" in user_data :
+                if not RoleFontion.name_exist(data["role"]) :
+                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
+
             # Etablissez la connexion a la base de donnees
             conn = connect_pg.connect()
             cursor = conn.cursor()
@@ -156,7 +155,9 @@ class UsersFonction :
             # isAdmin false par defaut
             if "isAdmin" not in data :
                 data["isAdmin"] = False
-            # if role existe pas 
+            # if role existe pas
+            if not RoleFontion.name_exist(data["role"]) :
+                 return jsonify({"error": f"Role name not exist '{UsersFonction.get_all_role_name()}' "}), 400
 
             # Verification si id est deja utiliser
             if "id" in data :
@@ -204,16 +205,6 @@ class UsersFonction :
         conn.close()
         return count > 0
     
-    ############  VERIFICATION role EXIST ################
-    # Fonction pour verifier un role existe deja dans la base de donnees
-    def role_exists( role):
-        conn = connect_pg.connect()
-        cursor = conn.cursor()
-        query = f"SELECT COUNT(*) FROM ent.role WHERE name = %s"
-        cursor.execute(query, (role,))
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count > 0
 
     ############  VERIFICATION EMAIL SYNTAXE ################
     def is_valid_email(email):
@@ -249,22 +240,21 @@ class UsersFonction :
         password = ''.join(password_list)
 
         return password
-    
-    ############  GENERATE PASSWORD ################
+
+
     def get_all_role_name():
-        # Generate a password with at least one uppercase letter, one special character, two digits, and the rest lowercase letters
-        length = 12
-        uppercase_letter = random.choice(string.ascii_uppercase)
-        special_character = random.choice(string.punctuation)
-        digits = ''.join(random.choices(string.digits, k=2))
-        lowercase_letters = ''.join(random.choices(string.ascii_lowercase, k=length-4))
+        conn = connect()  # Établir une connexion à la base de données
+        cursor = conn.cursor()
 
-        # Shuffle the characters to create the final password
-        password_list = list(uppercase_letter + special_character + digits + lowercase_letters)
-        random.shuffle(password_list)
-        password = ''.join(password_list)
+        query = "SELECT name FROM Role"
+        cursor.execute(query)
+        
+        role_names = [row[0] for row in cursor.fetchall()]  # Récupérer tous les noms de rôles
 
-        return password
+        conn.close()  # Fermer la connexion à la base de données
+
+        return ", ".join(role_names)  # Retourner les noms de rôles sous forme d'une chaîne de caractères séparés par des virgules
+
     
 
 #----------------------------------ERROR-------------------------------------

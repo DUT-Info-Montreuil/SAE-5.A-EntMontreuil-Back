@@ -41,7 +41,7 @@ class RoleServices :
             return jsonify({"error": "Updated role name is required"}), 400
         
         if RoleFonction.name_exists(updated_role_name) :
-            return jsonify({"error": "Role name already exist"}), 400
+            return jsonify({"error": f"Role name {updated_role_name} already exist"}), 400
 
         # Mettre à jour le nom du rôle dans la base de données
         cursor.execute("UPDATE ent.role SET name = %s WHERE id = %s", (updated_role_name, role_id))
@@ -56,7 +56,7 @@ class RoleServices :
         conn = connect_pg.connect()   # Établir une connexion à la base de données
         cursor = conn.cursor()
         if not RoleFonction.id_exists(role_id) :
-            return jsonify({"error": "Role id not exist"}), 400
+            return jsonify({"error": f"id role '{role_id}' not exist"}), 400
         # Supprimer le rôle de la base de données
         cursor.execute("DELETE FROM ent.role WHERE id = %s", (role_id,))
 
@@ -82,7 +82,7 @@ class RoleServices :
     def get_role_by_id(self,role_id):
         
         if RoleFonction.id_exists(role_id) :
-            return jsonify({"error": "Role id not exist"}), 400
+            raise ValidationError(f"id role '{role_id}' not exist")
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = "select * from ent.role where id = %s"
@@ -114,3 +114,7 @@ class RoleFonction :
         count = cursor.fetchone()[0]
         conn.close()
         return count > 0
+    
+#--------------------ERROR----------------------------------#
+class ValidationError(Exception) :
+    pass

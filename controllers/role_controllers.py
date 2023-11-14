@@ -1,5 +1,5 @@
 from flask import jsonify, Blueprint, request
-from services.role import RoleServices
+from services.role import RoleServices , ValidationError
 
 role_bp = Blueprint('role', __name__)
 role_service = RoleServices()
@@ -48,5 +48,7 @@ def get_role_by_id(role_id):
     try:
         role = role_service.get_role_by_id(role_id)
         return role
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500

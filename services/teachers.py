@@ -21,9 +21,9 @@ class TeachersService :
 
         for row in rows:
             if output_format == 'dto':
-                teacher_instance = Teachers(row[0], row[1], row[2], row[3], row[4])
+                teacher_instance = Teachers(row[0], row[1], row[2], row[3])
             elif output_format == 'model':
-                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[4],row[9] , row[10] , row[6] , row[8] , row[11])
+                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11])
             else:
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             returnStatement.append(teacher_instance.jsonify())
@@ -40,9 +40,9 @@ class TeachersService :
         returnStatement = []
         for row in rows:
             if output_format == 'dto':
-                teacher_instance = Teachers(row[0], row[1], row[2], row[3], row[4])
+                teacher_instance = Teachers(row[0], row[1], row[2], row[3])
             elif output_format == 'model':
-                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[4],row[9] , row[10] , row[6] , row[8] , row[11])
+                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11])
             else:
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             returnStatement.append(teacher_instance.jsonify())
@@ -58,7 +58,7 @@ class TeachersService :
         if "user" not in data:
             return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
-        user_data["type"] = "teacher"
+        user_data["role"] = "teacher"
         
         # Verification initial et si il existe
         if "initial" not in data :
@@ -80,16 +80,10 @@ class TeachersService :
             password = user_response.json.get("password")
             # Recuperation du user id
             user_id = user_response.json.get("id")
-            # Si timetable_manager est present alors prend sa valeur sinon prend la valeur false par defaut
-            if "timetable_manager" in data :
-                timetable_manager = data.get("timetable_manager")
-            else :
-                timetable_manager = False
             # Construction json de teacher_data
             teacher_data = {
                 "desktop": data.get("desktop"),
                 "initial": data.get("initial"),
-                "timetable_manager": timetable_manager,
                 "id_User" : user_id
             }
             teacher_data["id"] = data.get("id")
@@ -182,9 +176,9 @@ class TeachersService :
             conn.commit()
             conn.close()
             if output_format == 'dto':
-                return Teachers(row[0], row[1], row[2], row[3], row[4]).jsonify()
+                return Teachers(row[0], row[1], row[2], row[3]).jsonify()
             elif output_format == 'model':
-                return TeachersModel(row[0], row[1], row[2], row[3], row[4],row[9] , row[10] , row[6] , row[8] , row[11]).jsonify()
+                return TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11]).jsonify()
             else:
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         except Exception as e:

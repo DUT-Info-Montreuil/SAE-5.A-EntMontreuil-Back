@@ -48,7 +48,33 @@ def get_all_materials():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+#------------------- Récuperer un équipment par son id -----------------------#
+@materials_bp.route('/materials/<int:id_Material>', methods=['GET'])
+def get_material(id_Material):
+    """
+    Récupérer un équipement par son id
 
+    ---
+   tags:
+      - Equipements
+   responses:
+      200:
+        description: équipement récupérer
+        examples:
+          application/json: [
+            {
+                "equipment": "projecteur",
+                "id": 4
+            },
+          ]
+      500:
+        description: Erreur serveur en cas de problème lors de la récupération des équipements.
+    """
+    try:
+        material = materials_service.get_material(id_Material)
+        return jsonify(material), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 #--------------------Créer un  equipement--------------------------------------#
 

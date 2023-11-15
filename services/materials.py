@@ -28,7 +28,30 @@ class MaterialService:
         except Exception as e:
             raise e
         finally:
-            conn.close()
+            if conn:
+                connect_pg.disconnect(conn)
+
+#-------------------- Récuperer un équipement par son id--------------------------------------#
+
+    def get_material(self, id_Material):
+        try:
+            conn = connect_pg.connect()
+            query = "SELECT * FROM ent.Materials where id=1"
+            with conn, conn.cursor() as cursor:
+                cursor.execute(query, (id_Material,))
+                row = cursor.fetchone()
+                material = Material(
+                            id=row[0],
+                            equipment=row[1]
+                )
+            return row
+            return material.jsonify()
+
+        except Exception as e:
+            raise e
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
 
 #-------------------- Ajouter un équipement--------------------------------------#
 

@@ -14,6 +14,33 @@ materials_service = MaterialService()
 
 @materials_bp.route('/materials', methods=['GET'])
 def get_all_materials():
+    """
+    Récupérer toutes les équipements
+
+    ---
+   tags:
+      - Equipements
+   responses:
+      200:
+        description: Liste des équipements récupérés depuis la base de données.
+        examples:
+          application/json: [
+            {
+                "equipment": "projecteur",
+                "id": 4
+            },
+            {
+                "equipment": "tablette",
+                "id": 6
+            },
+            {
+                "equipment": "PC portable Asus",
+                "id": 8
+            }
+          ]
+      500:
+        description: Erreur serveur en cas de problème lors de la récupération des équipements.
+    """
     
     try:
         material_list = materials_service.get_all_materials()
@@ -27,6 +54,30 @@ def get_all_materials():
 
 @materials_bp.route('/materials', methods=['POST'])
 def add_material():
+    """
+    Créer un équipement.
+
+    ---
+    tags:
+      - Equipements
+    parameters:
+      - in: body
+        name: datas
+        required: true
+        schema:
+          type: object
+          properties:
+            equipment:
+              type: string
+              description: Le nom de l'équipement à créer.
+    responses:
+      201:
+        description: L'équipement a été créé avec succès.
+      400:
+        description: Requête invalide ou données manquantes.
+      500:
+        description: Erreur serveur lors de la création de l'équipement.
+    """
     try:
         
         donnees_equipement = request.json.get('datas', {})
@@ -51,6 +102,26 @@ def add_material():
 
 @materials_bp.route('/materials/<int:id_material>', methods=['DELETE'])
 def delete_material(id_material):
+    """
+    Supprimer un équipement.
+
+    ---
+    tags:
+      - Equipements
+    parameters:
+      - in: path
+        name: id_material
+        required: true
+        type: integer
+        description: L'identifiant unique de l'équipement à supprimer.
+    responses:
+      200:
+        description: L'équipement a été supprimé avec succès.
+      404:
+        description: L'équipement spécifié n'existe pas.
+      500:
+        description: Erreur serveur lors de la suppression de l'équipement.
+    """
     try:
         if not connect_pg.does_entry_exist("Materials", id_material):
             return jsonify({"message": "L'équiment spécifié n'existe pas."}), 404
@@ -63,6 +134,37 @@ def delete_material(id_material):
 #--------------------Modifier un  equipement--------------------------------------#
 @materials_bp.route('/materials/<int:id_material>', methods=['PUT'])
 def update_material(id_material):
+    """
+    Mettre à jour un équipement.
+
+    ---
+    tags:
+      - Equipements
+    parameters:
+      - in: path
+        name: id_material
+        required: true
+        type: integer
+        description: L'identifiant unique de l'équipement à mettre à jour.
+      - in: body
+        name: datas
+        required: true
+        schema:
+          type: object
+          properties:
+            equipment:
+              type: string
+              description: La nouvelle valeur de l'équipement.
+    responses:
+      201:
+        description: L'équipement a été mis à jour avec succès.
+      400:
+        description: Données de l'équipement manquantes ou incorrectes.
+      404:
+        description: L'équipement spécifié n'existe pas.
+      500:
+        description: Erreur serveur lors de la mise à jour de l'équipement.
+    """
     try:
         donnees_equipement = request.json.get('datas', {})
 

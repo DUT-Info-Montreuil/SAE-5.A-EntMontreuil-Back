@@ -1,5 +1,5 @@
 class Material:
-    def __init__(self, id, equipment, quantity):
+    def __init__(self, id, equipment):
         self.id = id
         self.equipment = equipment
 

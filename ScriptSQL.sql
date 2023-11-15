@@ -96,6 +96,16 @@ CREATE TABLE Materials(
     PRIMARY KEY (id)
 );
 
+
+CREATE TABLE CONTAINS(
+    id_materials INTEGER,
+    id_classroom INTEGER,
+    quantity INTEGER,
+    PRIMARY KEY (id_materials, id_classroom)
+    FOREIGN KEY(id_materials) REFERENCES Materials(id),
+    FOREIGN KEY(id_classroom) REFERENCES Classroom(id),
+);
+
 CREATE TABLE Classroom(
     id SERIAL,
     name VARCHAR(32),

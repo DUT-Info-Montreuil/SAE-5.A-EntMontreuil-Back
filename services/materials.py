@@ -44,7 +44,6 @@ class MaterialService:
                             id=row[0],
                             equipment=row[1]
                 )
-            return row
             return material.jsonify()
 
         except Exception as e:

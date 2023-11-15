@@ -5,11 +5,18 @@ CREATE SCHEMA ent;
 -- Définissez le schéma "ent" comme schéma par défaut
 SET search_path TO ent;
 
+drop schema if exists ent cascade;
+-- Créez le schéma "ent"
+CREATE SCHEMA ent;
+
+-- Définissez le schéma "ent" comme schéma par défaut
+SET search_path TO ent;
+
 CREATE TABLE Roles(
     id SERIAL,
     name VARCHAR(32),
-    PRIMARY KEY (id),
-)
+    PRIMARY KEY (id)
+);
 
 CREATE TABLE Users(
     id SERIAL,
@@ -20,12 +27,12 @@ CREATE TABLE Users(
     email VARCHAR(32),
     isAdmin BOOLEAN,
     id_Role BIGINT,
-    PRIMARY KEY(id)
+    PRIMARY KEY(id),
     FOREIGN KEY (id_Role) REFERENCES Roles(id)
 );
 
 CREATE TABLE Teachers(
-    id SERIAL, 
+    id SERIAL,
     initital VARCHAR(32),
     desktop VARCHAR(32),
     id_User BIGINT ,
@@ -37,7 +44,7 @@ CREATE TABLE Degrees(
     id SERIAL,
     name VARCHAR(32),
     PRIMARY KEY(id)
-)
+);
 
 CREATE TABLE Trainings(
     id SERIAL,
@@ -96,24 +103,23 @@ CREATE TABLE Materials(
     PRIMARY KEY (id)
 );
 
-
-CREATE TABLE CONTAINS(
-    id_materials INTEGER,
-    id_classroom INTEGER,
-    quantity INTEGER,
-    PRIMARY KEY (id_materials, id_classroom)
-    FOREIGN KEY(id_materials) REFERENCES Materials(id),
-    FOREIGN KEY(id_classroom) REFERENCES Classroom(id),
-);
-
 CREATE TABLE Classroom(
     id SERIAL,
     name VARCHAR(32),
     capacity INTEGER,
-    id_Material BIGINT,
-    PRIMARY KEY (id),
-    FOREIGN KEY (id_Material) REFERENCES Materials(id)
+    PRIMARY KEY (id)
 );
+
+CREATE TABLE CONTAINS(
+    id_materials BIGINT,
+    id_classroom BIGINT,
+    quantity INTEGER,
+    PRIMARY KEY (id_materials, id_classroom),
+    FOREIGN KEY(id_materials) REFERENCES Materials(id),
+    FOREIGN KEY(id_classroom) REFERENCES Classroom(id)
+);
+
+
 
 CREATE TABLE Courses(
     id SERIAL,
@@ -172,3 +178,66 @@ CREATE TABLE Logs(
     PRIMARY KEY (id),
     FOREIGN KEY (id_User) REFERENCES Users(id)
 );
+
+
+-- Insertion des rôles
+INSERT INTO Roles (name) VALUES ('Admin');
+INSERT INTO Roles (name) VALUES ('User');
+
+-- Insertion des degrés
+INSERT INTO Degrees (name) VALUES ('INFO');
+INSERT INTO Degrees (name) VALUES ('GAGO');
+INSERT INTO Degrees (name) VALUES ('CLIO');
+INSERT INTO Degrees (name) VALUES ('INFOCOM');
+
+-- Insertion des utilisateurs
+INSERT INTO Users (username, password, last_name, first_name, email, isAdmin, id_Role) VALUES ('admin', 'password', 'Admin', 'Admin', 'admin@example.com', true, 1);
+INSERT INTO Users (username, password, last_name, first_name, email, isAdmin, id_Role) VALUES ('user', 'password', 'User', 'User', 'user@example.com', false, 2);
+
+-- Insertion des enseignants
+INSERT INTO Teachers (initital, desktop, id_User) VALUES ('T1', 'Desk1', 1);
+INSERT INTO Teachers (initital, desktop, id_User) VALUES ('T2', 'Desk2', 2);
+
+-- Insertion des formations
+INSERT INTO Trainings (name, id_Degree) VALUES ('Formation1', 1);
+INSERT INTO Trainings (name, id_Degree) VALUES ('Formation2', 2);
+
+-- Insertion des promotions
+INSERT INTO Promotions (year, level, id_Degree) VALUES (2023, 1, 1);
+INSERT INTO Promotions (year, level, id_Degree) VALUES (2022, 2, 2);
+
+-- Insertion des ressources
+INSERT INTO Resources (name, id_Promotion) VALUES ('Ressource1', 1);
+INSERT INTO Resources (name, id_Promotion) VALUES ('Ressource2', 2);
+
+-- Insertion des TD
+INSERT INTO TD (name, id_Promotion, id_Training) VALUES ('TD1', 1, 1);
+INSERT INTO TD (name, id_Promotion, id_Training) VALUES ('TD2', 2, 2);
+
+-- Insertion des TP
+INSERT INTO TP (name, id_Td) VALUES ('TP1', 1);
+INSERT INTO TP (name, id_Td) VALUES ('TP2', 2);
+
+-- Insertion des matériaux
+INSERT INTO Materials (equipment, quantity) VALUES ('Ordinateur portable', 50);
+INSERT INTO Materials (equipment, quantity) VALUES ('Tableau blanc', 10);
+
+-- Insertion des classes
+INSERT INTO Classroom (name, capacity) VALUES ('Salle1', 30);
+INSERT INTO Classroom (name, capacity) VALUES ('Salle2', 40);
+
+-- Insertion des cours
+INSERT INTO Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom) VALUES ('08:00:00', '10:00:00', '2023-11-15', true, 1, 1, 1, 1, 1, 1);
+INSERT INTO Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom) VALUES ('10:30:00', '12:30:00', '2023-11-15', true, 2, 2, 2, 2, 2, 2);
+
+-- Insertion des étudiants
+INSERT INTO Students (numero, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (123456, true, 2, 1, 1, 1);
+INSERT INTO Students (numero, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (789123, false, 1, 2, 2, 2);
+
+-- Insertion des absences
+INSERT INTO Absences (id_Student, id_Course, reason, justify) VALUES (1, 1, 'Malade', false);
+INSERT INTO Absences (id_Student, id_Course, reason, justify) VALUES (2, 2, 'Raison personnelle', true);
+
+-- Insertion des logs
+INSERT INTO Logs (id_User, modification) VALUES (1, 'Modification 1');
+INSERT INTO Logs (id_User, modification) VALUES (2, 'Modification 2');

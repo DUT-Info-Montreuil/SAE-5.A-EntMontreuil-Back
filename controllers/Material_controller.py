@@ -41,7 +41,7 @@ def add_material():
     except Exception as e:
         return jsonify({"message": "Erreur lors de l'ajout de l'équipement : " + str(e)}), 500
     
-
+#--------------------Supprimer un  equipement--------------------------------------#
 
 @materials_bp.route('/materials/<int:id_material>', methods=['DELETE'])
 def delete_material(id_material):

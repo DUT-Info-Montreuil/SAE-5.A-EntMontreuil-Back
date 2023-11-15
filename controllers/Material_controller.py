@@ -30,7 +30,9 @@ def add_material():
     try:
         
         donnees_equipement = request.json.get('datas', {})
-
+        if not isinstance(donnees_equipement['equipment'], str):
+            return jsonify({"message": "Le champ 'equipment' doit être une chaîne de caractères (string)"}), 400
+        
         
         if not donnees_equipement or 'equipment' not in donnees_equipement:
             return jsonify({"message": "Données de l'équipement manquantes ou incomplètes"}), 400

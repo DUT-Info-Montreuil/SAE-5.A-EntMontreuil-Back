@@ -77,3 +77,10 @@ VALUES (1, 1, 'Maladie', true);
 -- Insérer des données dans la table Historique
 INSERT INTO Historique (id_User, modification)
 VALUES (4, 'est devenue responsable emploi du temps');
+
+-- Insérer des données dans la table material
+
+INSERT INTO Materials(equipment)
+VALUES("Ordinateurs"),
+       ("Tableau Numérique Interactif"),
+       ("Vidéo projecteur");

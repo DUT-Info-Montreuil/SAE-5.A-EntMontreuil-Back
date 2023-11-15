@@ -75,3 +75,30 @@ class MaterialService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+
+
+#-------------------- Modfifier un équipement--------------------------------------#
+
+    def update_material(self, equipment_dto):
+        try:
+            conn = connect_pg.connect()
+            query = "UPDATE ent.Materials SET equipment = %s WHERE id = %s RETURNING id, equipment"
+            values = (equipment_dto.equipment, equipment_dto.id)
+
+            with conn, conn.cursor() as cursor:
+                cursor.execute(query, values)
+                updated_row = cursor.fetchone()
+                conn.commit()
+
+            if updated_row:
+                updated_id, updated_equipment = updated_row
+                return {"message": f"Équipement avec l'ID {updated_id} mis à jour avec succès en tant que {updated_equipment}"}, 200
+            else:
+                return {"message": f"Équipement avec l'ID {equipment_dto.id} introuvable."}, 404
+
+        except psycopg2.Error as e:
+            return {"message": f"Erreur lors de la mise à jour de l'équipement : {str(e)}"}, 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

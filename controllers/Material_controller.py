@@ -95,8 +95,7 @@ def add_material():
 
     except Exception as e:
         return jsonify({"message": "Erreur lors de l'ajout de l'équipement : " + str(e)}), 500
-    
-#--------------------Supprimer un  equipement--------------------------------------#
+
 
 #--------------------Supprimer un  equipement--------------------------------------#
 

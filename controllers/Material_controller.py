@@ -45,6 +45,7 @@ def add_material():
     
 #--------------------Supprimer un  equipement--------------------------------------#
 
+#--------------------Supprimer un  equipement--------------------------------------#
 
 @materials_bp.route('/materials/<int:id_material>', methods=['DELETE'])
 def delete_material(id_material):

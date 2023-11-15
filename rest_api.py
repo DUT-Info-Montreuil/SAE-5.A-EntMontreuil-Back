@@ -9,6 +9,8 @@ from config import config
 from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
 from controllers.Material_controller import materials_bp
+from controllers.Classroom_controller import Classroom_bp
+
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
@@ -17,6 +19,7 @@ swagger = Swagger(app)
 app.register_blueprint(absences_bp)
 app.register_blueprint(training_bp)
 app.register_blueprint(materials_bp)
+app.register_blueprint(Classroom_bp)
 
 @app.after_request
 def after_request(response):

@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from flask import Flask, request, jsonify
-from flask_restful import reqparse, abort, Api, Resource
+from flask import Flask, request
+from flask_restful import Api
 from flask_cors import CORS
-import json
-import psycopg2
-import requests
-from contextlib import closing
+from flasgger import Swagger
 from config import config
-import connect_pg
 
 from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
+from controllers.Material_controller import materials_bp
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
-
+swagger = Swagger(app)
 #register the absence
 app.register_blueprint(absences_bp)
 app.register_blueprint(training_bp)
+app.register_blueprint(materials_bp)
+
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')

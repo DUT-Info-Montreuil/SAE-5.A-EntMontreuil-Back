@@ -137,7 +137,6 @@ CREATE TABLE Courses(
 
 CREATE TABLE Students (
     id SERIAL,
-    numero INTEGER UNIQUE,
     apprentice BOOLEAN,
     ine VARCHAR(32),
     nip VARCHAR(32),
@@ -226,8 +225,8 @@ INSERT INTO Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp
 INSERT INTO Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom) VALUES ('10:30:00', '12:30:00', '2023-11-15', true, 2, 2, 2, 2, 2, 2);
 
 -- Insertion des étudiants
-INSERT INTO Students (numero, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (123456, true, 2, 1, 1, 1);
-INSERT INTO Students (numero, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (789123, false, 1, 2, 2, 2);
+INSERT INTO Students (nip, ine, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (123456,789455, true, 2, 1, 1, 1);
+INSERT INTO Students (nip, ine, apprentice, id_User, id_Td, id_Tp, id_Promotion) VALUES (789123,123456, false, 1, 2, 2, 2);
 
 -- Insertion des absences
 INSERT INTO Absences (id_Student, id_Course, reason, justify) VALUES (1, 1, 'Malade', false);

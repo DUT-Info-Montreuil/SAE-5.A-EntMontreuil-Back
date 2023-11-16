@@ -5,13 +5,6 @@ CREATE SCHEMA ent;
 -- Définissez le schéma "ent" comme schéma par défaut
 SET search_path TO ent;
 
-drop schema if exists ent cascade;
--- Créez le schéma "ent"
-CREATE SCHEMA ent;
-
--- Définissez le schéma "ent" comme schéma par défaut
-SET search_path TO ent;
-
 CREATE TABLE Roles(
     id SERIAL,
     name VARCHAR(32),

@@ -24,9 +24,9 @@ class UsersServices :
 
         for row in rows:
             if output_format == 'dto' :
-                user = Users(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+                user = Users(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
             elif output_format == 'model' :
-                user = UsersModel(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+                user = UsersModel(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
             else :
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             users.append(user.jsonify())
@@ -45,9 +45,9 @@ class UsersServices :
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
         if output_format == 'dto' :
-            user = Users(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+            user = Users(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
         elif output_format == 'model' :
-            user = UsersModel(id = row[0], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+            user = UsersModel(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
         else :
             raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         conn.commit()

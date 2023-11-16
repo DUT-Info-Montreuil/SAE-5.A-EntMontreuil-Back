@@ -1,6 +1,7 @@
 class UsersModel:
-    def __init__(self, id, username, last_name, first_name, email , id_Role ,role_name, isAdmin):
+    def __init__(self, id, password, username, last_name, first_name, email , id_Role ,role_name, isAdmin):
         self.id = id
+        self.password = password
         self.username = username
         self.last_name = last_name
         self.first_name = first_name
@@ -15,6 +16,7 @@ class UsersModel:
     def jsonify(self):
         return {
             "id": self.id,
+            "password" : self.password,
             "username": self.username,
             "last_name": self.last_name,
             "first_name": self.first_name,

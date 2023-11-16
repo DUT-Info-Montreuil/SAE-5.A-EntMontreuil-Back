@@ -218,8 +218,8 @@ INSERT INTO TP (name, id_Td) VALUES ('TP1', 1);
 INSERT INTO TP (name, id_Td) VALUES ('TP2', 2);
 
 -- Insertion des matériaux
-INSERT INTO Materials (equipment, quantity) VALUES ('Ordinateur portable');
-INSERT INTO Materials (equipment, quantity) VALUES ('Tableau blanc');
+INSERT INTO Materials (equipment) VALUES ('Ordinateur portable');
+INSERT INTO Materials (equipment) VALUES ('Tableau blanc');
 
 -- Insertion des classes
 INSERT INTO Classroom (name, capacity) VALUES ('Salle1', 30);

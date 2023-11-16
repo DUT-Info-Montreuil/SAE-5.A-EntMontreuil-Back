@@ -1,3 +1,4 @@
+import json
 import psycopg2
 import connect_pg
 from entities.DTO.classroom import Classroom
@@ -8,7 +9,7 @@ class ClassroomService:
     def __init__(self):
         pass
 
-    def get_all_classrooms(self, output_format="model"):
+    def get_all_classrooms(self, output_format="model",id_classroom=None,):
         conn = None
         cursor = None  # Initialisez cursor en dehors du bloc try
         
@@ -18,12 +19,18 @@ class ClassroomService:
 
             if output_format == "model":
                 # Si output_format est "model", retourne une liste de ClassroomModel
-                cursor.execute("""
+                query="""
                     SELECT c.id, c.name, c.capacity, m.id AS material_id, m.equipment, cm.quantity
                     FROM ent.Classroom c
                     LEFT JOIN ent.CONTAINS cm ON c.id = cm.id_classroom
                     LEFT JOIN ent.Materials m ON cm.id_materials = m.id
-                """)
+                """
+                
+                if id_classroom is not None:
+                        query += "WHERE c.id=%s"
+                        cursor.execute(query,(id_classroom,))
+                else :
+                        cursor.execute(query)
                 rows = cursor.fetchall()
                 
                 classroom_models = {}
@@ -49,10 +56,16 @@ class ClassroomService:
                 result = [classroom_model.jsonify() for classroom_model in classroom_models.values()]
                 return jsonify(result)
             else:
+                
                 # Si output_format est "dto" (ou tout autre format par défaut), retourne une liste de Classroom
-                cursor.execute("SELECT * FROM ent.Classroom")
+                query ="SELECT * FROM ent.Classroom "
+                
+                if id_classroom is not None:
+                        query += "WHERE Classroom.id=%s"
+                        cursor.execute(query,(id_classroom,))
+                else :
+                        cursor.execute(query)
                 rows = cursor.fetchall()
-
                 classrooms = []
                 for row in rows:
                     classroom = Classroom(

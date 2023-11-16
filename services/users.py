@@ -149,7 +149,7 @@ class UsersFonction :
             required_fields = ['username' , 'first_name' , 'last_name' , 'email' , 'role']
             for field in required_fields : 
                 if field not in data :
-                    return jsonify({"error": f"Missing '{field}' field in JSON"}), 400
+                    return jsonify({"error": f"Missing '{field}' field in user"}), 400
             # Attribution des valeurs
             username = data["username"]
             email = data["email"] 

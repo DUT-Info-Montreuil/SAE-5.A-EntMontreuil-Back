@@ -99,7 +99,6 @@ CREATE TABLE TP(
 CREATE TABLE Materials(
     id SERIAL,
     equipment VARCHAR(100),
-    quantity INTEGER,
     PRIMARY KEY (id)
 );
 

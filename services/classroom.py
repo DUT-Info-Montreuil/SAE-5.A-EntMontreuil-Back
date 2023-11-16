@@ -83,3 +83,95 @@ class ClassroomService:
                 cursor.close()
             if conn is not None:
                 conn.close()
+
+    def search_classrooms(self, name=None, capacity=None, equipment=None, output_format="model"):
+        conn = None
+        cursor = None
+
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Build the query based on the provided criteria
+            query = "SELECT c.id, c.name, c.capacity, m.id AS material_id, m.equipment, cm.quantity FROM ent.Classroom c"
+            query += " LEFT JOIN ent.CONTAINS cm ON c.id = cm.id_classroom"
+            query += " LEFT JOIN ent.Materials m ON cm.id_materials = m.id"
+            conditions = []
+            values = []
+
+            if name:
+                conditions.append("c.name = %s")
+                values.append(name)
+            if capacity is not None:
+                conditions.append("c.capacity >= %s")
+                values.append(capacity)
+
+            if equipment:
+                conditions.append("m.equipment = %s")
+                values.append(equipment)
+
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+
+            cursor.execute(query, tuple(values))
+            rows = cursor.fetchall()
+
+            classroom_models = {}
+            for row in rows:
+                classroom_id = row[0]
+                if classroom_id not in classroom_models:
+                    classroom_model = ClassroomModel(
+                        id=row[0],
+                        name=row[1],
+                        capacity=row[2],
+                        materials=[]
+                    )
+                    classroom_models[classroom_id] = classroom_model
+
+                if row[3] is not None:
+                    material = {
+                        "id": row[3],
+                        "equipment": row[4],
+                        "quantity": row[5]
+                    }
+                    classroom_models[classroom_id].materials.append(material)
+
+            result = [classroom_model.jsonify() for classroom_model in classroom_models.values()]
+            return jsonify(result) if output_format == "model" else jsonify(result)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+    def add_equipments_to_classroom(self, id_Classroom, equipment_ids):
+            try:
+                conn = connect_pg.connect()  # Remplacez par votre fonction de connexion réelle
+                cursor = conn.cursor()
+
+                if not connect_pg.does_entry_exist("Classroom", id_Classroom):
+                    raise Exception("La salle de classe spécifiée n'existe pas.")
+                
+                if not equipment_ids:
+                    raise Exception("Aucun équipement spécifié à ajouter.")
+                    
+                # Vérifiez si les équipements existent et récupérez leurs IDs
+                cursor.execute("SELECT id FROM ent.Materials WHERE id IN %s", (tuple(equipment_ids),))
+                existing_equipment_ids = [row[0] for row in cursor.fetchall()]
+
+                if len(existing_equipment_ids) != len(equipment_ids):
+                    raise Exception("Certains équipements spécifiés n'existent pas.")
+
+                # Ajoutez les équipements à la salle de classe en utilisant les IDs
+                cursor.executemany("INSERT INTO ent.CONTAINS (id_classroom, id_materials, quantity) VALUES (%s, %s, %s)",
+                                    [(id_Classroom, equip_id, 1) for equip_id in existing_equipment_ids])
+
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                cursor.close()
+                conn.close()

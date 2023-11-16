@@ -15,7 +15,7 @@ def create_role():
         return jsonify({'error': str(e)}), 500
 
 # Route pour mettre à jour un rôle existant
-@role_bp.route('/roles/<int:role_id>', methods=['PUT'])
+@role_bp.route('/roles/<int:role_id>', methods=['PATCH'])
 def update_role(role_id):
     try:
         role_data = request.json

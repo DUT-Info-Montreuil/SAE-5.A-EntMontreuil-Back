@@ -1,11 +1,11 @@
 from flask import jsonify, Blueprint, request
-from services.role import RoleServices , ValidationError
+from services.roles import RolesServices , ValidationError
 
-role_bp = Blueprint('role', __name__)
-role_service = RoleServices()
+roles_bp = Blueprint('roles', __name__)
+roles_service = RolesServices()
 
 # Route pour créer un nouveau rôle
-@role_bp.route('/roles', methods=['POST'])
+@roles_bp.route('/roles', methods=['POST'])
 def create_role():
     try:
         role_data = request.json
@@ -15,7 +15,7 @@ def create_role():
         return jsonify({'error': str(e)}), 500
 
 # Route pour mettre à jour un rôle existant
-@role_bp.route('/roles/<int:role_id>', methods=['PATCH'])
+@roles_bp.route('/roles/<int:role_id>', methods=['PATCH'])
 def update_role(role_id):
     try:
         role_data = request.json
@@ -25,7 +25,7 @@ def update_role(role_id):
         return jsonify({'error': str(e)}), 500
 
 # Route pour supprimer un rôle existant
-@role_bp.route('/roles/<int:role_id>', methods=['DELETE'])
+@roles_bp.route('/roles/<int:role_id>', methods=['DELETE'])
 def delete_role(role_id):
     try:
         deleted_role = role_service.delete_role(role_id)
@@ -34,7 +34,7 @@ def delete_role(role_id):
         return jsonify({'error': str(e)}), 500
 
 # Route pour obtenir tous les rôles
-@role_bp.route('/roles', methods=['GET'])
+@roles_bp.route('/roles', methods=['GET'])
 def get_all_roles():
     try:
         all_roles = role_service.get_roles()
@@ -43,7 +43,7 @@ def get_all_roles():
         return jsonify({'error': str(e)}), 500
 
 # Route pour obtenir un rôle spécifique par ID
-@role_bp.route('/roles/<int:role_id>', methods=['GET'])
+@roles_bp.route('/roles/<int:role_id>', methods=['GET'])
 def get_role_by_id(role_id):
     try:
         role = role_service.get_role_by_id(role_id)

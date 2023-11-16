@@ -21,9 +21,9 @@ CREATE TABLE Users(
     id_Role BIGINT,
     PRIMARY KEY(id),
     isAdmin BOOLEAN,
-    FOREIGN KEY(id_Role) REFERENCES Role(id)
+    FOREIGN KEY(id_Role) REFERENCES Roles(id)
 );
-
+role
 CREATE TABLE Teachers(
     id SERIAL,
     initial VARCHAR(32),

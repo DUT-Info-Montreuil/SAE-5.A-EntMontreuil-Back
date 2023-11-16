@@ -7,7 +7,6 @@ from entities.DTO.students import Students
 from entities.model.studentsm import StudentsModel
 from services.users import UsersFonction
 
-students_bp = Blueprint('students', __name__)
 
 
 class StudentsServices : 
@@ -139,7 +138,6 @@ class StudentsServices :
 
 
     ############ STUDENTS/UPDATE/<int:id_student> ############
-    #@students_bp.route('/students/update/<int:id_student>', methods=['PATCH'])
     def update_students(self, id_student, datas):
         # Si il manque datas renvoie une erreur
         if "datas" not in datas:
@@ -183,7 +181,6 @@ class StudentsServices :
         return jsonify({"message": "Student update", "id": id_student}) , 200 
 
     ############ STUDENTS/CSV ############
-    @students_bp.route('/students/add_csv', methods=['POST'])
     def csv_add_students(self, csv_path):
         #test avec : C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv
         # Verification fichier valide

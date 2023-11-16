@@ -5,11 +5,10 @@ from flask_restful import Api
 from flask_cors import CORS
 from flasgger import Swagger
 from config import config
-from controllers.teachers_controllers import teachers_bp
-from controllers.users_controllers import users_bp
-from controllers.role_controllers import role_bp
-from controllers.students_controllers import students_bp
-
+from controllers.Teachers_controllers import teachers_bp
+from controllers.Users_controllers import users_bp
+from controllers.Roles_controllers import roles_bp
+from controllers.Students_controllers import students_bp
 from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
 from controllers.Material_controller import materials_bp
@@ -17,14 +16,13 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 swagger = Swagger(app)
-#register the absence
+#blueprint
 app.register_blueprint(absences_bp)
 app.register_blueprint(training_bp)
 app.register_blueprint(materials_bp)
-
 app.register_blueprint(users_bp)
 app.register_blueprint(teachers_bp)
-app.register_blueprint(role_bp)
+app.register_blueprint(roles_bp)
 app.register_blueprint(students_bp)
 
 @app.after_request

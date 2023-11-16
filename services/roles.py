@@ -1,11 +1,9 @@
-from flask import jsonify, Blueprint, request
+from flask import jsonify, request
 import connect_pg
-from entities.DTO.role import Role
-
-role_bp = Blueprint('role', __name__)
+from entities.DTO.roles import Roles
 
 # Route pour créer un nouveau rôle
-class RoleServices :
+class RolesServices :
     def create_role(self,data):
         conn = connect_pg.connect()  # Établir une connexion à la base de données
         cursor = conn.cursor()
@@ -16,11 +14,11 @@ class RoleServices :
         # Vérifier si le nom du rôle est fourni
         if not role_name:
             return jsonify({"error": "Role name is required"}), 400
-        if RoleFonction.name_exists(role_name) :
+        if RolesFonction.name_exists(role_name) :
             return jsonify({"error": "Role name already exist"}), 400
 
         # Insérer le nouveau rôle dans la base de données
-        cursor.execute("INSERT INTO ent.role (name) VALUES (%s) RETURNING id", (role_name,))
+        cursor.execute("INSERT INTO ent.roles (name) VALUES (%s) RETURNING id", (role_name,))
         role_id = cursor.fetchone()[0]
 
         conn.commit()  # Valider la transaction
@@ -40,11 +38,11 @@ class RoleServices :
         if not updated_role_name:
             return jsonify({"error": "Updated role name is required"}), 400
         
-        if RoleFonction.name_exists(updated_role_name) :
+        if RolesFonction.name_exists(updated_role_name) :
             return jsonify({"error": f"Role name {updated_role_name} already exist"}), 400
 
         # Mettre à jour le nom du rôle dans la base de données
-        cursor.execute("UPDATE ent.role SET name = %s WHERE id = %s", (updated_role_name, role_id))
+        cursor.execute("UPDATE ent.roles SET name = %s WHERE id = %s", (updated_role_name, role_id))
 
         conn.commit()  # Valider la transaction
         conn.close()   # Fermer la connexion à la base de données
@@ -55,10 +53,10 @@ class RoleServices :
     def delete_role(self,role_id):
         conn = connect_pg.connect()   # Établir une connexion à la base de données
         cursor = conn.cursor()
-        if not RoleFonction.id_exists(role_id) :
+        if not RolesFonction.id_exists(role_id) :
             return jsonify({"error": f"id role '{role_id}' not exist"}), 400
         # Supprimer le rôle de la base de données
-        cursor.execute("DELETE FROM ent.role WHERE id = %s", (role_id,))
+        cursor.execute("DELETE FROM ent.roles WHERE id = %s", (role_id,))
 
         conn.commit()  # Valider la transaction
         conn.close()   # Fermer la connexion à la base de données
@@ -67,7 +65,7 @@ class RoleServices :
 
     # Route pour obtenir tous les rôles
     def get_roles(self):
-        query = "select * from ent.role order by id"
+        query = "select * from ent.roles order by id"
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         roles = []
@@ -81,11 +79,11 @@ class RoleServices :
     # Route pour obtenir un rôle spécifique par ID
     def get_role_by_id(self,role_id):
         
-        if RoleFonction.id_exists(role_id) :
+        if RolesFonction.id_exists(role_id) :
             raise ValidationError(f"id role '{role_id}' not exist")
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = "select * from ent.role where id = %s"
+        query = "select * from ent.roles where id = %s"
         cursor.execute(query, (role_id,))
         row = cursor.fetchone()
         role = Role(id = row[0], name = row[1])
@@ -95,12 +93,12 @@ class RoleServices :
         return role.jsonify()
 
 #--------------------Role Fonction----------------------------#
-class RoleFonction :
+class RolesFonction :
 
     def name_exists( name):
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = f"SELECT COUNT(*) FROM ent.role WHERE name = %s"
+        query = f"SELECT COUNT(*) FROM ent.roles WHERE name = %s"
         cursor.execute(query, (name,))
         count = cursor.fetchone()[0]
         conn.close()
@@ -109,7 +107,7 @@ class RoleFonction :
     def id_exists( id):
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = f"SELECT COUNT(*) FROM ent.role WHERE id = %s"
+        query = f"SELECT COUNT(*) FROM ent.roles WHERE id = %s"
         cursor.execute(query, (id,))
         count = cursor.fetchone()[0]
         conn.close()

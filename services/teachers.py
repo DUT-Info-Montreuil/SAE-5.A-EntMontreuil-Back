@@ -6,8 +6,6 @@ from entities.model.teachersm import TeachersModel
 from services.users import UsersFonction
 
 
-teachers_bp = Blueprint('teachers', __name__)
-
 #--------------------------------------------------ROUTE--------------------------------------------------#
 class TeachersService :
     

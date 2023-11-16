@@ -23,7 +23,7 @@ CREATE TABLE Users(
     isAdmin BOOLEAN,
     FOREIGN KEY(id_Role) REFERENCES Roles(id)
 );
-role
+
 CREATE TABLE Teachers(
     id SERIAL,
     initial VARCHAR(32),
@@ -190,8 +190,8 @@ INSERT INTO Users (username, password, last_name, first_name, email, isAdmin, id
 INSERT INTO Users (username, password, last_name, first_name, email, isAdmin, id_Role) VALUES ('user', 'password', 'User', 'User', 'user@example.com', false, 2);
 
 -- Insertion des enseignants
-INSERT INTO Teachers (initital, desktop, id_User) VALUES ('T1', 'Desk1', 1);
-INSERT INTO Teachers (initital, desktop, id_User) VALUES ('T2', 'Desk2', 2);
+INSERT INTO Teachers (initial, desktop, id_User) VALUES ('T1', 'Desk1', 1);
+INSERT INTO Teachers (initial, desktop, id_User) VALUES ('T2', 'Desk2', 2);
 
 -- Insertion des formations
 INSERT INTO Trainings (name, id_Degree) VALUES ('Formation1', 1);

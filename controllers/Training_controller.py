@@ -13,28 +13,58 @@ training_service = TrainingService()
 @training_bp.route('/trainings', methods=['GET'])
 def get_all_trainings():
     """
-    Récupère tous les parcours en fonction du format de sortie spécifié.
+Récupérer tous les parcours.
 
-    Cette route permet de récupérer la liste de tous les parcours disponibles. Vous pouvez spécifier le format de
-    sortie en utilisant le paramètre 'output_format' avec les valeurs possibles 'DTO' (par défaut) ou 'model'.
+---
+tags:
+  - Parcours
+parameters:
+  - name: output_format
+    in: /trainings?output_format=model
+    description: Le format de sortie des données (par défaut "model").
+    required: false
+    type: string
+    default: "model"
+    enum: ["DTO", "model"]
+  - name: id_Degree
+    in: /trainings?is_degree=1
+    description: L'identifiant de la formation pour filtrer les parcours (optionnel).
+    required: false
+    type: integer
+responses:
+  200:
+    description: Liste des parcours récupérés depuis la base de données (model).
+    examples:
+      application/json:
+        [
+            {
+                "degree_name": "GAGO",
+                "id": 2,
+                "id_Degree": 2,
+                "name": "Formation2"
+            },
+            {
+                "degree_name": "INFO",
+                "id": 2,
+                "id_Degree": 1,
+                "name": "PARCOUR A"
+            }
+        ]
+    
+  500:
+    description: Erreur serveur en cas de problème lors de la récupération des parcours.
+"""
 
-    Vous pouvez également filtrer les résultats en spécifiant l'identifiant de la formation ('id_degree') pour
-    récupérer uniquement les parcours associés à une formation particulière.
-
-    :return: Une liste de parcours au format spécifié (DTO ou model).
-    :rtype: list
-    :raises: 500 (Internal Server Error) en cas d'erreur lors de la récupération des données.
-    """
     try:
         output_format = request.args.get('output_format', default='DTO', type=str)
         id_Degree = request.args.get('id_Degree', default=None, type=int)  # Ajout de la récupération de id_degree
-
+        
         # Appel de la fonction get_all_trainings avec ou sans id_degree en fonction de sa présence
         if id_Degree is not None:
             trainings = training_service.get_all_trainings(output_format, id_Degree=id_Degree)
         else:
             trainings = training_service.get_all_trainings(output_format)
-
+        
         return jsonify(trainings), 200
 
     except Exception as e:
@@ -43,7 +73,7 @@ def get_all_trainings():
 
 
 #--------------------ajouter  un  parcours--------------------------------------#
-@training_bp.route('/trainings/add', methods=['POST'])
+@training_bp.route('/trainings', methods=['POST'])
 def add_training():
     """
     Ajoute un nouveau parcours à la base de données.
@@ -98,11 +128,49 @@ def add_training():
 
     
 #-------------------- Récuperer un parcours via son id ----------------------#
-@training_bp.route('/trainings/get/<int:id_training>', methods=['GET'])
+@training_bp.route('/trainings/<int:id_training>', methods=['GET'])
 def get_training(id_training):
     """
-    Récupère les détails d'un parcours spécifique par son ID.
-    """
+Récupère les détails d'un parcours spécifique par son ID.
+
+Cette route permet de récupérer les informations détaillées d'un parcours en spécifiant son ID.
+
+---
+tags:
+  - Parcours
+parameters:
+  - name: id_training
+    in: path
+    description: L'identifiant unique du parcours à récupérer.
+    required: true
+    type: integer
+  - name: output_format
+    in: query
+    description: Le format de sortie des données (par défaut "model").
+    required: false
+    type: string
+    default: "model"
+    enum: ["DTO", "model"]
+responses:
+  200:
+    description: Informations détaillées du parcours récupérées avec succès.
+    examples:
+      application/json:
+        {
+            "degree_name": "GAGO",
+            "id": 2,
+            "id_Degree": 2,
+            "name": "Formation2"
+        }
+  404:
+    description: Parcours non trouvé en cas d'ID inexistant.
+    examples:
+      application/json: {"message": "Le parcours spécifié n'existe pas."}
+  500:
+    description: Erreur serveur en cas de problème lors de la récupération du parcours.
+    examples:
+      application/json: {"message": "Erreur lors de la récupération du parcours : [message d'erreur]"}
+"""
 
     if not connect_pg.does_entry_exist("Trainings", id_training):
         return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
@@ -114,25 +182,57 @@ def get_training(id_training):
         return jsonify({"message": f"Erreur lors de la récupération du parcours : {str(e)}"}), 500
 
 
-@training_bp.route('/trainings/update/<int:id_training>', methods=['PUT'])
+@training_bp.route('/trainings/<int:id_training>', methods=['PUT'])
 def update_training(id_training):
     """
-    Met à jour un parcours existant dans la base de données par son ID.
+Met à jour un parcours existant dans la base de données par son ID.
 
-    Cette route permet de mettre à jour les informations d'un parcours en spécifiant son ID.
+Cette route permet de mettre à jour les informations d'un parcours en spécifiant son ID.
 
-    Args:
-        id_training (int): L'identifiant unique du parcours à mettre à jour.
+---
+tags:
+  - Parcours
+parameters:
+  - name: id_training
+    in: path
+    description: L'identifiant unique du parcours à mettre à jour.
+    required: true
+    type: integer
+  - name: body
+    in: body
+    description: Les données du parcours à mettre à jour au format JSON.
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Le nouveau nom du parcours.
+            id_Degree:
+              type: integer
+              description: L'identifiant de la formation associée au parcours.
+responses:
+  200:
+    description: Message de réussite de la mise à jour.
+    examples:
+      application/json: {"message": "Parcours mis à jour avec succès."}
+  400:
+    description: Requête incorrecte en cas de données manquantes ou mal formatées.
+    examples:
+      application/json: {"message": "Données manquantes ou mal formatées."}
+  404:
+    description: Parcours non trouvé en cas d'ID inexistant.
+    examples:
+      application/json: {"message": "Le parcours spécifié n'existe pas."}
+  500:
+    description: Erreur serveur en cas de problème lors de la mise à jour du parcours.
+    examples:
+      application/json: {"message": "Erreur lors de la mise à jour du parcours : [message d'erreur]"}
+"""
 
-    Returns:
-        tuple: Un tuple contenant un message de résultat et un code d'état HTTP.
-
-    Raises:
-        Exception: En cas d'erreur lors de la mise à jour du parcours.
-
-    Example:
-        Pour mettre à jour un parcours avec l'ID 1, envoyez une requête PUT avec les nouvelles données au format DTO.
-    """
     try:
         json_data = request.json
 
@@ -155,11 +255,37 @@ def update_training(id_training):
         return jsonify({"message": f"Erreur lors de la mise à jour du parcours : {str(e)}"}), 500
 
 
-@training_bp.route('/trainings/delete/<int:id_training>', methods=['DELETE'])
+@training_bp.route('/trainings/<int:id_training>', methods=['DELETE'])
 def delete_training(id_training):
     """
-    Supprime un parcours existant de la base de données par son ID.
-    """
+Supprime un parcours existant de la base de données par son ID.
+
+Cette route permet de supprimer un parcours en spécifiant son ID.
+
+---
+tags:
+  - Parcours
+parameters:
+  - name: id_training
+    in: path
+    description: L'identifiant unique du parcours à supprimer.
+    required: true
+    type: integer
+responses:
+  200:
+    description: Message de réussite de la suppression.
+    examples:
+      application/json: {"message": "Parcours supprimé avec succès."}
+  404:
+    description: Parcours non trouvé en cas d'ID inexistant.
+    examples:
+      application/json: {"message": "Le parcours spécifié n'existe pas."}
+  500:
+    description: Erreur serveur en cas de problème lors de la suppression du parcours.
+    examples:
+      application/json: {"message": "Erreur lors de la suppression du parcours : [message d'erreur]"}
+"""
+
     try:
         result, status_code = training_service.delete_training(id_training)
         return jsonify(result), status_code

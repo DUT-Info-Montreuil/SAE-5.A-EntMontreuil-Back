@@ -102,14 +102,16 @@ CREATE TABLE Classroom(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE CONTAINS(
+CREATE TABLE CONTAINS (
     id_materials BIGINT,
     id_classroom BIGINT,
     quantity INTEGER,
     PRIMARY KEY (id_materials, id_classroom),
-    FOREIGN KEY(id_materials) REFERENCES Materials(id),
-    FOREIGN KEY(id_classroom) REFERENCES Classroom(id)
+    FOREIGN KEY (id_materials) REFERENCES Materials(id),
+    FOREIGN KEY (id_classroom) REFERENCES Classroom(id),
+    UNIQUE (id_materials, id_classroom)
 );
+
 
 
 

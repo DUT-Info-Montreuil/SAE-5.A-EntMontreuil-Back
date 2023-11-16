@@ -18,19 +18,19 @@ CREATE TABLE Users(
     last_name VARCHAR(32),
     first_name VARCHAR(32),
     email VARCHAR(32),
-    isAdmin BOOLEAN,
     id_Role BIGINT,
     PRIMARY KEY(id),
-    FOREIGN KEY (id_Role) REFERENCES Roles(id)
+    isAdmin BOOLEAN,
+    FOREIGN KEY(id_Role) REFERENCES Role(id)
 );
 
 CREATE TABLE Teachers(
     id SERIAL,
-    initital VARCHAR(32),
+    initial VARCHAR(32),
     desktop VARCHAR(32),
     id_User BIGINT ,
     PRIMARY KEY(id),
-    FOREIGN KEY(id_User) REFERENCES Users(id)
+    FOREIGN KEY (id_User) REFERENCES Users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Degrees(
@@ -139,17 +139,18 @@ CREATE TABLE Students (
     id SERIAL,
     numero INTEGER UNIQUE,
     apprentice BOOLEAN,
-    id_User BIGINT,
-    id_Td BIGINT,
-    id_Tp BIGINT,
-    id_Promotion BIGINT,
+    ine VARCHAR(32),
+    nip VARCHAR(32),
+    id_User BIGINT ,
+    id_Td  BIGINT ,
+    id_Tp  BIGINT ,
+    id_Promotion BIGINT ,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_User) REFERENCES Users (id),
-    FOREIGN KEY (id_Td) REFERENCES TD (id) ON DELETE SET NULL,
-    FOREIGN KEY (id_Tp) REFERENCES TP (id) ON DELETE SET NULL,
-    FOREIGN KEY (id_Promotion) REFERENCES Promotions (id) ON DELETE SET NULL
+    FOREIGN KEY (id_User) REFERENCES Users(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_Td) REFERENCES TD(id),
+    FOREIGN KEY (id_Tp) REFERENCES TP(id),
+    FOREIGN KEY (id_Promotion) REFERENCES Promotions(id)
 );
-
 
 
 CREATE TABLE Absences(
@@ -173,8 +174,10 @@ CREATE TABLE Logs(
 
 
 -- Insertion des rôles
-INSERT INTO Roles (name) VALUES ('Admin');
-INSERT INTO Roles (name) VALUES ('User');
+INSERT INTO Roles (name) VALUES ('admin');
+INSERT INTO Roles (name) VALUES ('user');
+INSERT INTO Roles (name) VALUES ('student');
+INSERT INTO Roles (name) VALUES ('teacher');
 
 -- Insertion des degrés
 INSERT INTO Degrees (name) VALUES ('INFO');
@@ -233,3 +236,32 @@ INSERT INTO Absences (id_Student, id_Course, reason, justify) VALUES (2, 2, 'Rai
 -- Insertion des logs
 INSERT INTO Logs (id_User, modification) VALUES (1, 'Modification 1');
 INSERT INTO Logs (id_User, modification) VALUES (2, 'Modification 2');
+
+
+
+-- Création du déclencheur
+CREATE OR REPLACE FUNCTION delete_absences_on_student_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM ent.Absences WHERE id_Student = OLD.id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER delete_absences_trigger
+BEFORE DELETE ON ent.Students
+FOR EACH ROW
+EXECUTE FUNCTION delete_absences_on_student_delete();
+
+CREATE OR REPLACE FUNCTION delete_courses_on_teacher_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM ent.Courses WHERE id_Teacher = OLD.id;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER delete_courses_trigger
+BEFORE DELETE ON ent.Teachers
+FOR EACH ROW
+EXECUTE FUNCTION delete_courses_on_teacher_delete();

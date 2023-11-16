@@ -1,5 +1,5 @@
 class Teachers:
-    def __init__(self, id, initital, desktop, timetable_manager, id_User):
+    def __init__(self, id, initital, desktop, id_User):
         self.id = id
         self.initital = initital
         self.desktop = desktop

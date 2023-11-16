@@ -34,7 +34,7 @@ class UsersServices :
         return jsonify(users)
 
     ############ GET /USERS/<int:id_user> ################
-    def get_users_with_id(self, id_user):
+    def get_users_with_id(self, id_user, output_format):
         """ Return one user in JSON format """
 
         if not UsersFonction.field_exists('id' , id_user) :

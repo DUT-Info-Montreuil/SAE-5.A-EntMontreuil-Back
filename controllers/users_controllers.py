@@ -12,7 +12,8 @@ users_service = UsersServices()
 @users_bp.route('/users', methods=['GET'])
 def get_all_users_dto():
     try:
-        all_users = users_service.get_users().json
+        output_format = request.args.get('output_format', default='dto')
+        all_users = users_service.get_users(output_format).json
         return jsonify(all_users)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -21,7 +22,8 @@ def get_all_users_dto():
 @users_bp.route('/users/<int:id>', methods=['GET'])
 def get_one_users_dto(id):
     try:
-        user = users_service.get_users_with_id(id)
+        output_format = request.args.get('output_format', default='dto')
+        user = users_service.get_users_with_id(id, output_format)
         return jsonify(user)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400

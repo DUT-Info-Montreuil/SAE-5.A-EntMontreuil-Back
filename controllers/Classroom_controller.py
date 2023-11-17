@@ -379,3 +379,49 @@ def delete_classroom(id_classroom):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@Classroom_bp.route('/classrooms', methods=['POST'])
+def create_classroom():
+    """
+    Créer une nouvelle salle de classe.
+    ---
+    tags:
+      - Salles de classe
+    parameters:
+      - in: body
+        name: classroom_data
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Le nom de la salle de classe.
+            capacity:
+              type: integer
+              description: La capacité de la salle de classe.
+    responses:
+      201:
+        description: Nouvelle salle de classe créée avec succès.
+      400:
+        description: Données invalides fournies.
+      500:
+        description: Erreur serveur lors de la création de la salle de classe.
+    """
+    try:
+        data = request.json.get(('dats'),{})
+        name = data.get('name')
+        capacity = data.get('capacity')
+
+        # Vérifications supplémentaires
+        if not name:
+            return jsonify({"message": "Le nom de la salle est requis."}), 400
+        if not isinstance(capacity, int) or capacity <= 0:
+            return jsonify({"message": "La capacité doit être un nombre entier positif."}), 400
+
+        result = Classroom_service.create_classroom(name, capacity)
+        if "error" in result:
+            return jsonify(result), 500
+        return jsonify(result), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

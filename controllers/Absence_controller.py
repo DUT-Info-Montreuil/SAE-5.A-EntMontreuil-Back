@@ -16,15 +16,37 @@ def get_all_absences():
     """
     Récupère toutes les absences depuis la base de données.
 
-    Params:
-        justified (int): (Optionnel) 1 pour les absences justifiées, 0 pour les absences non justifiées.
-        output_format (str): (Optionnel) Format de sortie des données ('DTO' ou 'model').
-
-    Returns:
-        JSON: Liste des absences récupérées depuis la base de données.
-
-    Raises:
-        500 (Internal Server Error): Erreur serveur en cas de problème lors de la récupération des absences.
+    ---
+    tags:
+      - Absences
+    parameters:
+      - name: justified
+        in: query
+        type: integer
+        required: false
+        description: 1 pour les absences justifiées, 0 pour les absences non justifiées.
+      - name: output_format
+        in: query
+        type: string
+        required: false
+        default: 'DTO'
+        description: Format de sortie des données ('DTO' ou 'model').
+    responses:
+      200:
+        description: Liste des absences récupérées depuis la base de données.
+        examples:
+          application/json: [
+            {
+              "id": 1,
+              "student_id": 123,
+              "date": "2023-01-01",
+              "justified": true
+              # ... autres champs
+            },
+            # ... autres absences
+          ]
+      500:
+        description: Erreur serveur en cas de problème lors de la récupération des absences.
     """
     justified = request.args.get('justified', default=None, type=int)
     output_format = request.args.get('output_format', default='DTO', type=str)

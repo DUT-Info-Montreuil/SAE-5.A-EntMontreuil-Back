@@ -265,3 +265,26 @@ class ClassroomService:
                     cursor.close()
                 if conn:
                     conn.close()
+
+
+    def create_classroom(self,classroom):
+            conn = None
+            cursor = None
+            try:
+                conn = connect_pg.connect()
+                cursor = conn.cursor()
+
+                insert_query = "INSERT INTO ent.Classroom (name, capacity) VALUES (%s, %s) RETURNING id"
+                cursor.execute(insert_query, (classroom.name, classroom.apacity))
+                classroom_id = cursor.fetchone()[0]
+
+                conn.commit()
+                return {"message": "Classroom created successfully.", "id": classroom_id}
+            except Exception as e:
+                conn.rollback()
+                return {"error": str(e)}
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()

@@ -347,3 +347,35 @@ def remove_equipment(id_classroom, id_equipment):
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+    
+#------------------------------ supprimer une classe -----------------------#
+
+@Classroom_bp.route('/classrooms/<int:id_classroom>', methods=['DELETE'])
+def delete_classroom(id_classroom):
+    """
+    Supprimer une salle de classe et toutes les données associées.
+    ---
+    tags:
+      - Salles de classe
+    parameters:
+      - name: id_classroom
+        in: path
+        description: L'identifiant unique de la salle de classe à supprimer.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Salle de classe et données associées supprimées avec succès.
+      404:
+        description: Salle de classe non trouvée.
+      500:
+        description: Erreur serveur lors de la suppression de la salle de classe.
+    """
+    try:
+        result = Classroom_service.delete_classroom(id_classroom)
+        if "error" in result:
+            return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

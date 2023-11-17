@@ -238,3 +238,30 @@ class ClassroomService:
             finally:
                 cursor.close()
                 conn.close()
+
+#--------------------- supprimer une classe --------------------#
+    def delete_classroom(self, id_classroom):
+            conn = None
+            cursor = None
+            try:
+                conn = connect_pg.connect()
+                cursor = conn.cursor()
+
+                # Supprimez d'abord les tuples associés dans les tables liées
+                delete_related_query = "DELETE FROM ent.CONTAINS WHERE id_classroom = %s"
+                cursor.execute(delete_related_query, (id_classroom,))
+
+                # Ensuite, supprimez la salle de classe
+                delete_classroom_query = "DELETE FROM ent.Classroom WHERE id = %s"
+                cursor.execute(delete_classroom_query, (id_classroom,))
+
+                conn.commit()
+                return {"message": "Classroom and related data successfully deleted."}
+            except Exception as e:
+                conn.rollback()
+                return {"error": str(e)}
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()

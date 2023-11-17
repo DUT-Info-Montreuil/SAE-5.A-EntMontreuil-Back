@@ -1,23 +1,25 @@
 class ClassroomModel:
-    def __init__(self, id, name, capacity, id_Material, material_equipment, material_quantity):
+    def __init__(self, id, name, capacity, materials):
         self.id = id
         self.name = name
         self.capacity = capacity
-        self.id_Material = id_Material
-
-        # material
-        self.material_equipment = material_equipment
-        self.material_quantity = material_quantity
+        self.materials = materials  # Une liste de matériel
 
     def __str__(self):
         return f"Classroom id: {self.id}, name: {self.name}"
 
     def jsonify(self):
+        materials_json = []
+        for material in self.materials:
+            materials_json.append({
+                "id": material["id"],
+                "equipment": material["equipment"],
+                "quantity": material["quantity"]
+            })
+
         return {
             "id": self.id,
             "name": self.name,
             "capacity": self.capacity,
-            "id_Material": self.id_Material,
-            "material_equipment": self.material_equipment,
-            "material_quantity": self.material_quantity
+            "materials": materials_json
         }

@@ -12,8 +12,8 @@ from controllers.Students_controllers import students_bp
 from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
 from controllers.Material_controller import materials_bp
+from controllers.Classroom_controller import Classroom_bp
 from controllers.Authentificate_controller import authentificate_bp
-
 from flask_jwt_extended import JWTManager
 
 # Register the main controller
@@ -27,6 +27,7 @@ swagger = Swagger(app)
 app.register_blueprint(absences_bp)
 app.register_blueprint(training_bp)
 app.register_blueprint(materials_bp)
+app.register_blueprint(Classroom_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(teachers_bp)
 app.register_blueprint(roles_bp)

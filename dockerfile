@@ -1,6 +1,6 @@
 FROM python:3.8
 WORKDIR /app
-COPY . /SAE-5.A-EntMonreuil-Back
+COPY . .
 RUN pip freeze > requirements.txt
 RUN pip install -r requirements.txt
 RUN mkdir -p /usr/src/modules/logs

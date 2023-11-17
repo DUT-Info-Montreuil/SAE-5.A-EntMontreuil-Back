@@ -247,7 +247,9 @@ Example:
 """
 
     try:
-        equipment_ids = request.json.get('equipment_ids', [])
+        json_data = request.json
+        datas = json_data.get('datas', {})
+        equipment_ids = datas.get('equipment_ids', [])
         
         if not connect_pg.does_entry_exist("Classroom", id_Classroom):
             return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
@@ -303,7 +305,11 @@ def update_classroom_equipment_quantity(id_classroom, id_equipment):
         description: Erreur serveur lors de la mise à jour de la quantité de l'équipement.
     """
     try:
-        new_quantity = request.json.get('new_quantity', None)
+        json_data = request.json
+        
+        datas = json_data.get('datas', {})
+        new_quantity = datas.get('new_quantity', None)
+
 
         if new_quantity is None:
             return jsonify({"message": "La nouvelle quantité est requise."}), 400

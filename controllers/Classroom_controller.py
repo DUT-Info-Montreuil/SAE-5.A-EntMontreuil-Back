@@ -6,7 +6,7 @@ Classroom_bp = Blueprint('classrooms', __name__)
 
 
 Classroom_service = ClassroomService()
-
+#------------------------------- récuperer toute les salles de classe -------------------#
 @Classroom_bp.route('/classrooms', methods=['GET'])
 def get_all_classrooms():
     """
@@ -75,6 +75,7 @@ responses:
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
+ #------------------------------- chercher  une salle de classe en focntion de critère -------------------#   
 @Classroom_bp.route('/classrooms/<int:id_Classroom>', methods=['GET'])
 def get_classroom(id_Classroom):
     """
@@ -203,6 +204,7 @@ def search_classrooms():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
+ ##------------------------------- ajouter un equipement dans une salle -----------------------#   
 @Classroom_bp.route('/classrooms/<int:id_Classroom>/equipments', methods=['POST'])
 def add_equipments_to_classroom(id_Classroom ):
     """
@@ -258,3 +260,56 @@ Example:
         return jsonify({"message": "Les équipements ont été ajoutés avec succès à la salle de classe"}), 201
     except Exception as e:
         return jsonify({"message": f"Erreur lors de l'ajout des équipements : {str(e)}"}), 500
+
+#----------------- modifer la quantité d'un equipement dans une salle  ----------------------#
+
+@Classroom_bp.route('/classrooms/<int:id_classroom>/equipments/<int:id_equipment>', methods=['PUT'])
+def update_classroom_equipment_quantity(id_classroom, id_equipment):
+    """
+    Mettre à jour la quantité d'un équipement dans une salle de classe.
+
+    ---
+    tags:
+      - Salles de classe
+    parameters:
+      - name: id_classroom
+        in: path
+        description: L'identifiant unique de la salle de classe.
+        required: true
+        type: integer
+      - name: id_equipment
+        in: path
+        description: L'identifiant unique de l'équipement.
+        required: true
+        type: integer
+      - in: body
+        name: data
+        required: true
+        schema:
+          type: object
+          properties:
+            new_quantity:
+              type: integer
+              description: La nouvelle quantité de l'équipement.
+              example: 5
+    responses:
+      200:
+        description: La quantité de l'équipement a été mise à jour avec succès.
+      400:
+        description: Requête invalide ou données manquantes.
+      404:
+        description: La salle de classe ou l'équipement spécifié n'existe pas.
+      500:
+        description: Erreur serveur lors de la mise à jour de la quantité de l'équipement.
+    """
+    try:
+        new_quantity = request.json.get('new_quantity', None)
+
+        if new_quantity is None:
+            return jsonify({"message": "La nouvelle quantité est requise."}), 400
+
+        Classroom_service.update_equipment_quantity(id_classroom, id_equipment, new_quantity)
+
+        return jsonify({"message": "La quantité de l'équipement a été mise à jour avec succès."}), 200
+    except Exception as e:
+        return jsonify({"message": f"Erreur lors de la mise à jour de la quantité de l'équipement : {str(e)}"}), 500

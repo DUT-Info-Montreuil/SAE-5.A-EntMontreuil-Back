@@ -8,7 +8,7 @@ from flask import jsonify
 class ClassroomService:
     def __init__(self):
         pass
-
+#------------------------------- récuperer toute les salles de classe -------------------#
     def get_all_classrooms(self, output_format="model",id_classroom=None,):
         conn = None
         cursor = None  # Initialisez cursor en dehors du bloc try
@@ -84,6 +84,8 @@ class ClassroomService:
             if conn is not None:
                 conn.close()
 
+#------------------------------- chercher  une salle de classe en focntion de critère -------------------#
+
     def search_classrooms(self, name=None, capacity=None, equipment=None, output_format="model"):
         conn = None
         cursor = None
@@ -145,7 +147,7 @@ class ClassroomService:
                 cursor.close()
             if conn is not None:
                 conn.close()
-
+##------------------------------- ajouter un equipement dans une salle -----------------------#
     def add_equipments_to_classroom(self, id_Classroom, equipment_ids):
             try:
                 conn = connect_pg.connect()  # Remplacez par votre fonction de connexion réelle
@@ -174,4 +176,41 @@ class ClassroomService:
                 raise e
             finally:
                 cursor.close()
+                conn.close()
+
+
+#----------------- modifer la quantité d'un equipement dans une salle  ----------------------#
+
+    def update_equipment_quantity(self, id_classroom, id_equipment, new_quantity):
+        conn = None
+        cursor = None
+
+        try:
+            conn = connect_pg.connect()  # Utilisez votre fonction de connexion
+            cursor = conn.cursor()
+
+            # Vérifiez si la salle de classe spécifiée existe
+            if not connect_pg.does_entry_exist("Classroom", id_classroom):
+                raise Exception("La salle de classe spécifiée n'existe pas.")
+
+            # Vérifiez si l'équipement spécifié existe dans la salle
+            cursor.execute("SELECT * FROM ent.CONTAINS WHERE id_classroom = %s AND id_materials = %s", (id_classroom, id_equipment))
+            if cursor.fetchone() is None:
+                raise Exception("L'équipement spécifié n'existe pas dans la salle de classe.")
+
+            # Mettez à jour la quantité de l'équipement
+            cursor.execute("UPDATE ent.CONTAINS SET quantity = %s WHERE id_classroom = %s AND id_materials = %s", (new_quantity, id_classroom, id_equipment))
+
+            conn.commit()
+            return jsonify({"message": "Quantité mise à jour avec succès"}), 200
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return jsonify({"error": str(e)}), 500
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
                 conn.close()

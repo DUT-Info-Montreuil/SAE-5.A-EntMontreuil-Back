@@ -118,23 +118,23 @@ class ClassroomService:
 
             classroom_models = {}
             for row in rows:
-                classroom_id = row[0]
-                if classroom_id not in classroom_models:
-                    classroom_model = ClassroomModel(
-                        id=row[0],
-                        name=row[1],
-                        capacity=row[2],
-                        materials=[]
-                    )
-                    classroom_models[classroom_id] = classroom_model
+                    classroom_id = row[0]
+                    if classroom_id not in classroom_models:
+                        classroom_model = ClassroomModel(
+                            id=row[0],
+                            name=row[1],
+                            capacity=row[2],
+                            materials=[]
+                        )
+                        classroom_models[classroom_id] = classroom_model
 
-                if row[3] is not None:
-                    material = {
-                        "id": row[3],
-                        "equipment": row[4],
-                        "quantity": row[5]
-                    }
-                    classroom_models[classroom_id].materials.append(material)
+                    if row[3] is not None:
+                        material = {
+                            "id": row[3],
+                            "equipment": row[4],
+                            "quantity": row[5]
+                        }
+                        classroom_models[classroom_id].materials.append(material)
 
             result = [classroom_model.jsonify() for classroom_model in classroom_models.values()]
             return jsonify(result) if output_format == "model" else jsonify(result)
@@ -165,7 +165,7 @@ class ClassroomService:
                     raise Exception("Certains équipements spécifiés n'existent pas.")
 
                 # Ajoutez les équipements à la salle de classe en utilisant les IDs
-                cursor.executemany("INSERT INTO ent.CONTAINS (id_classroom, id_materials, quantity) VALUES (%s, %s, %s)",
+                cursor.executemany("INSERT INTO ent.CONTAINS (id_classroom, id_materials, quantity) VALUES (%s, %s, %s)  ON CONFLICT (id_materials, id_classroom) DO NOTHING",
                                     [(id_Classroom, equip_id, 1) for equip_id in existing_equipment_ids])
 
                 conn.commit()

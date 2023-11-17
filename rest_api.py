@@ -13,7 +13,13 @@ from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
 from controllers.Material_controller import materials_bp
 from controllers.Authentificate_controller import authentificate_bp
+
+from flask_jwt_extended import JWTManager
+
+# Register the main controller
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = "iG98fdsVFD5fds"
+jwt = JWTManager(app)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 swagger = Swagger(app)

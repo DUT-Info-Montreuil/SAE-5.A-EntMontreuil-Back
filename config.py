@@ -1,5 +1,4 @@
 #!/usr/bin/python
-SECRETE_KEY = 'mamadou'
 
 from configparser import ConfigParser
 def config(filename='config.ini', section='postgresql'):

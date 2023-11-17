@@ -93,7 +93,7 @@ class UsersFonction :
                 if not UsersFonction.is_valid_email(email):
                     return jsonify({"error": "Invalid email format"}), 400
             if "role" in user_data :
-                if not RoleFonction.name_exists(user_data["role"]) :
+                if not RolesFonction.name_exists(user_data["role"]) :
                     return jsonify({"error": f"Role name '{user_data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
                 id_role = UsersFonction.get_role_id_by_name(user_data["role"])
                 del user_data["role"]  # Supprimez le champ du nom du rôle
@@ -159,7 +159,7 @@ class UsersFonction :
             if "isAdmin" not in data :
                 data["isAdmin"] = False
             # if role existe pas
-            if not RoleFonction.name_exists(data["role"]) :
+            if not RolesFonction.name_exists(data["role"]) :
                  return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
              
             id_role = UsersFonction.get_role_id_by_name(data["role"])
@@ -252,7 +252,7 @@ class UsersFonction :
     def get_all_role_name():
         conn =connect_pg.connect()  # Établir une connexion à la base de données
         cursor = conn.cursor()
-        query = "SELECT name FROM ent.role"
+        query = "SELECT name FROM ent.roles"
         cursor.execute(query)
         role_names = [row[0] for row in cursor.fetchall()]  # Récupérer tous les noms de rôles
         conn.close()  # Fermer la connexion à la base de données
@@ -263,7 +263,7 @@ class UsersFonction :
             cursor = conn.cursor()
 
             # Exécutez une requête pour obtenir l'ID du rôle en fonction de son nom
-            cursor.execute("SELECT id FROM ent.role WHERE name = %s", (role_name,))
+            cursor.execute("SELECT id FROM ent.roles WHERE name = %s", (role_name,))
             role_id = cursor.fetchone()
 
             conn.close()  # Fermer la connexion à la base de données

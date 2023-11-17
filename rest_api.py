@@ -12,6 +12,7 @@ from controllers.Students_controllers import students_bp
 from controllers.Absence_controller import absences_bp
 from controllers.Training_controller import training_bp
 from controllers.Material_controller import materials_bp
+from controllers.Authentificate_controller import authentificate_bp
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
@@ -24,6 +25,7 @@ app.register_blueprint(users_bp)
 app.register_blueprint(teachers_bp)
 app.register_blueprint(roles_bp)
 app.register_blueprint(students_bp)
+app.register_blueprint(authentificate_bp)
 
 @app.after_request
 def after_request(response):

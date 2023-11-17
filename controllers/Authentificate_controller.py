@@ -1,0 +1,37 @@
+from flask import request, jsonify, Blueprint
+from services.authentificate import AuthentificateService
+import connect_pg
+from flask_jwt_extended import get_jwt_identity , jwt_required , create_access_token
+
+# Création d'un Blueprint pour les routes liées 
+authentificate_bp = Blueprint('authentificate', __name__)
+
+# Instanciation du service 
+authentificate_service = AuthentificateService()
+
+
+
+@authentificate_bp.route('/authentification' , methods = ['POST'])
+def authentification():
+    try :
+        auth_data = request.json
+        response, http_status = authentificate_service.authentification(auth_data)
+        if http_status != 200 :  
+            return response, http_status
+        else :
+            username = response.json.get('username')
+            access_token = create_access_token(identity=username)
+            return jsonify({'token':access_token})
+    except Exception as e:
+        # Gérez les autres erreurs
+        return jsonify({'error': str(e)}), 400
+    
+    
+    
+@authentificate_bp.route('/protected' , methods = ['GET'])
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+        
+               

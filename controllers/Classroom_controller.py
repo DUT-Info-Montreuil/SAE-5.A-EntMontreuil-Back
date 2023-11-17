@@ -313,3 +313,37 @@ def update_classroom_equipment_quantity(id_classroom, id_equipment):
         return jsonify({"message": "La quantité de l'équipement a été mise à jour avec succès."}), 200
     except Exception as e:
         return jsonify({"message": f"Erreur lors de la mise à jour de la quantité de l'équipement : {str(e)}"}), 500
+    
+#-------------------- supprimer un equipement d'une salle
+@Classroom_bp.route('/classrooms/<int:id_classroom>/equipments/<int:id_equipment>', methods=['DELETE'])
+def remove_equipment(id_classroom, id_equipment):
+    """
+    Supprimer un équipement d'une salle de classe.
+
+    ---
+    tags:
+      - Salles de classe
+    parameters:
+      - name: id_classroom
+        in: path
+        description: L'identifiant unique de la salle de classe.
+        required: true
+        type: integer
+      - name: id_equipment
+        in: path
+        description: L'identifiant unique de l'équipement à supprimer.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Équipement supprimé avec succès.
+      404:
+        description: Salle de classe ou équipement non trouvé.
+      500:
+        description: Erreur serveur lors de la suppression de l'équipement.
+    """
+    try:
+        result = Classroom_service.remove_equipment_from_classroom(id_classroom, id_equipment)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500

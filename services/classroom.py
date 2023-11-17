@@ -213,4 +213,28 @@ class ClassroomService:
             if cursor:
                 cursor.close()
             if conn:
+                    conn.close()
+    #----------- enlever un equipement d'une classe  ---------------#
+    def remove_equipment_from_classroom(self, id_classroom, id_equipment):
+            try:
+                conn = connect_pg.connect()
+                cursor = conn.cursor()
+
+                # Vérifiez si la salle de classe et l'équipement existent
+                if not connect_pg.does_entry_exist("Classroom", id_classroom):
+                    raise Exception("La salle de classe spécifiée n'existe pas.")
+
+                if not connect_pg.does_entry_exist("Materials", id_equipment):
+                    raise Exception("L'équipement spécifié n'existe pas.")
+
+                # Supprimez l'équipement de la salle de classe
+                cursor.execute("DELETE FROM ent.CONTAINS WHERE id_classroom = %s AND id_materials = %s", (id_classroom, id_equipment))
+                conn.commit()
+
+                return {"message": "Équipement supprimé avec succès."}
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                cursor.close()
                 conn.close()

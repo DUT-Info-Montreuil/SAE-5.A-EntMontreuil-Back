@@ -93,7 +93,7 @@ class UsersFonction :
                 if not UsersFonction.is_valid_email(email):
                     return jsonify({"error": "Invalid email format"}), 400
             if "role" in user_data :
-                if not RoleFonction.name_exists(user_data["role"]) :
+                if not RolesFonction.name_exists(user_data["role"]) :
                     return jsonify({"error": f"Role name '{user_data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
                 id_role = UsersFonction.get_role_id_by_name(user_data["role"])
                 del user_data["role"]  # Supprimez le champ du nom du rôle
@@ -159,7 +159,7 @@ class UsersFonction :
             if "isAdmin" not in data :
                 data["isAdmin"] = False
             # if role existe pas
-            if not RoleFonction.name_exists(data["role"]) :
+            if not RolesFonction.name_exists(data["role"]) :
                  return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
              
             id_role = UsersFonction.get_role_id_by_name(data["role"])

@@ -9,7 +9,7 @@ roles_service = RolesServices()
 def create_role():
     try:
         role_data = request.json
-        new_role = role_service.create_role(role_data)
+        new_role = roles_service.create_role(role_data)
         return new_role
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -19,7 +19,7 @@ def create_role():
 def update_role(role_id):
     try:
         role_data = request.json
-        updated_role = role_service.update_role(role_id, role_data)
+        updated_role = roles_service.update_role(role_id, role_data)
         return updated_role
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -28,7 +28,7 @@ def update_role(role_id):
 @roles_bp.route('/roles/<int:role_id>', methods=['DELETE'])
 def delete_role(role_id):
     try:
-        deleted_role = role_service.delete_role(role_id)
+        deleted_role = roles_service.delete_role(role_id)
         return deleted_role
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -37,7 +37,7 @@ def delete_role(role_id):
 @roles_bp.route('/roles', methods=['GET'])
 def get_all_roles():
     try:
-        all_roles = role_service.get_roles()
+        all_roles = roles_service.get_roles()
         return all_roles
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -46,7 +46,7 @@ def get_all_roles():
 @roles_bp.route('/roles/<int:role_id>', methods=['GET'])
 def get_role_by_id(role_id):
     try:
-        role = role_service.get_role_by_id(role_id)
+        role = roles_service.get_role_by_id(role_id)
         return role
     except ValidationError as e:
         return jsonify({'error': str(e)}), 500

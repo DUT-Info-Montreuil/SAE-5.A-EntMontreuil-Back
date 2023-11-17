@@ -56,7 +56,7 @@ def delete_student(id_student):
         # Retournez la réponse au format JSON
         return message, status_code
     except ValidationError as va :
-        return jsonify({'error': str(ve)}), 400
+        return jsonify({'error': str(va)}), 400
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400

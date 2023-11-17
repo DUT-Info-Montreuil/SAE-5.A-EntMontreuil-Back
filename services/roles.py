@@ -71,7 +71,7 @@ class RolesServices :
         roles = []
 
         for row in rows:
-            role = Role(id = row[0], name = row[1])
+            role = Roles(id = row[0], name = row[1])
             roles.append(role.jsonify())
         connect_pg.disconnect(conn)
         return jsonify(roles)
@@ -86,7 +86,7 @@ class RolesServices :
         query = "select * from ent.roles where id = %s"
         cursor.execute(query, (role_id,))
         row = cursor.fetchone()
-        role = Role(id = row[0], name = row[1])
+        role = Roles(id = row[0], name = row[1])
 
         conn.commit()
         conn.close()

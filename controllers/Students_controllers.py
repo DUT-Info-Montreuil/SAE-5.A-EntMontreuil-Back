@@ -11,6 +11,44 @@ students_services = StudentsServices()
 #-----------get all students--------------
 @students_bp.route('/students', methods=['GET'])
 def get_all_students_controller():
+    """
+    Get a list of all students.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: List of all students retrieved from the database.
+        examples:
+          application/json: [
+            {
+              "id": 1,
+              "ine": "12345",
+              "nip": "12345",
+              "apprentice": true,
+              "user": {
+                "email": "test@test.fr",
+                "username": "teste",
+                "first_name": "test",
+                "last_name": "test",
+                "password": "Ouinon#1234"
+              }
+            },
+            # ... (other students)
+          ]
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student retrieval.
+    """
     try:
         # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
         output_format = request.args.get('output_format', default='dto')
@@ -30,6 +68,32 @@ def get_all_students_controller():
 #-----------get one students--------------
 @students_bp.route('/students/<int:id_students>', methods=['GET'])
 def get_student_controller(id_students):
+    """
+    Get information about a specific student by ID.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: id_students
+        in: path
+        description: ID of the student to retrieve.
+        required: true
+        type: integer
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: Information about the specified student retrieved from the database.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student retrieval.
+    """
     try:
         # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
         output_format = request.args.get('output_format', default='dto')
@@ -50,6 +114,25 @@ def get_student_controller(id_students):
 #-----------delete students--------------
 @students_bp.route('/students/<int:id_student>', methods=['DELETE'])
 def delete_student(id_student):
+    """
+    Delete a specific student by ID.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: id_student
+        in: path
+        description: ID of the student to delete.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Student successfully deleted.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student deletion.
+    """
     try:
         # Utilisez la fonction du service pour supprimer un etudiant
         message, status_code = students_services.delete_students(id_student)
@@ -64,6 +147,57 @@ def delete_student(id_student):
 #-----------add students--------------
 @students_bp.route('/students', methods=['POST'])
 def add_students():
+    """
+    Add a new student.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: student_data
+        in: body
+        description: JSON data for the student to be added.
+        required: true
+        schema:
+          type: object
+          properties:
+            datas:
+              type: object
+              properties:
+                ine:
+                  type: string
+                  example: "12345"
+                nip:
+                  type: string
+                  example: "12345"
+                apprentice:
+                  type: boolean
+                  example: true
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      example: "test@test.fr"
+                    username:
+                      type: string
+                      example: "teste"
+                    first_name:
+                      type: string
+                      example: "test"
+                    last_name:
+                      type: string
+                      example: "test"
+                    password:
+                      type: string
+                      example: "Ouinon#1234"
+    responses:
+      200:
+        description: Student successfully added.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student addition.
+    """
     try:
         request_data = request.json
         # Utilisez la fonction du service pour ajouter un etudiant

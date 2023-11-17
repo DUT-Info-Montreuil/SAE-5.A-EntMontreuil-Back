@@ -1,7 +1,6 @@
-FROM python:3.8
 WORKDIR /app
-COPY . .
-RUN pip freeze > requirements.txt
+COPY requirements.txt ./
 RUN pip install -r requirements.txt
+COPY . .
 RUN mkdir -p /usr/src/modules/logs
 CMD ["python3", "rest_api.py", "--host", "0.0.0.0", "--port", "5050"]

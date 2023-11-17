@@ -85,8 +85,7 @@ class ClassroomService:
                 conn.close()
 
 #------------------------------- chercher  une salle de classe en focntion de critère -------------------#
-
-    def search_classrooms(self, name=None, capacity=None, equipment=None, output_format="model"):
+    def search_classrooms(self, name=None, capacity=None, id_material=None, min_quantity=None, output_format="model"):
         conn = None
         cursor = None
 
@@ -94,49 +93,58 @@ class ClassroomService:
             conn = connect_pg.connect()
             cursor = conn.cursor()
 
-            # Build the query based on the provided criteria
+            # Build the base query
             query = "SELECT c.id, c.name, c.capacity, m.id AS material_id, m.equipment, cm.quantity FROM ent.Classroom c"
             query += " LEFT JOIN ent.CONTAINS cm ON c.id = cm.id_classroom"
             query += " LEFT JOIN ent.Materials m ON cm.id_materials = m.id"
+
             conditions = []
             values = []
 
-            if name:
-                conditions.append("c.name = %s")
-                values.append(name)
-            if capacity is not None:
-                conditions.append("c.capacity >= %s")
-                values.append(capacity)
+            # Helper function to add conditions
+            def add_condition(condition_sql, value):
+                if conditions:
+                    conditions.append(f"AND {condition_sql}")
+                else:
+                    conditions.append(f"WHERE {condition_sql}")
+                values.append(value)
 
-            if equipment:
-                conditions.append("m.equipment = %s")
-                values.append(equipment)
+            if name:
+                add_condition("c.name = %s", name)
+            if capacity is not None:
+                add_condition("c.capacity >= %s", capacity)
+            if id_material is not None:
+                add_condition("m.id = %s", id_material)
+            if min_quantity is not None:
+                # Utilize a subquery to filter materials based on the minimum quantity
+                subquery = "(SELECT id_classroom FROM ent.CONTAINS WHERE id_materials = m.id AND quantity >= %s)"
+                add_condition(f"c.id IN {subquery}", min_quantity)
 
             if conditions:
-                query += " WHERE " + " AND ".join(conditions)
+                query += " " + " ".join(conditions)
 
             cursor.execute(query, tuple(values))
             rows = cursor.fetchall()
 
             classroom_models = {}
             for row in rows:
-                    classroom_id = row[0]
-                    if classroom_id not in classroom_models:
-                        classroom_model = ClassroomModel(
-                            id=row[0],
-                            name=row[1],
-                            capacity=row[2],
-                            materials=[]
-                        )
-                        classroom_models[classroom_id] = classroom_model
+                classroom_id = row[0]
+                if classroom_id not in classroom_models:
+                    classroom_model = ClassroomModel(
+                        id=row[0],
+                        name=row[1],
+                        capacity=row[2],
+                        materials=[]
+                    )
+                    classroom_models[classroom_id] = classroom_model
 
-                    if row[3] is not None:
-                        material = {
-                            "id": row[3],
-                            "equipment": row[4],
-                            "quantity": row[5]
-                        }
-                        classroom_models[classroom_id].materials.append(material)
+                if row[3] is not None:
+                    material = {
+                        "id": row[3],
+                        "equipment": row[4],
+                        "quantity": row[5]
+                    }
+                    classroom_models[classroom_id].materials.append(material)
 
             result = [classroom_model.jsonify() for classroom_model in classroom_models.values()]
             return jsonify(result) if output_format == "model" else jsonify(result)
@@ -147,6 +155,8 @@ class ClassroomService:
                 cursor.close()
             if conn is not None:
                 conn.close()
+
+
 ##------------------------------- ajouter un equipement dans une salle -----------------------#
     def add_equipments_to_classroom(self, id_Classroom, equipment_ids):
             try:
@@ -256,7 +266,10 @@ class ClassroomService:
                 cursor.execute(delete_classroom_query, (id_classroom,))
 
                 conn.commit()
-                return {"message": "Classroom and related data successfully deleted."}
+                return {
+                    "message": "Salle de classe et données associées supprimées avec succès."
+                }
+
             except Exception as e:
                 conn.rollback()
                 return {"error": str(e)}
@@ -275,11 +288,15 @@ class ClassroomService:
                 cursor = conn.cursor()
 
                 insert_query = "INSERT INTO ent.Classroom (name, capacity) VALUES (%s, %s) RETURNING id"
-                cursor.execute(insert_query, (classroom.name, classroom.apacity))
+                cursor.execute(insert_query, (classroom.name, classroom.capacity))
                 classroom_id = cursor.fetchone()[0]
 
                 conn.commit()
-                return {"message": "Classroom created successfully.", "id": classroom_id}
+                return {
+                    "message": "Salle de classe créée avec succès.",
+                    "id": classroom_id
+                }
+
             except Exception as e:
                 conn.rollback()
                 return {"error": str(e)}

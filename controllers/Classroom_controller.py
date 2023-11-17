@@ -1,6 +1,6 @@
 from flask import request, jsonify, Blueprint
 from services.classroom import ClassroomService
-from entities.DTO.materials import Material
+from entities.DTO.classroom import Classroom
 import connect_pg
 Classroom_bp = Blueprint('classrooms', __name__)
 
@@ -124,7 +124,7 @@ responses:
 """
 
     try:
-        output_format = request.args.get('output_format', 'model')  # Par défaut, le format de sortie est "dto"
+        output_format = request.args.get('output_format', 'model')  
         classrooms = Classroom_service.get_all_classrooms(output_format,id_Classroom,)
 
         return classrooms
@@ -132,7 +132,6 @@ responses:
         return jsonify({"message": str(e)}), 500
     
 
-# Add a new route for searching classrooms with criteria
 @Classroom_bp.route('/classrooms/search', methods=['GET'])
 def search_classrooms():
     """
@@ -153,9 +152,14 @@ def search_classrooms():
         type: integer
       - name: equipment
         in: query
-        description: Le matériel présent dans la salle de classe à rechercher (optionnel).
+        description: L'ID de l'équipement présent dans la salle de classe à rechercher (optionnel).
         required: false
-        type: string
+        type: integer
+      - name: min_quantity
+        in: query
+        description: La quantité minimale de l'équipement à rechercher (optionnel).
+        required: false
+        type: integer
       - name: output_format
         in: query
         description: Le format de sortie des données (par défaut "model").
@@ -195,14 +199,16 @@ def search_classrooms():
         name = request.args.get('name', None)
         capacity = request.args.get('capacity', None)
         equipment = request.args.get('equipment', None)
+        min_quantity = request.args.get('min_quantity', None)
         output_format = request.args.get('output_format', 'model')
 
         # Call the search function in your ClassroomService
-        classrooms = Classroom_service.search_classrooms(name, capacity, equipment, output_format)
+        classrooms = Classroom_service.search_classrooms(name, capacity, equipment, min_quantity, output_format)
 
         return classrooms
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
     
  ##------------------------------- ajouter un equipement dans une salle -----------------------#   
 @Classroom_bp.route('/classrooms/<int:id_Classroom>/equipments', methods=['POST'])
@@ -247,10 +253,9 @@ Example:
 """
 
     try:
-        json_data = request.json
-        datas = json_data.get('datas', {})
-        equipment_ids = datas.get('equipment_ids', [])
         
+        data = request.json.get('datas', {})
+        equipment_ids = data.get('equipment_ids', [])
         if not connect_pg.does_entry_exist("Classroom", id_Classroom):
             return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
 
@@ -305,10 +310,8 @@ def update_classroom_equipment_quantity(id_classroom, id_equipment):
         description: Erreur serveur lors de la mise à jour de la quantité de l'équipement.
     """
     try:
-        json_data = request.json
-        
-        datas = json_data.get('datas', {})
-        new_quantity = datas.get('new_quantity', None)
+        data = request.json.get('datas', {})
+        new_quantity = data.get('new_quantity')
 
 
         if new_quantity is None:
@@ -415,17 +418,24 @@ def create_classroom():
         description: Erreur serveur lors de la création de la salle de classe.
     """
     try:
-        data = request.json.get(('dats'),{})
+        data = request.json.get('datas', {})
         name = data.get('name')
         capacity = data.get('capacity')
+
+
 
         # Vérifications supplémentaires
         if not name:
             return jsonify({"message": "Le nom de la salle est requis."}), 400
         if not isinstance(capacity, int) or capacity <= 0:
             return jsonify({"message": "La capacité doit être un nombre entier positif."}), 400
-
-        result = Classroom_service.create_classroom(name, capacity)
+       
+        classroom=Classroom(
+                            id=0,
+                            name=name,
+                            capacity=capacity
+        )
+        result = Classroom_service.create_classroom(classroom)
         if "error" in result:
             return jsonify(result), 500
         return jsonify(result), 201

@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 from configparser import ConfigParser
 def config(filename='config.ini', section='postgresql'):
     parser = ConfigParser() # create a parser

@@ -252,7 +252,7 @@ class UsersFonction :
     def get_all_role_name():
         conn =connect_pg.connect()  # Établir une connexion à la base de données
         cursor = conn.cursor()
-        query = "SELECT name FROM ent.role"
+        query = "SELECT name FROM ent.roles"
         cursor.execute(query)
         role_names = [row[0] for row in cursor.fetchall()]  # Récupérer tous les noms de rôles
         conn.close()  # Fermer la connexion à la base de données
@@ -263,7 +263,7 @@ class UsersFonction :
             cursor = conn.cursor()
 
             # Exécutez une requête pour obtenir l'ID du rôle en fonction de son nom
-            cursor.execute("SELECT id FROM ent.role WHERE name = %s", (role_name,))
+            cursor.execute("SELECT id FROM ent.roles WHERE name = %s", (role_name,))
             role_id = cursor.fetchone()
 
             conn.close()  # Fermer la connexion à la base de données

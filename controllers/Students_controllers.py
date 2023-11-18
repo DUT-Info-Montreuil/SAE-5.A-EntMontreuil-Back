@@ -211,6 +211,62 @@ def add_students():
 #-----------update students--------------
 @students_bp.route('/students/<int:id_student>', methods=['PATCH'])
 def update_students(id_student):
+    """
+    Update information about a specific student by ID.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: id_student
+        in: path
+        description: ID of the student to update.
+        required: true
+        type: integer
+      - name: student_data
+        in: body
+        description: JSON data for updating the student's information.
+        required: true
+        schema:
+          type: object
+          properties:
+            datas:
+              type: object
+              properties:
+                ine:
+                  type: string
+                  example: "12345"
+                nip:
+                  type: string
+                  example: "12345"
+                apprentice:
+                  type: boolean
+                  example: true
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      example: "test@test.fr"
+                    username:
+                      type: string
+                      example: "teste"
+                    first_name:
+                      type: string
+                      example: "test"
+                    last_name:
+                      type: string
+                      example: "test"
+                    password:
+                      type: string
+                      example: "Ouinon#1234"
+    responses:
+      200:
+        description: Student information successfully updated.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student information update.
+    """
     try:
         request_data = request.json
         # Utilisez la fonction du service pour modifier un etudiant
@@ -224,6 +280,30 @@ def update_students(id_student):
 #-----------update students--------------
 @students_bp.route('/students/add_csv', methods=['POST'])
 def csv_add_students():
+    """
+    Add multiple students from a CSV file.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: file_path
+        in: body
+        description: Path to the CSV file containing student data.
+        required: true
+        schema:
+          type: object
+          properties:
+            file_path:
+              type: string
+              example: "C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv"
+    responses:
+      200:
+        description: Students successfully added from the CSV file.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during student addition from the CSV file.
+    """
     try:
         request_data = request.json
         path = request_data["file_path"]

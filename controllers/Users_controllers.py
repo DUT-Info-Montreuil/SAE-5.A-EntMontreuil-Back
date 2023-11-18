@@ -11,6 +11,25 @@ users_service = UsersServices()
 #-----------get all users--------------
 @users_bp.route('/users', methods=['GET'])
 def get_all_users_dto():
+    """
+    Get a list of all users.
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: List of all users retrieved from the database.
+      500:
+        description: Server error in case of a problem during user retrieval.
+    """
     try:
         output_format = request.args.get('output_format', default='dto')
         all_users = users_service.get_users(output_format).json
@@ -21,6 +40,32 @@ def get_all_users_dto():
 #------------get one user with id-------------
 @users_bp.route('/users/<int:id>', methods=['GET'])
 def get_one_users_dto(id):
+    """
+    Get information about a specific user by ID.
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user to retrieve.
+        required: true
+        type: integer
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: User information successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during user retrieval.
+    """
     try:
         output_format = request.args.get('output_format', default='dto')
         user = users_service.get_users_with_id(id, output_format)

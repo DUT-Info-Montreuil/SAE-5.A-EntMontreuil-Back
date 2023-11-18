@@ -11,6 +11,27 @@ teachers_service = TeachersService()
 #-----------get all teachers--------------
 @teachers_bp.route('/teachers', methods=['GET'])
 def get_all_teachers():
+    """
+    Get a list of all teachers.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: List of all teachers retrieved from the database.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during teacher retrieval.
+    """
     try:
         # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
         output_format = request.args.get('output_format', default='dto')
@@ -33,6 +54,54 @@ def get_all_teachers():
 # Définissez la route pour ajouter des enseignants
 @teachers_bp.route('/teachers', methods=['POST'])
 def add_teachers():
+    """
+    Add a new teacher.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: teacher_data
+        in: body
+        description: JSON data for the teacher to be added.
+        required: true
+        schema:
+          type: object
+          properties:
+            datas:
+              type: object
+              properties:
+                initial:
+                  type: string
+                  example: "PS"
+                desktop:
+                  type: string
+                  example: "A2-09"
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      example: "test@test.fr"
+                    username:
+                      type: string
+                      example: "teste"
+                    first_name:
+                      type: string
+                      example: "test"
+                    last_name:
+                      type: string
+                      example: "test"
+                    password:
+                      type: string
+                      example: "Ouinon#1234"
+    responses:
+      200:
+        description: Teacher successfully added.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during teacher addition.
+    """
     try:
         # Obtenez les données JSON de la requête
         json_data = request.json
@@ -50,6 +119,59 @@ def add_teachers():
 # Définissez la route pour mettre à jour un enseignant
 @teachers_bp.route('/teachers/<int:id_teacher>', methods=['PATCH'])
 def update_teachers(id_teacher):
+    """
+    Update information about a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to update.
+        required: true
+        type: integer
+      - name: teacher_data
+        in: body
+        description: JSON data for updating the teacher's information.
+        required: true
+        schema:
+          type: object
+          properties:
+            datas:
+              type: object
+              properties:
+                initial:
+                  type: string
+                  example: "PS"
+                desktop:
+                  type: string
+                  example: "A2-09"
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      example: "test@test.fr"
+                    username:
+                      type: string
+                      example: "teste"
+                    first_name:
+                      type: string
+                      example: "test"
+                    last_name:
+                      type: string
+                      example: "test"
+                    password:
+                      type: string
+                      example: "Ouinon#1234"
+    responses:
+      200:
+        description: Teacher information successfully updated.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during teacher information update.
+    """
     try:
         # Obtenez les données JSON de la requête
         json_data = request.json
@@ -67,6 +189,25 @@ def update_teachers(id_teacher):
 # Définissez la route pour supprimer un enseignant
 @teachers_bp.route('/teachers/<int:id_teacher>', methods=['DELETE'])
 def delete_teachers(id_teacher):
+    """
+    Delete a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to delete.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Teacher successfully deleted.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during teacher deletion.
+    """
     try:
         # Utilisez la fonction du service pour supprimer un enseignant
         message, status_code = teachers_service.delete_teachers(id_teacher)
@@ -81,6 +222,32 @@ def delete_teachers(id_teacher):
 # Définissez la route pour obtenir les détails d'un enseignant
 @teachers_bp.route('/teachers/<int:id_teacher>', methods=['GET'])
 def get_teacher(id_teacher):
+    """
+    Get details of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve details.
+        required: true
+        type: integer
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: Teacher details successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during teacher retrieval.
+    """
     try:
         # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
         output_format = request.args.get('output_format', default='dto')

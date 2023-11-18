@@ -124,6 +124,9 @@ responses:
 """
 
     try:
+        if not connect_pg.does_entry_exist("Students", id_Classroom):
+          return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
+
         output_format = request.args.get('output_format', 'model')  
         classrooms = Classroom_service.get_all_classrooms(output_format,id_Classroom,)
 
@@ -231,12 +234,15 @@ parameters:
     schema:
       type: object
       properties:
-        equipment_ids:
-          type: array
-          description: La liste des IDs des équipements à ajouter.
-          items:
-            type: integer
-          example: [1, 2, 3]
+        datas:
+          type: object
+          properties:
+            equipment_ids:
+              type: array
+              description: La liste des IDs des équipements à ajouter.
+              items:
+                type: integer
+              example: [1, 2, 3]
 responses:
   201:
     description: Les équipements ont été ajoutés avec succès à la salle de classe.
@@ -273,42 +279,46 @@ Example:
 @Classroom_bp.route('/classrooms/<int:id_classroom>/equipments/<int:id_equipment>', methods=['PUT'])
 def update_classroom_equipment_quantity(id_classroom, id_equipment):
     """
-    Mettre à jour la quantité d'un équipement dans une salle de classe.
+Mettre à jour la quantité d'un équipement dans une salle de classe.
 
-    ---
-    tags:
-      - Salles de classe
-    parameters:
-      - name: id_classroom
-        in: path
-        description: L'identifiant unique de la salle de classe.
-        required: true
-        type: integer
-      - name: id_equipment
-        in: path
-        description: L'identifiant unique de l'équipement.
-        required: true
-        type: integer
-      - in: body
-        name: data
-        required: true
-        schema:
+---
+tags:
+  - Salles de classe
+parameters:
+  - name: id_classroom
+    in: path
+    description: L'identifiant unique de la salle de classe.
+    required: true
+    type: integer
+  - name: id_equipment
+    in: path
+    description: L'identifiant unique de l'équipement.
+    required: true
+    type: integer
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             new_quantity:
               type: integer
               description: La nouvelle quantité de l'équipement.
               example: 5
-    responses:
-      200:
-        description: La quantité de l'équipement a été mise à jour avec succès.
-      400:
-        description: Requête invalide ou données manquantes.
-      404:
-        description: La salle de classe ou l'équipement spécifié n'existe pas.
-      500:
-        description: Erreur serveur lors de la mise à jour de la quantité de l'équipement.
-    """
+responses:
+  200:
+    description: La quantité de l'équipement a été mise à jour avec succès.
+  400:
+    description: Requête invalide ou données manquantes.
+  404:
+    description: La salle de classe ou l'équipement spécifié n'existe pas.
+  500:
+    description: Erreur serveur lors de la mise à jour de la quantité de l'équipement.
+"""
+
     try:
         data = request.json.get('datas', {})
         new_quantity = data.get('new_quantity')
@@ -381,6 +391,8 @@ def delete_classroom(id_classroom):
         description: Erreur serveur lors de la suppression de la salle de classe.
     """
     try:
+        if not connect_pg.does_entry_exist("Students", id_classroom):
+          return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
         result = Classroom_service.delete_classroom(id_classroom)
         if "error" in result:
             return jsonify(result), 500
@@ -392,15 +404,19 @@ def delete_classroom(id_classroom):
 @Classroom_bp.route('/classrooms', methods=['POST'])
 def create_classroom():
     """
-    Créer une nouvelle salle de classe.
-    ---
-    tags:
-      - Salles de classe
-    parameters:
-      - in: body
-        name: classroom_data
-        required: true
-        schema:
+Créer une nouvelle salle de classe.
+
+---
+tags:
+  - Salles de classe
+parameters:
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             name:
@@ -409,14 +425,15 @@ def create_classroom():
             capacity:
               type: integer
               description: La capacité de la salle de classe.
-    responses:
-      201:
-        description: Nouvelle salle de classe créée avec succès.
-      400:
-        description: Données invalides fournies.
-      500:
-        description: Erreur serveur lors de la création de la salle de classe.
-    """
+responses:
+  201:
+    description: Nouvelle salle de classe créée avec succès.
+  400:
+    description: Données invalides fournies.
+  500:
+    description: Erreur serveur lors de la création de la salle de classe.
+"""
+
     try:
         data = request.json.get('datas', {})
         name = data.get('name')

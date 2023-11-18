@@ -52,24 +52,30 @@ def get_all_materials():
 @materials_bp.route('/materials/<int:id_Material>', methods=['GET'])
 def get_material(id_Material):
     """
-    Récupérer un équipement par son id
+Récupérer un équipement par son ID.
 
-    ---
-   tags:
-      - Equipements
-   responses:
-      200:
-        description: équipement récupérer
-        examples:
-          application/json: [
-            {
-                "equipment": "projecteur",
-                "id": 4
-            },
-          ]
-      500:
-        description: Erreur serveur en cas de problème lors de la récupération des équipements.
-    """
+---
+tags:
+  - Equipements
+parameters:
+  - in: path
+    name: id_Material
+    required: true
+    description: L'identifiant unique de l'équipement à récupérer.
+responses:
+  200:
+    description: Équipement récupéré avec succès.
+    examples:
+      application/json: [
+        {
+          "equipment": "projecteur",
+          "id": 4
+        }
+      ]
+  500:
+    description: Erreur serveur en cas de problème lors de la récupération de l'équipement.
+"""
+
     try:
         material = materials_service.get_material(id_Material)
         return jsonify(material), 200
@@ -81,29 +87,33 @@ def get_material(id_Material):
 @materials_bp.route('/materials', methods=['POST'])
 def add_material():
     """
-    Créer un équipement.
+Créer un équipement.
 
-    ---
-    tags:
-      - Equipements
-    parameters:
-      - in: body
-        name: datas
-        required: true
-        schema:
+---
+tags:
+  - Equipements
+parameters:
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             equipment:
               type: string
               description: Le nom de l'équipement à créer.
-    responses:
-      201:
-        description: L'équipement a été créé avec succès.
-      400:
-        description: Requête invalide ou données manquantes.
-      500:
-        description: Erreur serveur lors de la création de l'équipement.
-    """
+responses:
+  201:
+    description: L'équipement a été créé avec succès.
+  400:
+    description: Requête invalide ou données manquantes.
+  500:
+    description: Erreur serveur lors de la création de l'équipement.
+"""
+
     try:
         
         donnees_equipement = request.json.get('datas', {})
@@ -160,36 +170,40 @@ def delete_material(id_material):
 @materials_bp.route('/materials/<int:id_material>', methods=['PUT'])
 def update_material(id_material):
     """
-    Mettre à jour un équipement.
+Mettre à jour un équipement.
 
-    ---
-    tags:
-      - Equipements
-    parameters:
-      - in: path
-        name: id_material
-        required: true
-        type: integer
-        description: L'identifiant unique de l'équipement à mettre à jour.
-      - in: body
-        name: datas
-        required: true
-        schema:
+---
+tags:
+  - Equipements
+parameters:
+  - in: path
+    name: id_material
+    required: true
+    type: integer
+    description: L'identifiant unique de l'équipement à mettre à jour.
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             equipment:
               type: string
               description: La nouvelle valeur de l'équipement.
-    responses:
-      201:
-        description: L'équipement a été mis à jour avec succès.
-      400:
-        description: Données de l'équipement manquantes ou incorrectes.
-      404:
-        description: L'équipement spécifié n'existe pas.
-      500:
-        description: Erreur serveur lors de la mise à jour de l'équipement.
-    """
+responses:
+  201:
+    description: L'équipement a été mis à jour avec succès.
+  400:
+    description: Données de l'équipement manquantes ou incorrectes.
+  404:
+    description: L'équipement spécifié n'existe pas.
+  500:
+    description: Erreur serveur lors de la mise à jour de l'équipement.
+"""
+
     try:
         donnees_equipement = request.json.get('datas', {})
 

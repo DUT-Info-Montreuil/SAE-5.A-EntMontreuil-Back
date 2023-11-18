@@ -36,7 +36,7 @@ class MaterialService:
     def get_material(self, id_Material):
         try:
             conn = connect_pg.connect()
-            query = "SELECT * FROM ent.Materials where id=1"
+            query = "SELECT * FROM ent.Materials where id=%s"
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, (id_Material,))
                 row = cursor.fetchone()

@@ -122,44 +122,48 @@ def get_student_absences(id_student):
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['PUT'])
 def update_student_course_absence(id_student, id_course):
     """
-    Modifie une absence d'un étudiant pour un cours donné.
+Modifie une absence d'un étudiant pour un cours donné.
 
-    ---
-    tags:
-      - Absences
-    parameters:
-      - name: id_student
-        in: path
-        type: integer
-        required: true
-        description: ID de l'étudiant.
-      - name: id_course
-        in: path
-        type: integer
-        required: true
-        description: ID du cours.
-      - in: body
-        name: datas
-        required: true
-        schema:
+---
+tags:
+  - Absences
+parameters:
+  - name: id_student
+    in: path
+    type: integer
+    required: true
+    description: ID de l'étudiant.
+  - name: id_course
+    in: path
+    type: integer
+    required: true
+    description: ID du cours.
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             reason:
               type: string
               description: Raison de l'absence.
             justify:
-              type: string
-              description: Justification de l'absence.
-    responses:
-      200:
-        description: Confirmation de la mise à jour de l'absence.
-      400:
-        description: Données JSON manquantes ou incorrectes.
-      404:
-        description: L'absence ou l'étudiant spécifié n'existe pas.
-      500:
-        description: Erreur serveur lors de la mise à jour de l'absence.
-    """
+              type: boolean
+              description: Justification de l'absence (true pour justifié, false pour non justifié).
+responses:
+  200:
+    description: Confirmation de la mise à jour de l'absence.
+  400:
+    description: Données JSON manquantes ou incorrectes.
+  404:
+    description: L'absence ou l'étudiant spécifié n'existe pas.
+  500:
+    description: Erreur serveur lors de la mise à jour de l'absence.
+"""
+
     json_data = request.json
     if not json_data or 'datas' not in json_data:
         return jsonify({"message": "Données manquantes"}), 400
@@ -191,44 +195,48 @@ def update_student_course_absence(id_student, id_course):
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/add', methods=['POST'])
 def add_student_course_absence(id_student, id_course):
     """
-    Ajoute une absence d'un étudiant pour un cours donné.
+Ajoute une absence d'un étudiant pour un cours donné.
 
-    ---
-    tags:
-      - Absences
-    parameters:
-      - name: id_student
-        in: path
-        type: integer
-        required: true
-        description: ID de l'étudiant.
-      - name: id_course
-        in: path
-        type: integer
-        required: true
-        description: ID du cours.
-      - in: body
-        name: datas
-        required: true
-        schema:
+---
+tags:
+  - Absences
+parameters:
+  - name: id_student
+    in: path
+    type: integer
+    required: true
+    description: ID de l'étudiant.
+  - name: id_course
+    in: path
+    type: integer
+    required: true
+    description: ID du cours.
+  - in: body
+    name: datas
+    required: true
+    schema:
+      type: object
+      properties:
+        datas:
           type: object
           properties:
             reason:
               type: string
               description: Raison de l'absence.
             justify:
-              type: string
-              description: Justification de l'absence.
-    responses:
-      201:
-        description: Confirmation de l'ajout de l'absence.
-      400:
-        description: Données JSON manquantes ou incorrectes.
-      404:
-        description: Le cours ou l'étudiant spécifié n'existe pas.
-      500:
-        description: Erreur serveur lors de l'ajout de l'absence.
-    """
+              type: boolean
+              description: Justification de l'absence (true pour justifié, false pour non justifié).
+responses:
+  201:
+    description: Confirmation de l'ajout de l'absence.
+  400:
+    description: Données JSON manquantes ou incorrectes.
+  404:
+    description: Le cours ou l'étudiant spécifié n'existe pas.
+  500:
+    description: Erreur serveur lors de l'ajout de l'absence.
+"""
+
     try:
         json_data = request.json
 

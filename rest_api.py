@@ -43,7 +43,11 @@ def after_request(response):
 
 
 if __name__ == "__main__":
-    # read server parameters
+    # Lisez les paramètres du serveur depuis config.ini
     params = config('config.ini', 'server')
-    # Launch Flask server
-    app.run(debug=params['debug'], host=params['host'], port=params['port'])
+    
+    # Créez un contexte SSL avec les fichiers de certificat et de clé
+    context = (params['cert'], params['key'])
+    
+    # Lancez l'application Flask avec SSL activé
+    app.run(debug=params['debug'], host=params['host'], port=params['port'], ssl_context=context)

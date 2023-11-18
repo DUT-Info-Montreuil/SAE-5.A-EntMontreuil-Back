@@ -87,6 +87,8 @@ class TeachersService :
 
     ############ TEACHERS/UPDATE/<int:id_teacher> ############
     def update_teachers(self, id_teacher, datas):
+        if not TeachersFonction.field_exists('id' , id_teacher) : 
+            return jsonify({"error": f"id '{id_teacher} not exist"}) , 400 
         
         # Si il n'y a pas de champ datas
         if "datas" not in datas:

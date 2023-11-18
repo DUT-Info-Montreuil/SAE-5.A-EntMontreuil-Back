@@ -17,7 +17,7 @@ class UsersServices :
     ############ GET /USERS ################
     def get_users(self , output_format):
         """ Return all users in JSON format """
-        query = "select * from ent.users u inner join ent.role r on u.id_role = r.id order by u.id "
+        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id order by u.id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []
@@ -41,7 +41,7 @@ class UsersServices :
             raise ValidationError(f"id_user : '{id_user}' not exists")
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = "select * from ent.users u inner join ent.role r on u.id_role = r.id where u.id = %s"
+        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id where u.id = %s"
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
         if output_format == 'dto' :

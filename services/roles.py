@@ -28,9 +28,10 @@ class RolesServices :
 
     # Route pour mettre à jour un rôle existant
     def update_role(self, role_id, data):
-        conn = connect_pg.connect()   # Établir une connexion à la base de données
-        cursor = conn.cursor()
-
+        
+        if not RolesFonction.id_exists(role_id) :
+            raise ValidationError(f"id role '{role_id}' not exist")
+        
         # Récupérer le nouveau nom du rôle depuis la requête JSON
         updated_role_name = data.get('name')
 
@@ -40,7 +41,8 @@ class RolesServices :
         
         if RolesFonction.name_exists(updated_role_name) :
             return jsonify({"error": f"Role name {updated_role_name} already exist"}), 400
-
+        conn = connect_pg.connect()   # Établir une connexion à la base de données
+        cursor = conn.cursor()
         # Mettre à jour le nom du rôle dans la base de données
         cursor.execute("UPDATE ent.roles SET name = %s WHERE id = %s", (updated_role_name, role_id))
 
@@ -79,7 +81,7 @@ class RolesServices :
     # Route pour obtenir un rôle spécifique par ID
     def get_role_by_id(self,role_id):
         
-        if RolesFonction.id_exists(role_id) :
+        if not RolesFonction.id_exists(role_id) :
             raise ValidationError(f"id role '{role_id}' not exist")
         conn = connect_pg.connect()
         cursor = conn.cursor()

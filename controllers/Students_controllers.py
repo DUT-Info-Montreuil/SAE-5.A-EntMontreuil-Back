@@ -103,7 +103,7 @@ def get_student_controller(id_students):
         # Retournez les données au format JSON
         return jsonify(student_data)
     except ValidationError as va :
-        return jsonify({'error': str(ve)}), 400
+        return jsonify({'error': str(va)}), 400
     except ValueError as ve:
         # Gérez les erreurs liées à des valeurs incorrectes
         return jsonify({'error': str(ve)}), 400

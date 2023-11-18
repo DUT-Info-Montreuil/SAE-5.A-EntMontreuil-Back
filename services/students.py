@@ -140,15 +140,19 @@ class StudentsServices :
     ############ STUDENTS/UPDATE/<int:id_student> ############
     def update_students(self, id_student, datas):
         # Si il manque datas renvoie une erreur
+        if not StudentsFonction.field_exists('id' , id_student) : 
+            return jsonify({"error": f"id '{id_student} not exist"}) , 400
         if "datas" not in datas:
             return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
         student_data = datas["datas"]
         if "id" in student_data :
             return jsonify({"error": "Unable to modify user id, remove id field"}), 400
-        if StudentsFonction.field_exists('ine' , student_data["ine"] ) :
-            return jsonify({"error": f"ine '{student_data.get('ine')}' already exist"}), 400
-        if StudentsFonction.field_exists('nip' , student_data["nip"] ) :
-            return jsonify({"error": f"nip '{student_data.get('nip')}' already exist"}), 400
+        if "ine" in student_data : 
+            if StudentsFonction.field_exists('ine' , student_data["ine"] ) :
+                return jsonify({"error": f"ine '{student_data.get('ine')}' already exist"}), 400
+        if "nip" in student_data :
+            if StudentsFonction.field_exists('nip' , student_data["nip"] ) :
+                return jsonify({"error": f"nip '{student_data.get('nip')}' already exist"}), 400
         # Si il manque user renvoie une erreur
         if "user" in student_data:
             user_data = student_data["user"]
@@ -265,9 +269,6 @@ class StudentsFonction :
         count = cursor.fetchone()[0]
         conn.close()
         return count > 0
-
-
-
 
     ############ VERIFICATION CSV VALIDE ############
     def verification_csv_file(csv_path):

@@ -13,6 +13,40 @@ authentificate_service = AuthentificateService()
 
 @authentificate_bp.route('/authentification' , methods = ['POST'])
 def authentification():
+    """
+    Authentification de l'utilisateur.
+
+    Cette route permet à l'utilisateur de s'authentifier et de recevoir un jeton d'accès.
+
+    ---
+    tags:
+      - Authentification
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              description: Nom d'utilisateur de l'utilisateur.
+            password:
+              type: string
+              description: Mot de passe de l'utilisateur.
+    responses:
+      200:
+        description: Authentification réussie. Renvoie un jeton d'accès.
+        schema:
+          type: object
+          properties:
+            token:
+              type: string
+              description: Jeton d'accès JWT.
+      400:
+        description: Erreur de requête. Renvoie un message d'erreur.
+
+    """
     try :
         auth_data = request.json
         response, http_status = authentificate_service.authentification(auth_data)

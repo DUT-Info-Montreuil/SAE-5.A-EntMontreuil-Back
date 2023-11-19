@@ -76,7 +76,7 @@ def authentification():
     
     
     
-@authentificate_bp.route('/token_expiration' , methods = ['GET'])
+@authentificate_bp.route('/token_info' , methods = ['GET'])
 @jwt_required()
 def protected():
   try : 

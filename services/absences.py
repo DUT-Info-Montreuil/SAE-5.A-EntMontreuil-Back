@@ -2,7 +2,7 @@ import psycopg2
 import connect_pg
 from entities.model.absencesm import AbsencesModel
 from entities.DTO.absences import   Absences
-
+from flask import jsonify
 class AbsencesService:
     def __init__(self):
         pass
@@ -14,12 +14,13 @@ class AbsencesService:
             with conn.cursor() as cursor:
                 # Modification de la requête pour supporter la recherche par id_student ou username
                 sql_query = """
-                SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, 
-                    C.startTime, C.endTime, U.last_name, U.first_name 
+         SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, 
+                       C.startTime, C.endTime, U.last_name, U.first_name, R.name
                 FROM ent.Absences A 
                 INNER JOIN ent.Courses C ON A.id_Course = C.id 
                 INNER JOIN ent.Students S ON A.id_Student = S.id 
-                INNER JOIN ent.Users U ON S.id_User = U.id 
+                INNER JOIN ent.Users U ON S.id_User = U.id
+                INNER JOIN ent.Resources R ON C.id_Resource = R.id
                 WHERE """
 
                 # Déterminer si student_identifier est un ID ou un username
@@ -37,6 +38,7 @@ class AbsencesService:
                 cursor.execute(sql_query, (student_identifier,))
                 rows = cursor.fetchall()
                 absences_list = []
+                
                 for row in rows:
                     if output_format == "DTO":
                         absence = Absences(
@@ -55,7 +57,8 @@ class AbsencesService:
                             student_last_name=row[7],
                             student_first_name=row[8],
                             course_start_time=row[5],
-                            course_end_time=row[6]
+                            course_end_time=row[6],
+                            resource_name=row[9]
                         )
                         absences_list.append(absence.jsonify())
 
@@ -72,7 +75,16 @@ class AbsencesService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 # Construisez la requête SQL en fonction de la justification
-                sql_query = "SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, U.last_name, U.first_name FROM ent.Absences A INNER JOIN ent.Courses C ON A.id_Course = C.id INNER JOIN ent.Students S ON A.id_Student = S.id INNER JOIN ent.Users U ON S.id_User = U.id"
+                sql_query = """
+                            SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, 
+                                U.last_name, U.first_name, R.name 
+                            FROM ent.Absences A 
+                            INNER JOIN ent.Courses C ON A.id_Course = C.id 
+                            INNER JOIN ent.Students S ON A.id_Student = S.id 
+                            INNER JOIN ent.Users U ON S.id_User = U.id
+                            INNER JOIN ent.Resources R ON C.id_Resource = R.id
+                            """
+
                 if justified is not None:
                     if justified == 1:
                         sql_query += " WHERE A.justify = true"
@@ -81,6 +93,7 @@ class AbsencesService:
 
                 cursor.execute(sql_query)
                 rows = cursor.fetchall()
+
                 absences_list = []
 
                 for row in rows:
@@ -101,7 +114,8 @@ class AbsencesService:
                             student_last_name=row[7],
                             student_first_name=row[8],
                             course_start_time=row[5],
-                            course_end_time=row[6]
+                            course_end_time=row[6],
+                            resource_name=row[9]
                         )
                         absences_list.append(absence.jsonify())
 

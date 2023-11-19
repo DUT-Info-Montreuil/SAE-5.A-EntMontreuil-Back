@@ -15,7 +15,7 @@ class AbsencesService:
                 # Modification de la requête pour supporter la recherche par id_student ou username
                 sql_query = """
          SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, 
-                       C.startTime, C.endTime, U.last_name, U.first_name, R.name
+                       C.startTime, C.endTime, U.last_name, U.first_name, R.name, C.datecourse
                 FROM ent.Absences A 
                 INNER JOIN ent.Courses C ON A.id_Course = C.id 
                 INNER JOIN ent.Students S ON A.id_Student = S.id 
@@ -58,7 +58,8 @@ class AbsencesService:
                             student_first_name=row[8],
                             course_start_time=row[5],
                             course_end_time=row[6],
-                            resource_name=row[9]
+                            resource_name=row[9],
+                            course_date=row[10]
                         )
                         absences_list.append(absence.jsonify())
 
@@ -77,7 +78,7 @@ class AbsencesService:
                 # Construisez la requête SQL en fonction de la justification
                 sql_query = """
                             SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, 
-                                U.last_name, U.first_name, R.name 
+                                U.last_name, U.first_name, R.name ,C.datecourse
                             FROM ent.Absences A 
                             INNER JOIN ent.Courses C ON A.id_Course = C.id 
                             INNER JOIN ent.Students S ON A.id_Student = S.id 
@@ -115,7 +116,8 @@ class AbsencesService:
                             student_first_name=row[8],
                             course_start_time=row[5],
                             course_end_time=row[6],
-                            resource_name=row[9]
+                            resource_name=row[9],
+                            course_date=row[10]
                         )
                         absences_list.append(absence.jsonify())
 

@@ -1,7 +1,9 @@
 from flask import request, jsonify, Blueprint
 from services.authentificate import AuthentificateService
 import connect_pg
-from flask_jwt_extended import get_jwt_identity , jwt_required , create_access_token
+from flask_jwt_extended import get_jwt_identity , jwt_required , create_access_token, create_refresh_token
+import jwt
+from datetime import datetime
 
 # Création d'un Blueprint pour les routes liées 
 authentificate_bp = Blueprint('authentificate', __name__)
@@ -66,17 +68,43 @@ def authentification():
               "role" : role
             }
             access_token = create_access_token(identity=user)
-            return jsonify({'token':access_token , 'id_user' : id , 'first_name' : first_name, 'last_name' : last_name})
+            refresh_token = create_refresh_token(identity=user)
+            return jsonify({'token':access_token , 'refresh_token' : refresh_token, 'id_user' : id , 'first_name' : first_name, 'last_name' : last_name})
     except Exception as e:
         # Gérez les autres erreurs
         return jsonify({'error': str(e)}), 400
     
     
     
-@authentificate_bp.route('/protected' , methods = ['GET'])
+@authentificate_bp.route('/token_expiration' , methods = ['GET'])
 @jwt_required()
 def protected():
+  try : 
     current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    token = jwt.decode(request.headers['Authorization'].split()[1], 'iG98fdsVFD5fds', algorithms="HS256")
+    
+    expiration_timestamp = token['exp']  # Récupérer le timestamp d'expiration du token
+    
+    # Convertir le timestamp en format de date lisible
+    expiration_date = datetime.fromtimestamp(expiration_timestamp)
+    return jsonify({"logged_in_as"  : current_user, "token expiration" : expiration_date }), 200
+  except Exception as e:
+    # Gérez les autres erreurs
+    return jsonify({'error': str(e)}), 400
+  
+  
+
+# Route pour rafraîchir le temps de validité du token d'accès
+@authentificate_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+  try :
+    current_user = get_jwt_identity()
+    # Émettre un nouveau token d'accès avec une nouvelle date d'expiration étendue
+    new_access_token = create_access_token(identity=current_user)
+    return jsonify(access_token=new_access_token), 200
+  except Exception as e:
+    # Gérez les autres erreurs
+    return jsonify({'error': str(e)}), 400
         
                

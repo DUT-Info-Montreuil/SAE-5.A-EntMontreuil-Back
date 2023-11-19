@@ -57,7 +57,15 @@ def authentification():
             id = response.json.get('id_user')
             first_name = response.json.get('first_name')
             last_name = response.json.get('last_name')
-            access_token = create_access_token(identity=username)
+            role = response.json.get('role')
+            user = {
+              "id": id,
+              "first_name" : first_name,
+              "last_name" : last_name,
+              "username" : username,
+              "role" : role
+            }
+            access_token = create_access_token(identity=user)
             return jsonify({'token':access_token , 'id_user' : id , 'first_name' : first_name, 'last_name' : last_name})
     except Exception as e:
         # Gérez les autres erreurs

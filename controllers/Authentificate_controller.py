@@ -54,8 +54,11 @@ def authentification():
             return response, http_status
         else :
             username = response.json.get('username')
+            id = response.json.get('id_user')
+            first_name = response.json.get('first_name')
+            last_name = response.json.get('last_name')
             access_token = create_access_token(identity=username)
-            return jsonify({'token':access_token})
+            return jsonify({'token':access_token , 'id_user' : id , 'first_name' : first_name, 'last_name' : last_name})
     except Exception as e:
         # Gérez les autres erreurs
         return jsonify({'error': str(e)}), 400

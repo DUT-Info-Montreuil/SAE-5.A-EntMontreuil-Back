@@ -5,6 +5,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from flasgger import Swagger
 from config import config
+from datetime import timedelta
 from controllers.Teachers_controllers import teachers_bp
 from controllers.Users_controllers import users_bp
 from controllers.Roles_controllers import roles_bp
@@ -20,7 +21,10 @@ from flask_jwt_extended import JWTManager
 # Register the main controller
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "iG98fdsVFD5fds"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)
+
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 swagger = Swagger(app)

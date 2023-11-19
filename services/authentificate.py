@@ -32,7 +32,7 @@ class AuthentificateService:
         if not result :
             return jsonify({"error" : "username or password incorrect"}) , 400
         else :
-            return jsonify({"username" : username }) , 200
+            return jsonify({"username" : username, "id_user" : user[0] , "first_name" : user[4] , "last_name" : user[3] }) , 200
         #username : oudssi
         #mdp : aldp~o8xUwa8
 

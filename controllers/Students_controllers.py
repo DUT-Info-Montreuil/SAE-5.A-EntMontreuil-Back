@@ -26,6 +26,29 @@ def get_student_absences_route():
         # Gérer les exceptions ici
         return jsonify({'error': str(e)}), 500
 
+@students_bp.route('/student/info', methods=['GET'])
+@jwt_required()
+def get_student_info_route():
+    try:
+        # Extraire le username du token JWT
+        current_user = get_jwt_identity()
+        
+        # Assurez-vous que le 'username' est présent dans 'current_user'
+        if 'username' not in current_user:
+            return jsonify({'error': 'Username not found in token'}), 400
+
+        # Appeler la fonction du service en passant le username
+        student_info = students_services.get_student(current_user["username"], output_format="model")
+
+        # Retourner la réponse
+        if student_info:
+            return jsonify(student_info), 200
+        else:
+            return jsonify({'error': 'Student not found'}), 404
+
+    except Exception as e:
+        # Gérer les exceptions ici
+        return jsonify({'error': str(e)}), 500
 
 
 #-----------get all students--------------

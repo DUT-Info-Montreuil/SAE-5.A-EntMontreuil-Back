@@ -14,15 +14,40 @@ class StudentsServices :
     ############ STUDENTS/GET ############
     def get_all_students(self, output_format):
         """ Return all students in JSON format """
-        query = "select * from ent.students s inner join ent.users u on u.id = s.id_user left join ent.tp on s.id_tp = tp.id left join ent.td on s.id_td = td.id left join ent.promotions on s.id_promotion = promotions.id order by s.id asc"
+        query = """SELECT
+                                        S.id, S.nip, S.apprentice, S.ine,
+                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin,
+                                        TD.id,TD.name as td_name,
+                                        TP.id,TP.name as tp_name,
+                                        P.id, P.year as promotion_year, P.level as promotion_level,
+                                        D.id as degree_id, D.name as degree_name,
+                                        R.id as role_id, R.name as role_name,
+                                        U.id
+                    FROM
+                        ent.Students S
+                    INNER JOIN
+                        ent.Users U ON S.id_User = U.id
+                    LEFT JOIN
+                        ent.TD TD ON S.id_Td = TD.id
+                    LEFT JOIN
+                        ent.TP TP ON S.id_Tp = TP.id
+                    LEFT JOIN
+                        ent.Promotions P ON S.id_Promotion = P.id
+                    LEFT JOIN
+                        ent.Degrees D ON P.id_Degree = D.id
+                    LEFT JOIN
+                        ent.Roles R ON U.id_Role = R.id
+                    WHERE id_role=3
+                    order  by s.id asc"""
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         returnStatement = []
         for row in rows:
             if output_format == 'dto' :
-                student = Students(row[0], row[3], row[1], row[4], row[5], row[6], row[7], row[2])
+                student = Students(row[0], row[1], row[2], row[20], row[9], row[11], row[13], row[3])
             elif output_format == 'model' :
-                student = StudentsModel(row[0], row[3], row[1], row[4], row[5], row[6], row[7], row[2], row[11], row[12],row[9], row[13], row[15], row[20], row[17], row[24])
+                student = student = StudentsModel(*row[:-1])
+
             else :
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             returnStatement.append(student.jsonify())
@@ -30,24 +55,58 @@ class StudentsServices :
         return jsonify(returnStatement)
 
     ############ STUDENTS/GET/<int:id_students> ############
-    def get_student(self, id_students , output_format):
-        # Verification id student existe
-        if not StudentsFonction.field_exists('id',id_students) :
-            raise ValidationError(f"id_students : '{id_students}' not exists")
-        conn = connect_pg.connect()
-        cursor = conn.cursor()
-        query = "select * from ent.students s inner join ent.users u on u.id = s.id_user left join ent.tp on s.id_tp = tp.id left join ent.td on s.id_td = td.id left join ent.promotions on s.id_promotion = promotions.id where s.id = %s"
-        cursor.execute(query, (id_students,))
-        row = cursor.fetchone()
-        conn.commit()
-        conn.close()
-        if output_format == 'dto' :
-            return Students(row[0], row[3], row[1], row[4], row[5], row[6], row[7], row[2]).jsonify()
-        elif output_format == 'model' :
-            return StudentsModel(row[0], row[3], row[1], row[4], row[5], row[6], row[7], row[2], row[11], row[12],row[9], row[13], row[15], row[20], row[17], row[24]).jsonify()
-        else :
-            raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
+    def get_student(self, student_identifier, output_format="model"):
+            try:
+                conn = connect_pg.connect()
+                with conn.cursor() as cursor:
+                    # Déterminer si student_identifier est un nombre (ID) ou une chaîne (username)
+                    if isinstance(student_identifier, int) or student_identifier.isdigit():
+                        where_clause = "S.id = %s"
+                        params = (student_identifier,)
+                    else:
+                        where_clause = "U.username = %s"
+                        params = (student_identifier,)
 
+                    sql_query = f"""
+                    SELECT 
+                                        S.id, S.nip, S.apprentice, S.ine,
+                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin, 
+                                        TD.id,TD.name as td_name, 
+                                        TP.id,TP.name as tp_name, 
+                                        P.id, P.year as promotion_year, P.level as promotion_level, 
+                                        D.id as degree_id, D.name as degree_name,
+                                        R.id as role_id, R.name as role_name
+                    FROM 
+                        ent.Students S
+                    INNER JOIN 
+                        ent.Users U ON S.id_User = U.id
+                    LEFT JOIN 
+                        ent.TD TD ON S.id_Td = TD.id
+                    LEFT JOIN 
+                        ent.TP TP ON S.id_Tp = TP.id
+                    LEFT JOIN 
+                        ent.Promotions P ON S.id_Promotion = P.id
+                    LEFT JOIN 
+                        ent.Degrees D ON P.id_Degree = D.id
+                    LEFT JOIN 
+                        ent.Roles R ON U.id_Role = R.id
+                    WHERE 
+                        {where_clause};
+                    """
+                    
+                    cursor.execute(sql_query, params)
+                    row = cursor.fetchone()
+                    print(row)
+                    if row:
+                        student = StudentsModel(*row)
+                        return student.jsonify() if output_format == "model" else student
+                    else:
+                        return None
+
+            except Exception as e:
+                raise e
+            finally:
+                conn.close()
     ############ STUDENTS/ADD ############
     def add_students(self, datas):
         # Si il manque datas renvoie une erreur

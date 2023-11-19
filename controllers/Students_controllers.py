@@ -13,6 +13,37 @@ absences_services = AbsencesService()  # Créez une instance de AbsencesService
 @students_bp.route('/student/absences', methods=['GET'])
 @jwt_required()
 def get_student_absences_route():
+    """
+    Récupère les absences d'un étudiant spécifique à partir de son nom d'utilisateur à partir du token.
+    ---
+    tags:
+      - Étudiants
+    descriptions: 
+      - Cette route permet d'obtenir la liste des absences pour un étudiant, identifié par son nom d'utilisateur extrait du token JWT.
+    responses:
+      200:
+        description: Liste des absences de l'étudiant retournée avec succès.
+        examples:
+          application/json: 
+            [
+                {
+                    "course_date": "2023-11-15",
+                    "course_end_time": "12:30:00",
+                    "course_start_time": "10:30:00",
+                    "id_Course": 2,
+                    "id_Student": 6,
+                    "justify": true,
+                    "reason": "Raison personnelle",
+                    "resource_name": "Ressource2",
+                    "student_first_name": "teset",
+                    "student_last_name": "teset"
+                }
+            ]
+      400:
+        description: Erreur de requête ou problème de validation.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
         # Extraire le username du token JWT
         current_user = get_jwt_identity()
@@ -29,6 +60,46 @@ def get_student_absences_route():
 @students_bp.route('/student/info', methods=['GET'])
 @jwt_required()
 def get_student_info_route():
+    """
+    Récupère les informations détaillées d'un étudiant à partir de son nom d'utilisateur a partir du token.
+    ---
+    tags:
+      - Étudiants
+    descriptions: 
+      - Cette route permet d'obtenir des informations complètes sur un étudiant en utilisant son nom d'utilisateur extrait du token JWT.
+    responses:
+      200:
+        description: Informations détaillées de l'étudiant retournées avec succès.
+        examples:
+          application/json: 
+            {
+              "personal_info": {
+                "id": 1,
+                "nip": "123456",
+                "apprentice": true,
+                "ine": "789455"
+              },
+              "user_info": {
+                "username": "user",
+                "last_name": "User",
+                "first_name": "User",
+                "email": "user@example.com",
+                "isadmin": false
+              },
+              "academic_info": {
+                "td": {"name": "TD1"},
+                "tp": {"name": "TP1"},
+                "promotion": {"year": 2023, "level": 1},
+                "degree": {"id": 1, "name": "INFO"}
+              }
+            }
+      400:
+        description: Le nom d'utilisateur n'est pas trouvé dans le token.
+      404:
+        description: Aucun étudiant trouvé avec le nom d'utilisateur spécifié.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
         # Extraire le username du token JWT
         current_user = get_jwt_identity()

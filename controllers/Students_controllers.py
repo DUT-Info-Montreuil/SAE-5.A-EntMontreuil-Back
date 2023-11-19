@@ -1,12 +1,32 @@
 from flask import request, jsonify, Blueprint
 from services.students import StudentsServices , ValidationError
+from services.absences import AbsencesService
 import json
-
+from flask_jwt_extended import get_jwt_identity , jwt_required
 # Création d'un Blueprint pour les routes liées
 students_bp = Blueprint('students', __name__)
 
 # Instanciation du service
 students_services = StudentsServices()
+absences_services = AbsencesService()  # Créez une instance de AbsencesService
+
+@students_bp.route('/student/absences', methods=['GET'])
+@jwt_required()
+def get_student_absences_route():
+    try:
+        # Extraire le username du token JWT
+        current_user = get_jwt_identity()
+        
+        # Appeler la fonction du service en passant le username
+        absences = absences_services.get_student_absences(current_user["username"], justified=None,output_format="model")
+
+        # Retourner la réponse
+        return jsonify(absences), 200
+    except Exception as e:
+        # Gérer les exceptions ici
+        return jsonify({'error': str(e)}), 500
+
+
 
 #-----------get all students--------------
 @students_bp.route('/students', methods=['GET'])

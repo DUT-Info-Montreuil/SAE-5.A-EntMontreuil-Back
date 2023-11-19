@@ -74,11 +74,51 @@ def authentification():
         # Gérez les autres erreurs
         return jsonify({'error': str(e)}), 400
     
-    
+
     
 @authentificate_bp.route('/token_info' , methods = ['GET'])
 @jwt_required()
-def protected():
+def token_info():
+  """
+  Recuperation des informations du token
+  ---
+  tags:
+    - Authentification
+  summary: Informations sur le token d'accès
+  description: Récupère les informations liées au token d'accès JWT actuel.
+  parameters:
+        - name: Authorization
+          in: header
+          description: Jeton d'authentification JWT, Bearer <token>.
+          required: true
+          type: string
+          pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]+$'
+  responses:
+    200:
+      description: Informations du token récupérées avec succès.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              logged_in_as:
+                type: string
+                description: Utilisateur actuellement connecté.
+              token_expiration:
+                type: string
+                format: date-time
+                description: Date et heure d'expiration du token.
+    400:
+      description: Erreur de requête en cas de problème lors de la récupération des informations du token.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Description de l'erreur survenue.
+  """
   try : 
     current_user = get_jwt_identity()
     token = jwt.decode(request.headers['Authorization'].split()[1], 'iG98fdsVFD5fds', algorithms="HS256")
@@ -95,14 +135,51 @@ def protected():
   
 
 # Route pour rafraîchir le temps de validité du token d'accès
-@authentificate_bp.route('/refresh', methods=['POST'])
+@authentificate_bp.route('/refresh_token', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
+  """
+  refresh token
+  ---
+  tags:
+    - Authentification
+  summary: Rafraîchir le token d'accès
+  description: Rafraîchit le token d'accès pour prolonger sa durée de validité.
+  parameters:
+        - name: Authorization
+          in: header
+          description: Jeton d'authentification JWT, Bearer <token>.
+          required: true
+          type: string
+          pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]+$'
+  responses:
+    200:
+      description: Nouveau token d'accès généré avec succès.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                description: Nouveau token d'accès.
+    400:
+      description: Erreur de requête en cas de problème lors du rafraîchissement du token.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Description de l'erreur survenue.
+
+  """
   try :
     current_user = get_jwt_identity()
     # Émettre un nouveau token d'accès avec une nouvelle date d'expiration étendue
     new_access_token = create_access_token(identity=current_user)
-    return jsonify(access_token=new_access_token), 200
+    return jsonify(new_access_token=new_access_token), 200
   except Exception as e:
     # Gérez les autres erreurs
     return jsonify({'error': str(e)}), 400

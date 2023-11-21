@@ -59,59 +59,11 @@ class UsersServices :
     def add_user(self, data):
         """ Add one user"""
         try:
-            # Si le password est mentionner 
-            if "password" in data and data["password"] :
-                # Verifiez le mot de passe
-                user_response, http_status = UsersFonction.is_valid_password(data["password"]) 
-                if http_status != 200 :
-                    return user_response, http_status 
-            # Si le password n'est pas mentionner il est generer aleatoirement
-            else :   
-                data["password"] = UsersFonction.generate_password()
-            password = data["password"]
-            # isAdmin false par defaut
-            if "isAdmin" not in data :
-                data["isAdmin"] = False
-            # if role existe pas
             if not RolesFonction.name_exists(data["role"]) :
                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
             if data['role'] == 'student' or data['role'] == 'teacher' :
                 return jsonify({"error": f"Can't add {data.get('role')}"}), 400
-            id_role = UsersFonction.get_role_id_by_name(data["role"])
-            del data["role"]  # Supprimez le champ du nom du rôle
-            data["id_Role"] = id_role
-
-            # Verification si id est deja utiliser
-            if "id" in data :
-                if UsersFonction.field_exists('id' , data["id"]) :
-                    return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
-            # Verifiez username taille > 4
-            if len(data["username"]) < 4:
-                return jsonify({"error": "Username need to have minimum 4 characters"}), 400
-            # Verifiez si le nom d'utilisateur est deja utilise
-            if UsersFonction.field_exists('username', data["username"]):
-                return jsonify({"error": f"Username '{data.get('username')}' already exists"}), 400
-            # Verification de la syntaxe de l'email
-            if not UsersFonction.is_valid_email(data["email"] ):
-                return jsonify({"error": "Invalid email format"}), 400
-            # Hashage du password avec md5 + salt password with bcrypt
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')  
-            # Creez la liste de colonnes et de valeurs
-            columns = list(data.keys())
-            values = list(data.values())
-            values[columns.index("password")] = hashed_password
-            # Etablissez la connexion a la base de donnees
-            conn = connect_pg.connect()
-            cursor = conn.cursor()
-            # Créez la requête SQL parametree
-            query = f"INSERT INTO ent.users ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
-            # Executez la requête SQL avec les valeurs
-            cursor.execute(query, values)
-            row = cursor.fetchone()
-            # Validez la transaction et fermez la connexion
-            conn.commit()
-            conn.close()
-            return jsonify({"message": "User added", "id": row[0] , "username" : data["username"] , "password" : password}) , 200 
+            return UsersFonction.add_users(data) 
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}) , 400
 

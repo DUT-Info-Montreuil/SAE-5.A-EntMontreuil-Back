@@ -83,6 +83,65 @@ def get_one_user(id):
 @users_bp.route('/users', methods=['POST'])
 @UsersDecorators.validate_json_add_user
 def add_user():
+    """
+    Add a new user.
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: body
+        name: user
+        description: User object to be added.
+        required: true
+        schema:
+          $ref: '#/definitions/UserSchema'
+    responses:
+      200:
+        description: User successfully added.
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Confirmation message.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during user addition.
+    definitions:
+      UserSchema:
+        type: object
+        properties:
+          datas:
+            type: object
+            properties:
+              user:
+                $ref: '#/definitions/UserData'
+            required:
+              - user
+        required:
+          - datas
+      UserData:
+        type: object
+        properties:
+          first_name:
+            type: string
+          last_name:
+            type: string
+          username:
+            type: string
+          email:
+            type: string
+          role:
+            type: string
+        required:
+          - first_name
+          - last_name
+          - username
+          - email
+          - role
+        additionalProperties: false
+    """
 
     try:
         datas = request.json
@@ -97,6 +156,47 @@ def add_user():
 @users_bp.route('/user/info', methods=['GET'])
 @jwt_required()
 def get_user_info():
+  
+    """
+    Get information about the current user.
+    ---
+    tags:
+      - Users
+    security:
+      - jwt: []
+    responses:
+      200:
+        description: User information successfully retrieved.
+        schema:
+          $ref: '#/definitions/UserModel'
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during user retrieval.
+    definitions:
+      UserModel:
+        type: object
+        properties:
+          id:
+            type: integer
+          first_name:
+            type: string
+          last_name:
+            type: string
+          username:
+            type: string
+          email:
+            type: string
+          role:
+            type: string
+        required:
+          - id
+          - first_name
+          - last_name
+          - username
+          - email
+          - role
+    """
     try:
         current_user = get_jwt_identity()
         if current_user['role'] == 'student' :
@@ -115,7 +215,60 @@ def get_user_info():
 @users_bp.route('/users/<int:id_user>', methods=['PATCH'])
 @UsersDecorators.validate_json_update_user
 def update_user(id_user):
-
+    """
+    Update user information by ID.
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: id_user
+        in: path
+        description: ID of the user to update.
+        required: true
+        type: integer
+      - in: body
+        name: user
+        description: User object to update.
+        required: true
+        schema:
+          $ref: '#/definitions/UserUpdate'
+    responses:
+      200:
+        description: User information successfully updated.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during user update.
+    definitions:
+      UserUpdate:
+        type: object
+        properties:
+          datas:
+            type: object
+            properties:
+              user:
+                $ref: '#/definitions/UserData'
+            required:
+              - user
+        required:
+          - datas
+      UserData:
+        type: object
+        properties:
+          first_name:
+            type: string
+          last_name:
+            type: string
+          username:
+            type: string
+          email:
+            type: string
+          role:
+            type: string
+          password:
+            type: string
+        additionalProperties: false
+    """
     try:
         datas = request.json
         response , https_status = UsersFonction.update_users(datas['datas']['user'] , id_user)
@@ -129,6 +282,25 @@ def update_user(id_user):
 #------------delete user-------------
 @users_bp.route('/users/<int:id_user>', methods=['DELETE'])
 def delete_user(id_user):
+    """
+    Delete user by ID.
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: id_user
+        in: path
+        description: ID of the user to delete.
+        required: true
+        type: integer
+    responses:
+      204:
+        description: User successfully deleted.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during user deletion.
+    """
     try:
         response , https_status = UsersFonction.remove_users(id_user)
         return response , https_status

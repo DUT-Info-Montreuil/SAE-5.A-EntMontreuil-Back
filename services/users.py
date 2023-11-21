@@ -218,9 +218,6 @@ class UsersFonction :
             # isAdmin false par defaut
             if "isAdmin" not in data :
                 data["isAdmin"] = False
-            # if role existe pas
-            if not RolesFonction.name_exists(data["role"]) :
-                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
              
             id_role = UsersFonction.get_role_id_by_name(data["role"])
             del data["role"]  # Supprimez le champ du nom du rôle

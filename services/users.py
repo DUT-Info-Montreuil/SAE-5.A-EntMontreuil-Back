@@ -69,17 +69,14 @@ class UsersServices :
             else :   
                 data["password"] = UsersFonction.generate_password()
             password = data["password"]
-            # Attribution des valeurs
-            username = data["username"]
-            email = data["email"] 
-            first_name = data["first_name"] 
-            last_name = data["last_name"]
             # isAdmin false par defaut
             if "isAdmin" not in data :
                 data["isAdmin"] = False
             # if role existe pas
             if not RolesFonction.name_exists(data["role"]) :
-                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
+                return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
+            if data['role'] == 'student' or data['role'] == 'teacher' :
+                return jsonify({"error": f"Can't add {data.get('role')}"}), 400
             id_role = UsersFonction.get_role_id_by_name(data["role"])
             del data["role"]  # Supprimez le champ du nom du rôle
             data["id_Role"] = id_role
@@ -89,17 +86,16 @@ class UsersServices :
                 if UsersFonction.field_exists('id' , data["id"]) :
                     return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
             # Verifiez username taille > 4
-            if len(username) < 4:
+            if len(data["username"]) < 4:
                 return jsonify({"error": "Username need to have minimum 4 characters"}), 400
             # Verifiez si le nom d'utilisateur est deja utilise
-            if UsersFonction.field_exists('username', username):
-                return jsonify({"error": f"Username '{username}' already exists"}), 400
+            if UsersFonction.field_exists('username', data["username"]):
+                return jsonify({"error": f"Username '{data.get('username')}' already exists"}), 400
             # Verification de la syntaxe de l'email
-            if not UsersFonction.is_valid_email(email):
+            if not UsersFonction.is_valid_email(data["email"] ):
                 return jsonify({"error": "Invalid email format"}), 400
             # Hashage du password avec md5 + salt password with bcrypt
-            salt = bcrypt.gensalt()
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')  
             # Creez la liste de colonnes et de valeurs
             columns = list(data.keys())
             values = list(data.values())
@@ -115,7 +111,7 @@ class UsersServices :
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-            return jsonify({"message": "User added", "id": row[0] , "username" : username , "password" : password}) , 200 
+            return jsonify({"message": "User added", "id": row[0] , "username" : data["username"] , "password" : password}) , 200 
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}) , 400
 

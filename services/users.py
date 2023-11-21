@@ -156,17 +156,6 @@ class UsersFonction :
             else :   
                 data["password"] = UsersFonction.generate_password()
             password = data["password"]
-            
-            # Verifie si tous les attributs sont presents
-            required_fields = ['username' , 'first_name' , 'last_name' , 'email' , 'role']
-            for field in required_fields : 
-                if field not in data :
-                    return jsonify({"error": f"Missing '{field}' field in user"}), 400
-            # Attribution des valeurs
-            username = data["username"]
-            email = data["email"] 
-            first_name = data["first_name"] 
-            last_name = data["last_name"]
             # isAdmin false par defaut
             if "isAdmin" not in data :
                 data["isAdmin"] = False
@@ -180,13 +169,13 @@ class UsersFonction :
                 if UsersFonction.field_exists('id' , data["id"]) :
                     return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
             # Verifiez username taille > 4
-            if len(username) < 4:
+            if len(data["username"]) < 4:
                 return jsonify({"error": "Username need to have minimum 4 characters"}), 400
             # Verifiez si le nom d'utilisateur est deja utilise
-            if UsersFonction.field_exists('username', username):
-                return jsonify({"error": f"Username '{username}' already exists"}), 400
+            if UsersFonction.field_exists('username', data["username"]):
+                return jsonify({"error": f"Username '{data.get('username')}' already exists"}), 400
             # Verification de la syntaxe de l'email
-            if not UsersFonction.is_valid_email(email):
+            if not UsersFonction.is_valid_email(data["email"]):
                 return jsonify({"error": "Invalid email format"}), 400
             # Hashage du password avec md5 + salt password with bcrypt
             salt = bcrypt.gensalt()
@@ -206,7 +195,7 @@ class UsersFonction :
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()
-            return jsonify({"message": "User added", "id": row[0] , "username" : username , "password" : password}) , 200 
+            return jsonify({"message": "User added", "id": row[0] , "username" : data["username"] , "password" : password}) , 200 
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}) , 400
 

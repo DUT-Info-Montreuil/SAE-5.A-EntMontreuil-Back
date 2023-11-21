@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from services.users import UsersServices  , ValidationError
+from services.users import UsersServices  , ValidationError, UsersFonction
 import json
 from decorator.users_decorator import UsersDecorators
 from flask_jwt_extended import get_jwt_identity , jwt_required
@@ -86,8 +86,8 @@ def add_user():
 
     try:
         datas = request.json
-        response , https_satatus = users_service.add_user(datas['datas']['user'])
-        return response , https_satatus
+        response , https_status = users_service.add_user(datas['datas']['user'])
+        return response , https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
@@ -106,6 +106,20 @@ def get_user_info():
         else: 
           user = users_service.get_users_with_id(current_user['id'] ,'model')
         return jsonify(user)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+      
+#------------update user-------------
+@users_bp.route('/users/<int:id_user>', methods=['PATCH'])
+@UsersDecorators.validate_json_update_user
+def update_user(id_user):
+
+    try:
+        datas = request.json
+        response , https_status = UsersFonction.update_users(datas['datas']['user'] , id_user)
+        return response , https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

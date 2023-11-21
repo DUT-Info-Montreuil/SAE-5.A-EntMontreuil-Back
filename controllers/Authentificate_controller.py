@@ -73,66 +73,6 @@ def authentification():
     except Exception as e:
         # Gérez les autres erreurs
         return jsonify({'error': str(e)}), 400
-    
-
-    
-@authentificate_bp.route('/token_info' , methods = ['GET'])
-@jwt_required()
-def token_info():
-  """
-  Recuperation des informations du token
-  ---
-  tags:
-    - Authentification
-  summary: Informations sur le token d'accès
-  description: Récupère les informations liées au token d'accès JWT actuel.
-  parameters:
-        - name: Authorization
-          in: header
-          description: Jeton d'authentification JWT, Bearer <token>.
-          required: true
-          type: string
-          pattern: '^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_.+/=]+$'
-  responses:
-    200:
-      description: Informations du token récupérées avec succès.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              logged_in_as:
-                type: string
-                description: Utilisateur actuellement connecté.
-              token_expiration:
-                type: string
-                format: date-time
-                description: Date et heure d'expiration du token.
-    400:
-      description: Erreur de requête en cas de problème lors de la récupération des informations du token.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                description: Description de l'erreur survenue.
-  """
-  try : 
-    current_user = get_jwt_identity()
-    token = jwt.decode(request.headers['Authorization'].split()[1], 'iG98fdsVFD5fds', algorithms="HS256")
-    
-    expiration_timestamp = token['exp']  # Récupérer le timestamp d'expiration du token
-    
-    # Convertir le timestamp en format de date lisible
-    expiration_date = datetime.fromtimestamp(expiration_timestamp)
-    return jsonify({"logged_in_as"  : current_user, "token expiration" : expiration_date }), 200
-  except Exception as e:
-    # Gérez les autres erreurs
-    return jsonify({'error': str(e)}), 400
-  
-  
 
 # Route pour rafraîchir le temps de validité du token d'accès
 @authentificate_bp.route('/refresh_token', methods=['GET'])

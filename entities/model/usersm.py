@@ -15,13 +15,19 @@ class UsersModel:
 
     def jsonify(self):
         return {
-            "id": self.id,
-            "password" : self.password,
-            "username": self.username,
-            "last_name": self.last_name,
-            "first_name": self.first_name,
-            "role_name" : self.role_name,
-            "email": self.email,
-            "id_Role" : self.id_Role,
-            "isAdmin" : self.isAdmin,
+            "user" : {
+                "id": self.id,
+                "password" : self.password,
+                "username": self.username,
+                "last_name": self.last_name,
+                "first_name": self.first_name,
+                "email": self.email,
+                "isAdmin" : self.isAdmin,
+                "role": {
+                    "id" : self.id_Role,
+                    "name" : self.role_name,
+                }
+            }
+            
+            
         }

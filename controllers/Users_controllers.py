@@ -1,6 +1,10 @@
 from flask import request, jsonify, Blueprint
 from services.users import UsersServices  , ValidationError
 import json
+from decorator.users_decorator import UsersDecorators
+from flask_jwt_extended import get_jwt_identity , jwt_required
+from services.students import StudentsServices
+from services.teachers import TeachersService
 
 # Création d'un Blueprint pour les routes liées 
 users_bp = Blueprint('users', __name__)
@@ -10,7 +14,7 @@ users_service = UsersServices()
 
 #-----------get all users--------------
 @users_bp.route('/users', methods=['GET'])
-def get_all_users_dto():
+def get_all_users():
     """
     Get a list of all users.
     ---
@@ -39,7 +43,7 @@ def get_all_users_dto():
     
 #------------get one user with id-------------
 @users_bp.route('/users/<int:id>', methods=['GET'])
-def get_one_users_dto(id):
+def get_one_user(id):
     """
     Get information about a specific user by ID.
     ---
@@ -69,6 +73,38 @@ def get_one_users_dto(id):
     try:
         output_format = request.args.get('output_format', default='dto')
         user = users_service.get_users_with_id(id, output_format)
+        return jsonify(user)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+      
+#------------add user-------------
+@users_bp.route('/users', methods=['POST'])
+@UsersDecorators.validate_json_add_user
+def add_user():
+
+    try:
+        datas = request.json
+        response , https_satatus = users_service.add_user(datas['datas']['user'])
+        return response , https_satatus
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+      
+#------------ user info-----------------
+@users_bp.route('/user/info', methods=['GET'])
+@jwt_required()
+def get_user_info():
+    try:
+        current_user = get_jwt_identity()
+        if current_user['role'] == 'student' :
+          user = StudentsServices.get_student(StudentsServices, current_user['username'], 'model')
+        elif current_user['role'] == 'teacher' :
+          user = TeachersService.get_teacher(TeachersService, current_user['username'] , 'model')
+        else: 
+          user = users_service.get_users_with_id(current_user['id'] ,'model')
         return jsonify(user)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400

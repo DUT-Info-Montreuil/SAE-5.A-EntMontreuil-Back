@@ -263,4 +263,6 @@ def get_teacher(id_teacher):
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
 
+
+
     

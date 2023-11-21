@@ -135,7 +135,7 @@ def token_info():
   
 
 # Route pour rafraîchir le temps de validité du token d'accès
-@authentificate_bp.route('/refresh_token', methods=['POST'])
+@authentificate_bp.route('/refresh_token', methods=['GET'])
 @jwt_required(refresh=True)
 def refresh():
   """

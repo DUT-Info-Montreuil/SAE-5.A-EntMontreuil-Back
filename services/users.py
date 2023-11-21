@@ -53,6 +53,71 @@ class UsersServices :
         conn.commit()
         conn.close()
         return user.jsonify()
+    
+    
+    ############ ADD/USER ################
+    def add_user(self, data):
+        """ Add one user"""
+        try:
+            # Si le password est mentionner 
+            if "password" in data and data["password"] :
+                # Verifiez le mot de passe
+                user_response, http_status = UsersFonction.is_valid_password(data["password"]) 
+                if http_status != 200 :
+                    return user_response, http_status 
+            # Si le password n'est pas mentionner il est generer aleatoirement
+            else :   
+                data["password"] = UsersFonction.generate_password()
+            password = data["password"]
+            # Attribution des valeurs
+            username = data["username"]
+            email = data["email"] 
+            first_name = data["first_name"] 
+            last_name = data["last_name"]
+            # isAdmin false par defaut
+            if "isAdmin" not in data :
+                data["isAdmin"] = False
+            # if role existe pas
+            if not RolesFonction.name_exists(data["role"]) :
+                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
+            id_role = UsersFonction.get_role_id_by_name(data["role"])
+            del data["role"]  # Supprimez le champ du nom du rôle
+            data["id_Role"] = id_role
+
+            # Verification si id est deja utiliser
+            if "id" in data :
+                if UsersFonction.field_exists('id' , data["id"]) :
+                    return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
+            # Verifiez username taille > 4
+            if len(username) < 4:
+                return jsonify({"error": "Username need to have minimum 4 characters"}), 400
+            # Verifiez si le nom d'utilisateur est deja utilise
+            if UsersFonction.field_exists('username', username):
+                return jsonify({"error": f"Username '{username}' already exists"}), 400
+            # Verification de la syntaxe de l'email
+            if not UsersFonction.is_valid_email(email):
+                return jsonify({"error": "Invalid email format"}), 400
+            # Hashage du password avec md5 + salt password with bcrypt
+            salt = bcrypt.gensalt()
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
+            # Creez la liste de colonnes et de valeurs
+            columns = list(data.keys())
+            values = list(data.values())
+            values[columns.index("password")] = hashed_password
+            # Etablissez la connexion a la base de donnees
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            # Créez la requête SQL parametree
+            query = f"INSERT INTO ent.users ({', '.join(columns)}) VALUES ({', '.join(['%s' for _ in columns])}) RETURNING id"
+            # Executez la requête SQL avec les valeurs
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            # Validez la transaction et fermez la connexion
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "User added", "id": row[0] , "username" : username , "password" : password}) , 200 
+        except Exception as e:
+            return jsonify({"message": "ERROR", "error": str(e)}) , 400
 
         
 
@@ -135,9 +200,8 @@ class UsersFonction :
         try:
             # Si le password est mentionner 
             if "password" in data and data["password"] :
-                password = data["password"]
                 # Verifiez le mot de passe
-                user_response, http_status = UsersFonction.is_valid_password(password) 
+                user_response, http_status = UsersFonction.is_valid_password(data["password"]) 
                 if http_status != 200 :
                     return user_response, http_status 
             # Si le password n'est pas mentionner il est generer aleatoirement
@@ -245,14 +309,13 @@ class UsersFonction :
         password_list = list(uppercase_letter + special_character + digits + lowercase_letters)
         random.shuffle(password_list)
         password = ''.join(password_list)
-
         return password
 
 
     def get_all_role_name():
         conn =connect_pg.connect()  # Établir une connexion à la base de données
         cursor = conn.cursor()
-        query = "SELECT name FROM ent.roles"
+        query = "SELECT name FROM ent.roles WHERE name NOT IN ('teacher', 'student')"
         cursor.execute(query)
         role_names = [row[0] for row in cursor.fetchall()]  # Récupérer tous les noms de rôles
         conn.close()  # Fermer la connexion à la base de données

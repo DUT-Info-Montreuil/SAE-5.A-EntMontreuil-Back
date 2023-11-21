@@ -96,7 +96,6 @@ class StudentsServices :
                     
                     cursor.execute(sql_query, params)
                     row = cursor.fetchone()
-                    print(row)
                     if row:
                         student = StudentsModel(*row)
                         return student.jsonify() if output_format == "model" else student

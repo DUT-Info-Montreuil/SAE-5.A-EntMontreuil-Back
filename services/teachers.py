@@ -12,7 +12,7 @@ class TeachersService :
     ############  TEACHERS/GET ################
     def get_teachers(self, output_format):
         """ Return all teachers in JSON format """
-        query = "select * from ent.teachers t inner join ent.users u on u.id = t.id_User order by t.id asc"
+        query = "select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role order by t.id asc"
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         returnStatement = []
@@ -21,7 +21,7 @@ class TeachersService :
             if output_format == 'dto':
                 teacher_instance = Teachers(row[0], row[1], row[2], row[3])
             elif output_format == 'model':
-                teacher_instance = TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11])
+                teacher_instance = TeachersModel(*row)
             else:
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             returnStatement.append(teacher_instance.jsonify())
@@ -152,21 +152,28 @@ class TeachersService :
 
     ############ TEACHERS/GET/<int:id_teacher> ############
     #@teachers_bp.route('/teachers/<int:id_teacher>', methods=['GET', 'POST'])
-    def get_teacher(self, id_teacher , output_format):
+    def get_teacher(self, teacher_identifier , output_format):
         try:
-            if not TeachersFonction.field_exists('id' , id_teacher) :
-                return jsonify({"error": f"id_teacher : '{id_teacher}' not exists"}) , 400
+            
+            if isinstance(teacher_identifier, int) or teacher_identifier.isdigit():
+                if not TeachersFonction.field_exists('id' , teacher_identifier) :
+                    return jsonify({"error": f"id_teacher : '{teacher_identifier}' not exists"}) , 400
+                where_clause = "t.id = %s"
+            else:
+                if not UsersFonction.field_exists('username' , teacher_identifier) :
+                    return jsonify({"error": f"username : '{teacher_identifier}' not exists"}) , 400
+                where_clause = "u.username = %s"
             conn = connect_pg.connect()
             cursor = conn.cursor()
-            query = "select * from ent.teachers t inner join ent.users u on u.id = t.id_User where t.id = %s"
-            cursor.execute(query, (id_teacher,))
+            query = f"select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role where {where_clause}"
+            cursor.execute(query, (teacher_identifier,))
             row = cursor.fetchone()
             conn.commit()
             conn.close()
             if output_format == 'dto':
                 return Teachers(row[0], row[1], row[2], row[3]).jsonify()
             elif output_format == 'model':
-                return TeachersModel(row[0], row[1], row[2], row[3], row[7] , row[8] , row[5] , row[9] , row[11]).jsonify()
+                return TeachersModel(*row).jsonify()
             else:
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         except Exception as e:

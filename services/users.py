@@ -108,6 +108,8 @@ class UsersFonction :
             if "role" in user_data :
                 if not RolesFonction.name_exists(user_data["role"]) :
                     return jsonify({"error": f"Role name '{user_data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
+                if user_data['role'] == 'student' or user_data['role'] == 'teacher' :
+                    return jsonify({"error": f"Can't modifie role on {data.get('role')}"}), 400
                 id_role = UsersFonction.get_role_id_by_name(user_data["role"])
                 del user_data["role"]  # Supprimez le champ du nom du rôle
                 user_data["id_Role"] = id_role

@@ -124,3 +124,15 @@ def update_user(id_user):
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+      
+      
+#------------delete user-------------
+@users_bp.route('/users/<int:id_user>', methods=['DELETE'])
+def delete_user(id_user):
+    try:
+        response , https_status = UsersFonction.remove_users(id_user)
+        return response , https_status
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

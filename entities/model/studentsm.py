@@ -31,7 +31,7 @@ class StudentsModel:
                 "apprentice": self.apprentice,
                 "ine": self.ine
             },
-            "user_info": {
+            "user": {
                 "username": self.username,
                 "last_name": self.last_name,
                 "first_name": self.first_name,

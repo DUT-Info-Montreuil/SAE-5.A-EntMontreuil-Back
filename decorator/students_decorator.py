@@ -12,7 +12,7 @@ schema_add_student = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "id" : {"type": "integer", "minLength": 1},
+                        "id" : {"type": "integer", "minimum": 1},
                         "first_name": {"type": "string", "minLength": 1},
                         "last_name": {"type": "string", "minLength": 1},
                         "username" : {"type": "string", "minLength": 1},
@@ -25,7 +25,7 @@ schema_add_student = {
                 "apprentice" : {"type" : "boolean"},
                 "ine" : {"type" : "string", "minLength": 1},
                 "nip" : {"type" : "string", "minLength": 1},
-                "id" : {"type" : "integer"}
+                "id" : {"type" : "integer", "minimum": 1}
             },
             "required": ["user", "ine", "nip"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 

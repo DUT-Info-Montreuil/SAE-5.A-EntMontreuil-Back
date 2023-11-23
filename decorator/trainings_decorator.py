@@ -10,7 +10,7 @@ schema_add_training = {
             "type": "object",
             "properties": {
                 "name": {"type": "string", "minLength": 1},
-                "id_Degree": {"type": "integer"},
+                "id_Degree": {"type": "integer", "minimum": 1},
                     
                 
             },
@@ -30,7 +30,7 @@ schema_update_training = {
             "type": "object",
             "properties": {
                 "name": {"type": "string", "minLength": 1},
-                "id_Degree": {"type": "integer"},
+                "id_Degree": {"type": "integer", "minimum": 1},
             },
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }

@@ -12,7 +12,7 @@ schema_add_teacher = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "id" : {"type": "integer"},
+                        "id" : {"type": "integer", "minimum": 1},
                         "first_name": {"type": "string", "minLength": 1},
                         "last_name": {"type": "string", "minLength": 1},
                         "username" : {"type": "string", "minLength": 1},
@@ -24,7 +24,7 @@ schema_add_teacher = {
                 },
                 "desktop" : {"type" : "string", "minLength": 1},
                 "initial" : {"type" : "string", "minLength": 1},
-                "id" : {"type" : "integer"}
+                "id" : {"type" : "integer", "minimum": 1}
             },
             "required": ["user", "initial"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 

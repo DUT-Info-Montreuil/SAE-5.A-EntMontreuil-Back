@@ -2,6 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.classroom import ClassroomService
 from entities.DTO.classroom import Classroom
 import connect_pg
+from decorator.classrooms_decorator import ClassroomsDecorators
 Classroom_bp = Blueprint('classrooms', __name__)
 
 
@@ -215,6 +216,7 @@ def search_classrooms():
     
  ##------------------------------- ajouter un equipement dans une salle -----------------------#   
 @Classroom_bp.route('/classrooms/<int:id_Classroom>/equipments', methods=['POST'])
+@ClassroomsDecorators.validate_json_add_equipement_classroom
 def add_equipments_to_classroom(id_Classroom ):
     """
 Ajouter des équipements à une salle de classe.
@@ -277,6 +279,7 @@ Example:
 #----------------- modifer la quantité d'un equipement dans une salle  ----------------------#
 
 @Classroom_bp.route('/classrooms/<int:id_classroom>/equipments/<int:id_equipment>', methods=['PUT'])
+@ClassroomsDecorators.validate_json_update_equipment_classroom
 def update_classroom_equipment_quantity(id_classroom, id_equipment):
     """
 Mettre à jour la quantité d'un équipement dans une salle de classe.
@@ -323,10 +326,6 @@ responses:
         data = request.json.get('datas', {})
         new_quantity = data.get('new_quantity')
 
-
-        if new_quantity is None:
-            return jsonify({"message": "La nouvelle quantité est requise."}), 400
-
         Classroom_service.update_equipment_quantity(id_classroom, id_equipment, new_quantity)
 
         return jsonify({"message": "La quantité de l'équipement a été mise à jour avec succès."}), 200
@@ -335,7 +334,7 @@ responses:
     
 #-------------------- supprimer un equipement d'une salle
 @Classroom_bp.route('/classrooms/<int:id_classroom>/equipments/<int:id_equipment>', methods=['DELETE'])
-def remove_equipment(id_classroom, id_equipment):
+def remove_equipment_classroom(id_classroom, id_equipment):
     """
     Supprimer un équipement d'une salle de classe.
 
@@ -402,6 +401,7 @@ def delete_classroom(id_classroom):
 
 
 @Classroom_bp.route('/classrooms', methods=['POST'])
+@ClassroomsDecorators.validate_json_add_classroom
 def create_classroom():
     """
 Créer une nouvelle salle de classe.
@@ -437,16 +437,7 @@ responses:
     try:
         data = request.json.get('datas', {})
         name = data.get('name')
-        capacity = data.get('capacity')
-
-
-
-        # Vérifications supplémentaires
-        if not name:
-            return jsonify({"message": "Le nom de la salle est requis."}), 400
-        if not isinstance(capacity, int) or capacity <= 0:
-            return jsonify({"message": "La capacité doit être un nombre entier positif."}), 400
-       
+        capacity = data.get('capacity')       
         classroom=Classroom(
                             id=0,
                             name=name,

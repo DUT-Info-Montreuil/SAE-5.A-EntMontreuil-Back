@@ -12,7 +12,7 @@ schema_add_user = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "id" : {"type": "integer"},
+                        "id" : {"type": "integer", "minimum": 1},
                         "first_name": {"type": "string", "minLength": 1},
                         "last_name": {"type": "string", "minLength": 1},
                         "username" : {"type": "string", "minLength": 1},

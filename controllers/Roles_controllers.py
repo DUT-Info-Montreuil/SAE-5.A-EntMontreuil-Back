@@ -1,11 +1,13 @@
 from flask import jsonify, Blueprint, request
 from services.roles import RolesServices , ValidationError
+from decorator.roles_decorator import RolesDecorators
 
 roles_bp = Blueprint('roles', __name__)
 roles_service = RolesServices()
 
 # Route pour créer un nouveau rôle
 @roles_bp.route('/roles', methods=['POST'])
+@RolesDecorators.validate_json_role
 def create_role():
     """
     Create a new role.
@@ -39,6 +41,7 @@ def create_role():
 
 # Route pour mettre à jour un rôle existant
 @roles_bp.route('/roles/<int:role_id>', methods=['PATCH'])
+@RolesDecorators.validate_json_role
 def update_role(role_id):
     """
     Update an existing role by ID.

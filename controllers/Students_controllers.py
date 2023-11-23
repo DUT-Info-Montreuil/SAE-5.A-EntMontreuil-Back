@@ -3,6 +3,7 @@ from services.students import StudentsServices , ValidationError
 from services.absences import AbsencesService
 import json
 from flask_jwt_extended import get_jwt_identity , jwt_required
+from decorator.students_decorator import StudentsDecorators
 # Création d'un Blueprint pour les routes liées
 students_bp = Blueprint('students', __name__)
 
@@ -17,7 +18,7 @@ def get_student_absences_route():
     Récupère les absences d'un étudiant spécifique à partir de son nom d'utilisateur à partir du token.
     ---
     tags:
-      - Étudiants
+      - Students
     descriptions: 
       - Cette route permet d'obtenir la liste des absences pour un étudiant, identifié par son nom d'utilisateur extrait du token JWT.
     responses:
@@ -196,6 +197,7 @@ def delete_student(id_student):
     
 #-----------add students--------------
 @students_bp.route('/students', methods=['POST'])
+@StudentsDecorators.validate_json_add_student
 def add_students():
     """
     Add a new student.
@@ -260,6 +262,7 @@ def add_students():
     
 #-----------update students--------------
 @students_bp.route('/students/<int:id_student>', methods=['PATCH'])
+@StudentsDecorators.validate_json_update_student
 def update_students(id_student):
     """
     Update information about a specific student by ID.
@@ -329,6 +332,7 @@ def update_students(id_student):
     
 #-----------update students--------------
 @students_bp.route('/students/add_csv', methods=['POST'])
+@StudentsDecorators.validate_json_add_student_csv
 def csv_add_students():
     """
     Add multiple students from a CSV file.

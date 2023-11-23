@@ -1,6 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.absences import AbsencesService
 import connect_pg
+from decorator.absences_decorator import AbsencesDecorators
 
 # Création d'un Blueprint pour les routes liées aux absences
 absences_bp = Blueprint('absences', __name__)
@@ -120,6 +121,7 @@ def get_student_absences(id_student):
 #--------------------Modifier une  absence--------------------------------------#
 
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>', methods=['PUT'])
+@AbsencesDecorators.validate_json_update_absence
 def update_student_course_absence(id_student, id_course):
     """
 Modifie une absence d'un étudiant pour un cours donné.
@@ -165,12 +167,8 @@ responses:
 """
 
     json_data = request.json
-    if not json_data or 'datas' not in json_data:
-        return jsonify({"message": "Données manquantes"}), 400
 
     absence_data = json_data['datas']
-    if 'reason' not in absence_data or 'justify' not in absence_data:
-        return jsonify({"message": "Les raisons et les justifications sont requises"}), 400
 
     if not connect_pg.does_entry_exist("Courses", id_course):
         return jsonify({"message": "Absence non trouvée ou aucune modification effectuée"}), 404
@@ -193,6 +191,7 @@ responses:
     
 #--------------------ajouter  une  absence--------------------------------------#
 @absences_bp.route('/absences/student/<int:id_student>/course/<int:id_course>/add', methods=['POST'])
+@AbsencesDecorators.validate_json_add_absence
 def add_student_course_absence(id_student, id_course):
     """
 Ajoute une absence d'un étudiant pour un cours donné.
@@ -240,17 +239,7 @@ responses:
     try:
         json_data = request.json
 
-        # Vérifie la présence des données JSON et de la clé 'datas'
-        if not json_data or 'datas' not in json_data:
-            return jsonify({"message": "Données manquantes"}), 400
-
         absence_data = json_data['datas']
-
-        # Valide la présence des champs obligatoires dans les données JSON
-        required_fields = ['reason', 'justify']
-        for field in required_fields:
-            if field not in absence_data:
-                return jsonify({"message": f"Le champ '{field}' est requis"}), 400
 
         if not connect_pg.does_entry_exist("Courses", id_course):
             return jsonify({"message": "Le cours spécifié n'existe pas."}), 404

@@ -31,18 +31,11 @@ class TeachersService :
 
     ############ TEACHERS/ADD ############
     def add_teachers(self, datas):
-        # Verification data et user fields
-        if "datas" not in datas:
-            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
+
         data = datas["datas"]
-        if "user" not in data:
-            return jsonify({"error": "Missing 'user' field in JSON"}) , 400
         user_data = data["user"]
         user_data["role"] = "teacher"
         
-        # Verification initial et si il existe
-        if "initial" not in data :
-            return jsonify({"error": "Missing 'initial' field"}), 400
         if TeachersFonction.field_exists('initial', data.get("initial")) :
             return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
          # Si data est present
@@ -50,8 +43,6 @@ class TeachersService :
             if TeachersFonction.field_exists('id', data["id"]) :
                 return jsonify({"error": f"Id for teacher '{data.get('id')}' already exist"}), 400
             
-                
-        
         user_response, http_status = UsersFonction.add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
@@ -90,9 +81,6 @@ class TeachersService :
         if not TeachersFonction.field_exists('id' , id_teacher) : 
             return jsonify({"error": f"id '{id_teacher} not exist"}) , 400 
         
-        # Si il n'y a pas de champ datas
-        if "datas" not in datas:
-            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
         teacher_data = datas["datas"]
         # Si initial est present
         if "initial" in teacher_data :

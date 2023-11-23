@@ -1,6 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.teachers import TeachersService 
 import json
+from decorator.teachers_decorator import TeachersDecorators
 
 # Création d'un Blueprint pour les routes liées
 teachers_bp = Blueprint('teachers', __name__)
@@ -53,6 +54,7 @@ def get_all_teachers():
 #-----------add teachers--------------
 # Définissez la route pour ajouter des enseignants
 @teachers_bp.route('/teachers', methods=['POST'])
+@TeachersDecorators.validate_json_add_teacher
 def add_teachers():
     """
     Add a new teacher.
@@ -118,6 +120,7 @@ def add_teachers():
 #-----------update teachers--------------
 # Définissez la route pour mettre à jour un enseignant
 @teachers_bp.route('/teachers/<int:id_teacher>', methods=['PATCH'])
+@TeachersDecorators.validate_json_update_teacher
 def update_teachers(id_teacher):
     """
     Update information about a specific teacher by ID.

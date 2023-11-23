@@ -62,7 +62,7 @@ class UsersServices :
             if not RolesFonction.name_exists(data["role"]) :
                 return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
             if data['role'] == 'student' or data['role'] == 'teacher' :
-                return jsonify({"error": f"Can't add {data.get('role')}"}), 400
+                return jsonify({"error": f"You can't add {data.get('role')}, with function add user"}), 400
             return UsersFonction.add_users(data) 
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}) , 400

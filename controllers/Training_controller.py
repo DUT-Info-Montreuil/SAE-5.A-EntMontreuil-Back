@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.training import TrainingService  # Importer le service de gestion des parcours
 import connect_pg
-
+from decorator.trainings_decorator import TrainingsDecorators
 from entities.DTO.trainings import Training
 # Création d'un Blueprint pour les routes liées aux parcours
 training_bp = Blueprint('trainings', __name__)
@@ -17,7 +17,7 @@ Récupérer tous les parcours.
 
 ---
 tags:
-  - Parcours
+  - Trainings
 parameters:
   - name: output_format
     in: /trainings?output_format=model
@@ -74,38 +74,65 @@ responses:
 
 #--------------------ajouter  un  parcours--------------------------------------#
 @training_bp.route('/trainings', methods=['POST'])
+@TrainingsDecorators.validate_json_add_training
 def add_training():
+
     """
-    Ajoute un nouveau parcours à la base de données.
+    Add a new training.
+    ---
+    tags:
+      - Trainings
+    parameters:
+      - in: body
+        name: training
+        description: Training object to be added.
+        required: true
+        schema:
+          $ref: '#/definitions/TrainingInput'
+    responses:
+      200:
+        description: Training successfully added.
+        schema:
+          $ref: '#/definitions/SuccessMessage'
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during training addition.
+    definitions:
+      TrainingInput:
+        type: object
+        properties:
+          datas:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the training.
+              id_Degree:
+                type: integer
+                description: The ID of the degree associated with the training.
+        required:
+          - datas
+          - name
+          - id_Degree
+        additionalProperties: false
 
-    La fonction extrait les données de la requête, valide leur présence et leur format,
-    puis insère le nouveau parcours dans la base de données. Les erreurs sont gérées
-    et renvoyées sous forme de réponse JSON.
-
-    :return: Un message de confirmation ou un message d'erreur.
-    :rtype: dict
+      SuccessMessage:
+        type: object
+        properties:
+          message:
+            type: string
+            description: Confirmation message.
+        required:
+          - message
     """
     try:
         json_data = request.json
-
-        # Vérifie la présence des données JSON et de la clé 'datas'
-        if not json_data or 'datas' not in json_data:
-            return jsonify({"message": "Données manquantes"}), 400
-
-
         training_data = json_data['datas']
 
-        # Valide la présence des champs obligatoires dans les données JSON
-        required_fields = ['name', 'id_Degree']
-        for field in required_fields:
-            if field not in training_data:
-                return jsonify({"message": f"Le champ '{field}' est requis"}), 400
         # Valide le nom du parcours et s'assure qu'il n'est pas vide
-        if 'name' not in training_data or not training_data['name']:
+        if not training_data['name']:
           return jsonify({"message": "Le nom du parcours est requis"}), 400
-        
-        if 'id_Degree' not in training_data or not isinstance(training_data['id_Degree'], int):
-            return jsonify({"message": "L'identifiant du diplôme doit être un entier"}), 400
         # Valide que la formation spécifiée existe
         if not connect_pg.does_entry_exist("Degrees", training_data['id_Degree']):
             return jsonify({"message": "La formation spécifiée n'existe pas."}), 400
@@ -137,7 +164,7 @@ Cette route permet de récupérer les informations détaillées d'un parcours en
 
 ---
 tags:
-  - Parcours
+  - Trainings
 parameters:
   - name: id_training
     in: path
@@ -183,6 +210,7 @@ responses:
 
 
 @training_bp.route('/trainings/<int:id_training>', methods=['PUT'])
+@TrainingsDecorators.validate_json_update_training
 def update_training(id_training):
     """
 Met à jour un parcours existant dans la base de données par son ID.
@@ -191,7 +219,7 @@ Cette route permet de mettre à jour les informations d'un parcours en spécifia
 
 ---
 tags:
-  - Parcours
+  - Trainings
 parameters:
   - name: id_training
     in: path
@@ -236,10 +264,6 @@ responses:
     try:
         json_data = request.json
 
-        # Vérifie la présence des données JSON et de la clé 'datas'
-        if not json_data or 'datas' not in json_data:
-            return jsonify({"message": "Données manquantes"}), 400
-
         if not connect_pg.does_entry_exist("Trainings", id_training):
             return jsonify({"message": "Le parcours spécifié n'existe pas."}), 404
         training_data = json_data['datas']
@@ -264,7 +288,7 @@ Cette route permet de supprimer un parcours en spécifiant son ID.
 
 ---
 tags:
-  - Parcours
+  - Trainings
 parameters:
   - name: id_training
     in: path

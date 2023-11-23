@@ -108,15 +108,7 @@ class StudentsServices :
                 conn.close()
     ############ STUDENTS/ADD ############
     def add_students(self, datas):
-        # Si il manque datas renvoie une erreur
-        if "datas" not in datas:
-            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400
         data = datas["datas"]
-        # Si il manque user, ine ou nip renvoie une erreur
-        valid_fields = ['ine'  , 'user', 'nip']
-        for field in valid_fields :
-            if field not in data :
-                return jsonify({"error": f"Missing '{field}' field in JSON"}) , 400
         user_data = data["user"]
         # INE deja existant
         if StudentsFonction.field_exists('ine', data["ine"]) :
@@ -124,9 +116,7 @@ class StudentsServices :
         # nip deja existant
         if StudentsFonction.field_exists('nip', data["nip"]) :
             return jsonify({"error": f"nip  {data.get('nip')} already exist"}) , 400
-        # email deja existant
-        if "email" not in user_data :
-            return jsonify({"error": f"Missing 'email' field in user"}) , 400
+
         if UsersFonction.field_exists('email',user_data["email"]) :
             return jsonify({"error": f"email {data.get('email')} already exist"}) , 400
         
@@ -200,11 +190,6 @@ class StudentsServices :
         # Si il manque datas renvoie une erreur
         if not StudentsFonction.field_exists('id' , id_student) : 
             return jsonify({"error": f"id '{id_student} not exist"}) , 400
-        if "datas" not in datas:
-            return jsonify({"error": "Missing 'datas' field in JSON"}) , 400 
-        student_data = datas["datas"]
-        if "id" in student_data :
-            return jsonify({"error": "Unable to modify user id, remove id field"}), 400
         if "ine" in student_data : 
             if StudentsFonction.field_exists('ine' , student_data["ine"] ) :
                 return jsonify({"error": f"ine '{student_data.get('ine')}' already exist"}), 400
@@ -218,8 +203,6 @@ class StudentsServices :
             
             del student_data["user"]
             # Si user data est vide
-            if not user_data:
-                return jsonify({"error": "Empty 'user' field in JSON"}), 400
             if UsersFonction.field_exists('email' , user_data["email"] ) :
                 return jsonify({"error": f"email '{user_data.get('email')}' already exist"}), 400
             # Recuperation du user id

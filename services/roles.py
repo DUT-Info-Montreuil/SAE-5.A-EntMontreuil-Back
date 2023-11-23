@@ -11,9 +11,6 @@ class RolesServices :
         # Récupérer les données du rôle depuis la requête JSON
         role_name = data.get('name')
 
-        # Vérifier si le nom du rôle est fourni
-        if not role_name:
-            return jsonify({"error": "Role name is required"}), 400
         if RolesFonction.name_exists(role_name) :
             return jsonify({"error": "Role name already exist"}), 400
 
@@ -33,12 +30,7 @@ class RolesServices :
             raise ValidationError(f"id role '{role_id}' not exist")
         
         # Récupérer le nouveau nom du rôle depuis la requête JSON
-        updated_role_name = data.get('name')
-
-        # Vérifier si le nouveau nom du rôle est fourni
-        if not updated_role_name:
-            return jsonify({"error": "Updated role name is required"}), 400
-        
+        updated_role_name = data.get('name')        
         if RolesFonction.name_exists(updated_role_name) :
             return jsonify({"error": f"Role name {updated_role_name} already exist"}), 400
         conn = connect_pg.connect()   # Établir une connexion à la base de données

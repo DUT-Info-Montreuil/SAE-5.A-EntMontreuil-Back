@@ -14,7 +14,7 @@ Récupérer toutes les salles de classe.
 
 ---
 tags:
-  - Salles de classe
+  - Classrooms
 parameters:
   - name: output_format
     in: query
@@ -82,7 +82,7 @@ def get_classroom(id_Classroom):
 Récupérer une salle de classe via son id
 ---
 tags:
-  - Salles de classe
+  - Classrooms
 parameters:
   - name: id_Classroom
     in: path
@@ -141,7 +141,7 @@ def search_classrooms():
     Rechercher des salles de classe en fonction de critères spécifiés.
     ---
     tags:
-      - Salles de classe
+      - Classrooms
     parameters:
       - name: name
         in: query
@@ -221,7 +221,7 @@ Ajouter des équipements à une salle de classe.
 
 ---
 tags:
-  - Salles de classe
+  - Classrooms
 parameters:
   - name: id_Classroom
     in: path
@@ -283,7 +283,7 @@ Mettre à jour la quantité d'un équipement dans une salle de classe.
 
 ---
 tags:
-  - Salles de classe
+  - Classrooms
 parameters:
   - name: id_classroom
     in: path
@@ -341,7 +341,7 @@ def remove_equipment(id_classroom, id_equipment):
 
     ---
     tags:
-      - Salles de classe
+      - Classrooms
     parameters:
       - name: id_classroom
         in: path
@@ -375,7 +375,7 @@ def delete_classroom(id_classroom):
     Supprimer une salle de classe et toutes les données associées.
     ---
     tags:
-      - Salles de classe
+      - Classrooms
     parameters:
       - name: id_classroom
         in: path
@@ -408,7 +408,7 @@ Créer une nouvelle salle de classe.
 
 ---
 tags:
-  - Salles de classe
+  - Classrooms
 parameters:
   - in: body
     name: datas

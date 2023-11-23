@@ -12,12 +12,6 @@ class AuthentificateService:
         pass
     
     def authentification(self, data) :
-        valid_data = ['username', 'password']
-        for field in valid_data :
-            if field not in data:
-                return jsonify({"error" : f"data need to contains {field}"}) , 400
-            if not field :
-                return jsonify({"error" : f"{field} is empty"}) , 400
         password = data.get('password')
         username = data.get('username')
         if not UsersFonction.field_exists('username' , username) :

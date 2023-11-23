@@ -19,7 +19,7 @@ def get_all_materials():
 
     ---
    tags:
-      - Equipements
+      - Materials
    responses:
       200:
         description: Liste des équipements récupérés depuis la base de données.
@@ -56,7 +56,7 @@ Récupérer un équipement par son ID.
 
 ---
 tags:
-  - Equipements
+  - Materials
 parameters:
   - in: path
     name: id_Material
@@ -91,7 +91,7 @@ Créer un équipement.
 
 ---
 tags:
-  - Equipements
+  - Materials
 parameters:
   - in: body
     name: datas
@@ -142,7 +142,7 @@ def delete_material(id_material):
 
     ---
     tags:
-      - Equipements
+      - Materials
     parameters:
       - in: path
         name: id_material
@@ -174,7 +174,7 @@ Mettre à jour un équipement.
 
 ---
 tags:
-  - Equipements
+  - Materials
 parameters:
   - in: path
     name: id_material

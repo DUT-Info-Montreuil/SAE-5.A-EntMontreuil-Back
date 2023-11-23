@@ -13,12 +13,12 @@ schema_add_user = {
                     "type": "object",
                     "properties": {
                         "id" : {"type": "integer"},
-                        "first_name": {"type": "string"},
-                        "last_name": {"type": "string"},
-                        "username" : {"type": "string"},
-                        "email" : {"type": "string"},
-                        "role" : {"type": "string"},
-                        "password" : {"type": "string"}
+                        "first_name": {"type": "string", "minLength": 1},
+                        "last_name": {"type": "string", "minLength": 1},
+                        "username" : {"type": "string", "minLength": 1},
+                        "email" : {"type": "string", "minLength": 1},
+                        "role" : {"type": "string", "minLength": 1},
+                        "password" : {"type": "string", "minLength": 1}
                     },
                     "required": ["first_name", "last_name", "username", "email", "role"],  # Champs obligatoires dans 'user'
                     "additionalProperties": False  
@@ -42,12 +42,12 @@ schema_update_user = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "first_name": {"type": "string"},
-                        "last_name": {"type": "string"},
-                        "username" : {"type": "string"},
-                        "email" : {"type": "string"},
-                        "role" : {"type": "string"},
-                        "password" : {"type": "string"}
+                        "first_name": {"type": "string", "minLength": 1},
+                        "last_name": {"type": "string", "minLength": 1},
+                        "username" : {"type": "string", "minLength": 1},
+                        "email" : {"type": "string", "minLength": 1},
+                        "role" : {"type": "string", "minLength": 1},
+                        "password" : {"type": "string", "minLength": 1}
                     },
                     "additionalProperties": False  
                 }

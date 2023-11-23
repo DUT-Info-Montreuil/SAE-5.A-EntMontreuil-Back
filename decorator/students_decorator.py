@@ -12,19 +12,19 @@ schema_add_student = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "id" : {"type": "integer"},
-                        "first_name": {"type": "string"},
-                        "last_name": {"type": "string"},
-                        "username" : {"type": "string"},
-                        "email" : {"type": "string"},
-                        "password" : {"type": "string"}
+                        "id" : {"type": "integer", "minLength": 1},
+                        "first_name": {"type": "string", "minLength": 1},
+                        "last_name": {"type": "string", "minLength": 1},
+                        "username" : {"type": "string", "minLength": 1},
+                        "email" : {"type": "string", "minLength": 1},
+                        "password" : {"type": "string", "minLength": 1}
                     },
                     "required": ["first_name", "last_name", "username", "email"],  # Champs obligatoires dans 'user'
                     "additionalProperties": False  
                 },
                 "apprentice" : {"type" : "boolean"},
-                "ine" : {"type" : "integer"},
-                "nip" : {"type" : "integer"},
+                "ine" : {"type" : "string", "minLength": 1},
+                "nip" : {"type" : "string", "minLength": 1},
                 "id" : {"type" : "integer"}
             },
             "required": ["user", "ine", "nip"],  # Champs obligatoires dans 'datas'
@@ -45,17 +45,17 @@ schema_update_student = {
                 "user": {
                     "type": "object",
                     "properties": {
-                        "first_name": {"type": "string"},
-                        "last_name": {"type": "string"},
-                        "username" : {"type": "string"},
-                        "email" : {"type": "string"},
-                        "password" : {"type": "string"}
+                        "first_name": {"type": "string", "minLength": 1},
+                        "last_name": {"type": "string", "minLength": 1},
+                        "username" : {"type": "string", "minLength": 1},
+                        "email" : {"type": "string", "minLength": 1},
+                        "password" : {"type": "string", "minLength": 1}
                     },
                     "additionalProperties": False  
                 },
                 "apprentice" : {"type" : "boolean"},
-                "ine" : {"type" : "integer"},
-                "nip" : {"type" : "integer"}
+                "ine" : {"type" : "string", "minLength": 1},
+                "nip" : {"type" : "string", "minLength": 1}
             },
             "required": ["user"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
@@ -69,7 +69,7 @@ schema_update_student = {
 schema_add_student_csv = {
     "type": "object",
     "properties": {
-        "file_path": {"type": "string"}
+        "file_path": {"type": "string", "minLength": 1}
     },
     "required": ["file_path"],  # Champs obligatoires dans le schéma global
     "additionalProperties": False  

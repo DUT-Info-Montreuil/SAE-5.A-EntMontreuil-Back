@@ -6,7 +6,7 @@ from jsonschema import validate
 schema_role = {
     "type": "object",
     "properties": {
-        "name": {"type": "string"}
+        "name": {"type": "string", "minLength": 1}
     },
     "required": ["name"],  # Champs obligatoires dans le schéma global
     "additionalProperties": False  

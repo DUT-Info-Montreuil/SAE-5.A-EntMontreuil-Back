@@ -9,8 +9,8 @@ schema__add_absence = {
         "datas": {
             "type": "object",
             "properties": {
-                "justify": {"type": "object",},
-                "reason" : {"type" : "string"}
+                "justify": {"type": "boolean"},
+                "reason" : {"type" : "string", "minLength": 1}
             },
             "required": ["justify", "reason"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
@@ -26,8 +26,8 @@ schema__update_absence = {
         "datas": {
             "type": "object",
             "properties": {
-                "justify": {"type": "object",},
-                "reason" : {"type" : "string"}
+                "justify": {"type": "boolean"},
+                "reason" : {"type" : "string", "minLength": 1}
             },
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }

@@ -2,6 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.degrees import DeegreeService
 from entities.DTO.degrees import Degrees
 import connect_pg
+from decorator.degrees_decorator import DegreesDecorators
 
 degrees_bp = Blueprint('degrees', __name__)
 
@@ -14,7 +15,7 @@ def get_all_degrees():
 
     ---
     tags:
-      - Formation
+      - Degree
     parameters:
       - name: output_format
         in: query
@@ -37,13 +38,14 @@ def get_all_degrees():
         return jsonify({"message": str(e)}), 500
 
 @degrees_bp.route('/degrees', methods=['POST'])
+@DegreesDecorators.validate_json_degree
 def create_degree():
     """
 Créer une nouvelle Formation.
 
 ---
 tags:
-  - Formation
+  - Degree
 parameters:
   - in: body
     name: degree_data
@@ -69,10 +71,6 @@ responses:
     try:
         data = request.json.get('datas', {})
         name = data.get('name')
-        # Vérifications supplémentaires
-        if not name:
-            return jsonify({"message": "Le nom de la Formation est requis."}), 400
-
         degree = Degrees(id=0, name=name)
         result = degree_service.create_degree(degree)
 
@@ -92,7 +90,7 @@ def delete_degree(degree_id):
 
     ---
     tags:
-      - Formation
+      - Degree
     parameters:
       - name: degree_id
         in: path
@@ -123,7 +121,7 @@ Cette route permet de récupérer une formation en fournissant son ID.
 
 ---
 tags:
-  - Formation
+  - Degree
 parameters:
   - name: degree_id
     in: path
@@ -155,6 +153,7 @@ responses:
 
 # Route pour mettre à jour une formation
 @degrees_bp.route('/degrees/<int:degree_id>', methods=['PUT'])
+@DegreesDecorators.validate_json_degree
 def update_degree(degree_id):
     """
 Met à jour une formation par son ID.
@@ -163,7 +162,7 @@ Cette route permet de mettre à jour le nom d'une formation en fournissant son I
 
 ---
 tags:
-  - Formation
+  - Degree
 parameters:
   - name: degree_id
     in: path
@@ -196,9 +195,6 @@ responses:
 
     data = request.json.get('datas', {})
     new_name = data.get('name')
-    if not new_name:
-        return jsonify({"message": "Le nouveau nom de la formation est requis."}), 400
-
     if not connect_pg.does_entry_exist("Degrees", degree_id):
         return jsonify({"message": "La formation spécifiée n'existe pas."}), 404
 

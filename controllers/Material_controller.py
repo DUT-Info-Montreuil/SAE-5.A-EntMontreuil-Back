@@ -118,16 +118,7 @@ responses:
 
     try:
         
-        donnees_equipement = request.json.get('datas', {})
-        if not isinstance(donnees_equipement['equipment'], str):
-            return jsonify({"message": "Le champ 'equipment' doit être une chaîne de caractères (string)"}), 400
-        
-        
-        if not donnees_equipement or 'equipment' not in donnees_equipement:
-            return jsonify({"message": "Données de l'équipement manquantes ou incomplètes"}), 400
-
-
-        
+        donnees_equipement = request.json.get('datas', {})        
         message = materials_service.add_material(donnees_equipement)
         return jsonify({"message": message}), 201
 
@@ -208,16 +199,9 @@ responses:
 """
 
     try:
-        donnees_equipement = request.json.get('datas', {})
-
-        if not donnees_equipement or 'equipment' not in donnees_equipement:
-            return jsonify({"message": "Données de l'équipement manquantes ou incomplètes"}), 400
-        
+        donnees_equipement = request.json.get('datas', {})        
         equipment = donnees_equipement['equipment']
-        
-        if not isinstance(equipment, str):
-            return jsonify({"message": "Le champ 'equipment' doit être une chaîne de caractères (string)"}), 400
-        
+                
         if not connect_pg.does_entry_exist("Materials", id_material):
             return jsonify({"message": "L'équipement spécifié n'existe pas."}), 404
 

@@ -136,11 +136,6 @@ class DeegreeService:
             conn = connect_pg.connect()
             cursor = conn.cursor()
 
-            # Vérifiez d'abord si la formation existe
-            cursor.execute("SELECT id FROM ent.Degrees WHERE id = %s", (degree_id,))
-            if cursor.fetchone() is None:
-                raise Exception("La formation spécifiée n'existe pas.")
-
             # Mettez à jour le nom de la formation
             cursor.execute("UPDATE ent.Degrees SET name = %s WHERE id = %s", (new_name, degree_id))
             conn.commit()

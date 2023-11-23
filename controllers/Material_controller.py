@@ -2,6 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.materials import MaterialService
 from entities.DTO.materials import Material
 import connect_pg
+from decorator.materials_decorator import MaterialsDecorators
 
 # Création d'un Blueprint pour les routes liées aux absences
 materials_bp = Blueprint('materials', __name__)
@@ -85,6 +86,7 @@ responses:
 #--------------------Créer un  equipement--------------------------------------#
 
 @materials_bp.route('/materials', methods=['POST'])
+@MaterialsDecorators.validate_json_material
 def add_material():
     """
 Créer un équipement.
@@ -168,6 +170,7 @@ def delete_material(id_material):
 
 #--------------------Modifier un  equipement--------------------------------------#
 @materials_bp.route('/materials/<int:id_material>', methods=['PUT'])
+@MaterialsDecorators.validate_json_material
 def update_material(id_material):
     """
 Mettre à jour un équipement.

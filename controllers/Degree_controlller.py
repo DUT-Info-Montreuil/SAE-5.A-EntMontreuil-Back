@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.degrees import DeegreeService
 from entities.DTO.degrees import Degrees
 import connect_pg
-from decorator.degrees_decorator import DegreesDecorators
+from decorators.degrees_decorator import DegreesDecorators
 
 degrees_bp = Blueprint('degrees', __name__)
 

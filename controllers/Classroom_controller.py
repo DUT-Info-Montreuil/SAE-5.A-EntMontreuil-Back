@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.classroom import ClassroomService
 from entities.DTO.classroom import Classroom
 import connect_pg
-from decorator.classrooms_decorator import ClassroomsDecorators
+from decorators.classrooms_decorator import ClassroomsDecorators
 Classroom_bp = Blueprint('classrooms', __name__)
 
 

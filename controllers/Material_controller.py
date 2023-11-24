@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 from services.materials import MaterialService
 from entities.DTO.materials import Material
 import connect_pg
-from decorator.materials_decorator import MaterialsDecorators
+from decorators.materials_decorator import MaterialsDecorators
 
 # Création d'un Blueprint pour les routes liées aux absences
 materials_bp = Blueprint('materials', __name__)

@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.absences import AbsencesService
 import connect_pg
-from decorator.absences_decorator import AbsencesDecorators
+from decorators.absences_decorator import AbsencesDecorators
 
 # Création d'un Blueprint pour les routes liées aux absences
 absences_bp = Blueprint('absences', __name__)

@@ -4,7 +4,7 @@ import connect_pg
 from flask_jwt_extended import get_jwt_identity , jwt_required , create_access_token, create_refresh_token
 import jwt
 from datetime import datetime
-from decorator.authentification_decorator import AuthentificationDecorators
+from decorators.authentification_decorator import AuthentificationDecorators
 
 # Création d'un Blueprint pour les routes liées 
 authentificate_bp = Blueprint('authentificate', __name__)

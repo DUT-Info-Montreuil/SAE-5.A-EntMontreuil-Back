@@ -3,7 +3,7 @@ from services.students import StudentsServices , ValidationError
 from services.absences import AbsencesService
 import json
 from flask_jwt_extended import get_jwt_identity , jwt_required
-from decorator.students_decorator import StudentsDecorators
+from decorators.students_decorator import StudentsDecorators
 # Création d'un Blueprint pour les routes liées
 students_bp = Blueprint('students', __name__)
 

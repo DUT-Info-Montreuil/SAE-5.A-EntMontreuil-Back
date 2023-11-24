@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.training import TrainingService  # Importer le service de gestion des parcours
 import connect_pg
-from decorator.trainings_decorator import TrainingsDecorators
+from decorators.trainings_decorator import TrainingsDecorators
 from entities.DTO.trainings import Training
 # Création d'un Blueprint pour les routes liées aux parcours
 training_bp = Blueprint('trainings', __name__)

@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.users import UsersServices  , ValidationError, UsersFonction
 import json
-from decorator.users_decorator import UsersDecorators
+from decorators.users_decorator import UsersDecorators
 from flask_jwt_extended import get_jwt_identity , jwt_required
 from services.students import StudentsServices
 from services.teachers import TeachersService

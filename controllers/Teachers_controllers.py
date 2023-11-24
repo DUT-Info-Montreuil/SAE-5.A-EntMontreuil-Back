@@ -1,7 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.teachers import TeachersService 
 import json
-from decorator.teachers_decorator import TeachersDecorators
+from decorators.teachers_decorator import TeachersDecorators
 
 # Création d'un Blueprint pour les routes liées
 teachers_bp = Blueprint('teachers', __name__)

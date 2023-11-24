@@ -1,6 +1,6 @@
 from flask import jsonify, Blueprint, request
 from services.roles import RolesServices , ValidationError
-from decorator.roles_decorator import RolesDecorators
+from decorators.roles_decorator import RolesDecorators
 
 roles_bp = Blueprint('roles', __name__)
 roles_service = RolesServices()

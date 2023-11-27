@@ -246,13 +246,22 @@ responses:
 
         if not connect_pg.does_entry_exist("Students", id_student):
             return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 404
+          
 
         data = {
             "id_student": id_student,
             "id_course": id_course,
-            "reason": absence_data["reason"],
-            "justify": absence_data["justify"]
         }
+        
+        if  "reason" in absence_data :
+          data ["reason"] = absence_data["reason"]
+          
+        if "justify" in absence_data :
+          data["justify"] = absence_data["justify"]
+        else :
+          data["justify"] = False
+          
+        
 
         message = absences_service.add_student_course_absence(data)
         return jsonify({"message": message}), 201

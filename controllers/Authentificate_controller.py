@@ -62,12 +62,14 @@ def authentification():
             first_name = response.json.get('first_name')
             last_name = response.json.get('last_name')
             role = response.json.get('role')
+            isAdmin = response.json.get('isAdmin')
             user = {
               "id": id,
               "first_name" : first_name,
               "last_name" : last_name,
               "username" : username,
-              "role" : role
+              "role" : role,
+              "isAdmin" : isAdmin
             }
             access_token = create_access_token(identity=user)
             refresh_token = create_refresh_token(identity=user)

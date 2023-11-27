@@ -36,7 +36,7 @@ class StudentsModel:
                 "last_name": self.last_name,
                 "first_name": self.first_name,
                 "email": self.email,
-                "isadmin": self.isadmin,
+                "isAdmin": self.isadmin,
                 "role": {
                     "id": self.role_id,
                     "name": self.role_name

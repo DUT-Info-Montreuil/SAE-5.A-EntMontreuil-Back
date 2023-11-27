@@ -1,8 +1,9 @@
 class Absences:
-    def __init__(self, id_Student, id_Course, reason, justify):
+    def __init__(self, id_Student, id_Course, reason, document, justify):
         self.id_Student = id_Student
         self.id_Course = id_Course
         self.reason = reason
+        self.document = document
         self.justify = justify
 
     def __str__(self):
@@ -13,5 +14,6 @@ class Absences:
             "id_Student": self.id_Student,
             "id_Course": self.id_Course,
             "reason": self.reason,
+            "document": self.document,  
             "justify": self.justify
         }

@@ -12,7 +12,7 @@ schema__add_absence = {
                 "justify": {"type": "boolean"},
                 "reason" : {"type" : "string", "minLength": 1}
             },
-            "required": ["justify", "reason"],  # Champs obligatoires dans 'datas'
+            "required": ["justify"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }
     },

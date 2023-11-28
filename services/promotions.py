@@ -32,7 +32,7 @@ class PromotionService:
                             id=row[0],
                             year=row[1],
                             level=row[2],
-                            degree_id=row[3]
+                            id_Degree=row[3]
                         )
                         return promotion_info.jsonify()
                     elif output_format == "model":
@@ -40,7 +40,7 @@ class PromotionService:
                             id=row[0],
                             year=row[1],
                             level=row[2],
-                            degree_id=row[3]
+                            id_Degree=row[3]
                         )
                         return promotion_info.jsonify()
                 else:
@@ -72,7 +72,7 @@ class PromotionService:
                             id=row[0],
                             year=row[1],
                             level=row[2],
-                            degree_id=row[3]
+                            id_Degree=row[3]
                         )
                         promotions_list.append(promotion.jsonify())
                     elif output_format == "model":
@@ -80,7 +80,7 @@ class PromotionService:
                             id=row[0],
                             year=row[1],
                             level=row[2],
-                            degree_id=row[3]
+                            id_Degree=row[3]
                         )
                         promotions_list.append(promotion.jsonify())
 
@@ -227,6 +227,7 @@ class PromotionService:
 
     # -------------------- Ajouter un étudiant dans une promotion, TD et TP --------------------------------------#
     def add_students_from_csv(self, csv_path):
+        conn = None
         try:
             # Charger le fichier CSV dans un DataFrame
             df = pd.read_csv(csv_path)

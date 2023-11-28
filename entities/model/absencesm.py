@@ -1,9 +1,10 @@
 class AbsencesModel:
-    def __init__(self, id_Student, id_Course, reason, justify, student_last_name, student_first_name,
+    def __init__(self, id_Student, id_Course, reason, document, justify, student_last_name, student_first_name,
                  course_start_time, course_end_time, resource_name, course_date):
         self.id_Student = id_Student
         self.id_Course = id_Course
         self.reason = reason
+        self.document = document
         self.justify = justify
         self.resource_name = resource_name  # Existing attribute for resource name
 
@@ -24,6 +25,7 @@ class AbsencesModel:
             "id_Student": self.id_Student,
             "id_Course": self.id_Course,
             "reason": self.reason,
+            "document": self.document,
             "justify": self.justify,
             "resource_name": self.resource_name,
             "student_last_name": self.student_last_name,

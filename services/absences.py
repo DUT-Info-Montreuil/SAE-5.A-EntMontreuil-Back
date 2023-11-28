@@ -14,7 +14,7 @@ class AbsencesService:
             with conn.cursor() as cursor:
                 # Modification de la requête pour supporter la recherche par id_student ou username
                 sql_query = """
-         SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, 
+         SELECT A.id_Student, A.id_Course, A.reason, A.document, A.justify, C.dateCourse, 
                        C.startTime, C.endTime, U.last_name, U.first_name, R.name, C.datecourse
                 FROM ent.Absences A 
                 INNER JOIN ent.Courses C ON A.id_Course = C.id 
@@ -45,7 +45,8 @@ class AbsencesService:
                             id_Student=row[0],
                             id_Course=row[1],
                             reason=row[2],
-                            justify=row[3]
+                            document=row[3],
+                            justify=row[4]
                         )
                         absences_list.append(absence.jsonify())
                     elif output_format == "model":
@@ -53,13 +54,14 @@ class AbsencesService:
                             id_Student=row[0],
                             id_Course=row[1],
                             reason=row[2],
-                            justify=row[3],
-                            student_last_name=row[7],
-                            student_first_name=row[8],
-                            course_start_time=row[5],
-                            course_end_time=row[6],
-                            resource_name=row[9],
-                            course_date=row[10]
+                            document=row[3],
+                            justify=row[4],
+                            student_last_name=row[8],
+                            student_first_name=row[9],
+                            course_start_time=row[6],
+                            course_end_time=row[7],
+                            resource_name=row[10],
+                            course_date=row[5]
                         )
                         absences_list.append(absence.jsonify())
 
@@ -77,8 +79,8 @@ class AbsencesService:
             with conn.cursor() as cursor:
                 # Construisez la requête SQL en fonction de la justification
                 sql_query = """
-                            SELECT A.id_Student, A.id_Course, A.reason, A.justify, C.dateCourse, C.startTime, C.endTime, 
-                                U.last_name, U.first_name, R.name ,C.datecourse
+                            SELECT A.id_Student, A.id_Course, A.reason, A.document, A.justify, C.dateCourse, C.startTime, C.endTime, 
+                                U.last_name, U.first_name, R.name
                             FROM ent.Absences A 
                             INNER JOIN ent.Courses C ON A.id_Course = C.id 
                             INNER JOIN ent.Students S ON A.id_Student = S.id 
@@ -103,7 +105,8 @@ class AbsencesService:
                             id_Student=row[0],
                             id_Course=row[1],
                             reason=row[2],
-                            justify=row[3]
+                            document=row[3],
+                            justify=row[4]
                         )
                         absences_list.append(absence.jsonify())
                     else:
@@ -111,13 +114,14 @@ class AbsencesService:
                             id_Student=row[0],
                             id_Course=row[1],
                             reason=row[2],
-                            justify=row[3],
-                            student_last_name=row[7],
-                            student_first_name=row[8],
-                            course_start_time=row[5],
-                            course_end_time=row[6],
-                            resource_name=row[9],
-                            course_date=row[10]
+                            document=row[3],
+                            justify=row[4],
+                            student_last_name=row[8],
+                            student_first_name=row[9],
+                            course_start_time=row[6],
+                            course_end_time=row[7],
+                            resource_name=row[10],
+                            course_date=row[5]
                         )
                         absences_list.append(absence.jsonify())
 
@@ -182,6 +186,26 @@ class AbsencesService:
                     return f"Absence supprimée pour l'étudiant {deleted_row[0]} et le cours {deleted_row[1]}"
                 else:
                     return "Absence non trouvée ou déjà supprimée"
+        except psycopg2.Error as e:
+            raise e
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+
+#-------------------- Envoyer un justificatif--------------------------------------#
+
+    def submit_justification_document(self, data):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO ent.Absences (id_Student, id_Course, document) VALUES (%s, %s, %s) RETURNING id_Student, id_Course",
+                    (data["student_id"], data["id_course"], data["document"].read())
+                )
+                inserted_student_id, inserted_course_id = cursor.fetchone()
+                conn.commit()
+
+                return f"Justificatif envoyé avec succès pour l'étudiant {inserted_student_id} pour le cours de {inserted_course_id}"
         except psycopg2.Error as e:
             raise e
         finally:

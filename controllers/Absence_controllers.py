@@ -317,3 +317,35 @@ def delete_student_course_absence(id_student, id_course):
         return jsonify({"message": message}), 200
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+    
+# -------------------- Soumettre un justificatif de document ------------------------
+
+@absences_bp.route('/absences/submit_justification_document', methods=['POST'])
+def submit_justification_document():
+    try:
+        # Assurez-vous que le formulaire a les données nécessaires
+        if 'student_id' not in request.form or 'id_course' not in request.form or 'document' not in request.files:
+            return jsonify({"message": "Données manquantes"}), 400
+
+        student_id = int(request.form['student_id'])
+        id_course = int(request.form['id_course'])
+        document = request.files['document']
+
+        # Vérifiez que l'étudiant et le cours existent
+        if not connect_pg.does_entry_exist("Courses", id_course):
+            return jsonify({"message": "Le cours spécifié n'existe pas."}), 404
+
+        if not connect_pg.does_entry_exist("Students", student_id):
+            return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 404
+
+        data = {
+            "student_id": student_id,
+            "id_course": id_course,
+            "document": document
+        }
+
+        message = absences_service.submit_justification_document(data)
+        return jsonify({"message": message}), 201
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500

@@ -18,7 +18,8 @@ schema_add_user = {
                         "username" : {"type": "string", "minLength": 1},
                         "email" : {"type": "string", "minLength": 1},
                         "role" : {"type": "string", "minLength": 1},
-                        "password" : {"type": "string", "minLength": 1}
+                        "password" : {"type": "string", "minLength": 1},
+                        "isAdmin" : {"type": "boolean"}
                     },
                     "required": ["first_name", "last_name", "username", "email", "role"],  # Champs obligatoires dans 'user'
                     "additionalProperties": False  
@@ -47,7 +48,8 @@ schema_update_user = {
                         "username" : {"type": "string", "minLength": 1},
                         "email" : {"type": "string", "minLength": 1},
                         "role" : {"type": "string", "minLength": 1},
-                        "password" : {"type": "string", "minLength": 1}
+                        "password" : {"type": "string", "minLength": 1},
+                        "isAdmin" : {"type": "boolean"}
                     },
                     "additionalProperties": False  
                 }

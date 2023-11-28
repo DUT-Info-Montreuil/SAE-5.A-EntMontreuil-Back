@@ -65,7 +65,7 @@ def get_all_users_not_teacher_student():
     """
     try:
         output_format = request.args.get('output_format', default='dto')
-        all_users = users_service.get_users(output_format).json
+        all_users = users_service.get_users_not_teacher_student(output_format).json
         return jsonify(all_users)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

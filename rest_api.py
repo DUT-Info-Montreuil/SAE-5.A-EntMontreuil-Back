@@ -16,6 +16,7 @@ from controllers.Material_controllers import materials_bp
 from controllers.Classroom_controllers import Classroom_bp
 from controllers.Authentificate_controllers import authentificate_bp
 from controllers.Degree_controllers import degrees_bp
+from controllers.Promotions_controllers import promotions_bp
 from flask_jwt_extended import JWTManager
 
 # Register the main controller
@@ -39,6 +40,7 @@ app.register_blueprint(roles_bp)
 app.register_blueprint(students_bp)
 app.register_blueprint(authentificate_bp)
 app.register_blueprint(degrees_bp)
+app.register_blueprint(promotions_bp)
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')

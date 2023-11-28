@@ -40,7 +40,6 @@ class StudentsServices :
                         ent.Degrees D ON P.id_Degree = D.id
                     LEFT JOIN
                         ent.Roles R ON U.id_Role = R.id
-                    WHERE id_role=3
                     order  by s.id asc"""
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)

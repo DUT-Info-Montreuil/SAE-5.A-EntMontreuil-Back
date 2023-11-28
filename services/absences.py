@@ -56,12 +56,12 @@ class AbsencesService:
                             reason=row[2],
                             document=row[3],
                             justify=row[4],
-                            student_last_name=row[7],
-                            student_first_name=row[8],
-                            course_start_time=row[5],
-                            course_end_time=row[6],
-                            resource_name=row[9],
-                            course_date=row[10]
+                            student_last_name=row[8],
+                            student_first_name=row[9],
+                            course_start_time=row[6],
+                            course_end_time=row[7],
+                            resource_name=row[10],
+                            course_date=row[5]
                         )
                         absences_list.append(absence.jsonify())
 
@@ -80,7 +80,7 @@ class AbsencesService:
                 # Construisez la requête SQL en fonction de la justification
                 sql_query = """
                             SELECT A.id_Student, A.id_Course, A.reason, A.document, A.justify, C.dateCourse, C.startTime, C.endTime, 
-                                U.last_name, U.first_name, R.name ,C.datecourse
+                                U.last_name, U.first_name, R.name
                             FROM ent.Absences A 
                             INNER JOIN ent.Courses C ON A.id_Course = C.id 
                             INNER JOIN ent.Students S ON A.id_Student = S.id 
@@ -116,12 +116,12 @@ class AbsencesService:
                             reason=row[2],
                             document=row[3],
                             justify=row[4],
-                            student_last_name=row[7],
-                            student_first_name=row[8],
-                            course_start_time=row[5],
-                            course_end_time=row[6],
-                            resource_name=row[9],
-                            course_date=row[10]
+                            student_last_name=row[8],
+                            student_first_name=row[9],
+                            course_start_time=row[6],
+                            course_end_time=row[7],
+                            resource_name=row[10],
+                            course_date=row[5]
                         )
                         absences_list.append(absence.jsonify())
 

@@ -229,7 +229,7 @@ def get_user_info():
     try:
         current_user = get_jwt_identity()
         if current_user['role'] == 'student' :
-          user = StudentsServices.get_student(StudentsServices, current_user['username'], 'model')
+          user = StudentsServices.get_student(StudentsServices, current_user['username'])
         elif current_user['role'] == 'teacher' :
           user = TeachersService.get_teacher(TeachersService, current_user['username'] , 'model')
         else: 

@@ -17,7 +17,27 @@ class UsersServices :
     ############ GET /USERS ################
     def get_users(self , output_format):
         """ Return all users in JSON format """
-        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id WHERE r.name NOT IN ('teacher', 'student') order by u.id "
+        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id  order by u.id "
+        conn = connect_pg.connect()
+        rows = connect_pg.get_query(conn, query)
+        users = []
+
+        for row in rows:
+            if output_format == 'dto' :
+                user = Users(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+            elif output_format == 'model' :
+                user = UsersModel(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+            else :
+                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
+            users.append(user.jsonify())
+        connect_pg.disconnect(conn)
+        return jsonify(users)
+    
+    
+        ############ GET /USERS ################
+    def get_users_not_teacher_student(self , output_format):
+        """ Return all users in JSON format """
+        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id Where r.name not in ('teacher','student') order by u.id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []

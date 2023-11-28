@@ -10,6 +10,9 @@ from services.users import UsersFonction
 
 
 class StudentsServices : 
+    
+    def __init__ (self):
+        pass
 
     ############ STUDENTS/GET ############
     def get_all_students(self, output_format):
@@ -46,7 +49,7 @@ class StudentsServices :
             if output_format == 'dto' :
                 student = Students(row[0], row[1], row[2], row[20], row[9], row[11], row[13], row[3])
             elif output_format == 'model' :
-                student = student = StudentsModel(*row[:-1])
+                student =  StudentsModel(*row[:-1])
 
             else :
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
@@ -55,7 +58,7 @@ class StudentsServices :
         return jsonify(returnStatement)
 
     ############ STUDENTS/GET/<int:id_students> ############
-    def get_student(self, student_identifier, output_format="model"):
+    def get_student(self, student_identifier):
             try:
                 conn = connect_pg.connect()
                 with conn.cursor() as cursor:
@@ -67,38 +70,35 @@ class StudentsServices :
                         where_clause = "U.username = %s"
                         params = (student_identifier,)
 
-                    sql_query = f"""
-                    SELECT 
+                    sql_query = f"""SELECT
                                         S.id, S.nip, S.apprentice, S.ine,
-                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin, 
-                                        TD.id,TD.name as td_name, 
-                                        TP.id,TP.name as tp_name, 
-                                        P.id, P.year as promotion_year, P.level as promotion_level, 
+                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin,
+                                        TD.id,TD.name as td_name,
+                                        TP.id,TP.name as tp_name,
+                                        P.id, P.year as promotion_year, P.level as promotion_level,
                                         D.id as degree_id, D.name as degree_name,
-                                        R.id as role_id, R.name as role_name
-                    FROM 
+                                        R.id as role_id, R.name as role_name,
+                                        U.id
+                    FROM
                         ent.Students S
-                    INNER JOIN 
+                    INNER JOIN
                         ent.Users U ON S.id_User = U.id
-                    LEFT JOIN 
+                    LEFT JOIN
                         ent.TD TD ON S.id_Td = TD.id
-                    LEFT JOIN 
+                    LEFT JOIN
                         ent.TP TP ON S.id_Tp = TP.id
-                    LEFT JOIN 
+                    LEFT JOIN
                         ent.Promotions P ON S.id_Promotion = P.id
-                    LEFT JOIN 
+                    LEFT JOIN
                         ent.Degrees D ON P.id_Degree = D.id
-                    LEFT JOIN 
+                    LEFT JOIN
                         ent.Roles R ON U.id_Role = R.id
-                    WHERE 
-                        {where_clause};
-                    """
+                    WHERE {where_clause}"""
                     
                     cursor.execute(sql_query, params)
                     row = cursor.fetchone()
                     if row:
-                        student = StudentsModel(*row)
-                        return student.jsonify() if output_format == "model" else student
+                        return StudentsModel(*row[:-1]).jsonify()
                     else:
                         return None
 

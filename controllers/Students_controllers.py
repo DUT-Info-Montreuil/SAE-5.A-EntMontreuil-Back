@@ -147,9 +147,8 @@ def get_student_controller(id_students):
     """
     try:
         # Obtenez la valeur de l'argument output_format à partir des paramètres de la requête
-        output_format = request.args.get('output_format', default='dto')
         # Utilisez la fonction du service pour obtenir les détails d'un etudiant
-        student_data = students_services.get_student(id_students , output_format)
+        student_data = students_services.get_student(id_students)
 
         # Retournez les données au format JSON
         return jsonify(student_data)

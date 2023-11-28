@@ -42,7 +42,7 @@ def create_tp_in_td(td_id):
 @promotions_bp.route("/promotions/students/csv", methods=["POST"])
 def add_students_from_csv():
     csv_path = request.json.get("csv_path")
-    return promotion_service.add_students_from_csv(csv_path)
+    return promotion_service.add_students_tp_td_promotion_from_csv(csv_path)
 
 @promotions_bp.route("/promotions/students/<string:student_ine>", methods=["DELETE"])
 def remove_student_from_promotion(student_ine):

@@ -17,7 +17,7 @@ class UsersServices :
     ############ GET /USERS ################
     def get_users(self , output_format):
         """ Return all users in JSON format """
-        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id order by u.id "
+        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id WHERE r.name NOT IN ('teacher', 'student') order by u.id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []

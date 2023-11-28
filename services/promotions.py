@@ -226,7 +226,7 @@ class PromotionService:
                 connect_pg.disconnect(conn)
 
     # -------------------- Ajouter un étudiant dans une promotion, TD et TP --------------------------------------#
-    def add_students_from_csv(self, csv_path):
+    def add_students_tp_td_promotion_from_csv(self, csv_path):
         conn = None
         try:
             # Charger le fichier CSV dans un DataFrame
@@ -236,7 +236,8 @@ class PromotionService:
             with conn.cursor() as cursor:
                 for index, row in df.iterrows():
                     student_ine = str(row['ine'])
-                    promotion_name = str(row['promotion'])
+                    promotion_level = str(row['promotion'])
+                    degree_name = str(row['degree'])
                     td_name = str(row['td'])
                     tp_name = str(row['tp'])
 
@@ -246,20 +247,27 @@ class PromotionService:
 
                     if not student_id:
                         return jsonify({"message": f"Étudiant avec INE {student_ine} non trouvé"}), 404
+                    
+                    # Vérifier si la promotion existe
+                    cursor.execute("SELECT id FROM ent.Degrees WHERE name = %s", (degree_name,))
+                    degree = cursor.fetchone()
+
+                    if not degree:
+                        return jsonify({"message": f"Degree {degree} non trouvée"}), 404
 
                     # Vérifier si la promotion existe
-                    cursor.execute("SELECT id FROM ent.Promotions WHERE name = %s", (promotion_name,))
+                    cursor.execute("SELECT id FROM ent.Promotions WHERE level = %s", (promotion_level,))
                     promotion_id = cursor.fetchone()
 
                     if not promotion_id:
-                        return jsonify({"message": f"Promotion avec le nom {promotion_name} non trouvée"}), 404
+                        return jsonify({"message": f"Promotion avec le niveau {promotion_level} non trouvée"}), 404
 
                     # Vérifier si le TD existe
                     cursor.execute("SELECT id FROM ent.TD WHERE name = %s AND id_Promotion = %s", (td_name, promotion_id))
                     td_id = cursor.fetchone()
 
                     if not td_id:
-                        return jsonify({"message": f"TD avec le nom {td_name} non trouvé dans la promotion {promotion_name}"}), 404
+                        return jsonify({"message": f"TD avec le nom {td_name} non trouvé dans la promotion {promotion_level}"}), 404
 
                     # Vérifier si le TP existe
                     cursor.execute("SELECT id FROM ent.TP WHERE name = %s AND id_Td = %s", (tp_name, td_id))

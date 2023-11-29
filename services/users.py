@@ -247,7 +247,7 @@ class UsersFonction :
         if not re.search(r'[a-z]', password) : # au moins une minuscule
             return jsonify({"error": "Le mot de passe doit contenir au minimum 1 minuscule"}), 400
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
-            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 caractères speciale (! - @ - # - $ - % - ^ - & - *, ...)"}) , 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 caractère special (! - @ - # - $ - % - ^ - & - *, ...)"}) , 400
         if not re.search(r'[1-9]', password) : # au moins 1 chiffre
             return jsonify({"error": "Le mot de passe doit contenir au minimum 1 chiffre"}) , 400
         return True , 200

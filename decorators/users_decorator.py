@@ -76,7 +76,7 @@ class UsersDecorators :
                 # Si la validation réussit, exécute la fonction de vue
                 return f(*args, **kwargs)
             except Exception as e:
-                return jsonify({'error': "Certaines données sont manquantes, veillez remplir chaque champ"}), 400
+                return jsonify({'error': "Certaines données sont manquantes, veuillez remplir chaque champ"}), 400
         return decorated_function
     
     

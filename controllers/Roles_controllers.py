@@ -159,3 +159,13 @@ def get_role_by_id(role_id):
         return jsonify({'error': str(e)}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@roles_bp.route('/roles/not_student_teacher', methods=['GET'])
+def get_all_roles_not_student_teacher():
+
+    try:
+        all_roles = roles_service.get_roles_not_student_teacher()
+        return all_roles
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

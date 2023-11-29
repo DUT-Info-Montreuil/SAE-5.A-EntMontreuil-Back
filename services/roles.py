@@ -85,6 +85,19 @@ class RolesServices :
         conn.commit()
         conn.close()
         return role.jsonify()
+    
+        # Route pour obtenir tous les rôles
+    def get_roles_not_student_teacher(self):
+        query = "select * from ent.roles order by id not in ('teacher', 'student')"
+        conn = connect_pg.connect()
+        rows = connect_pg.get_query(conn, query)
+        roles = []
+
+        for row in rows:
+            role = Roles(id = row[0], name = row[1])
+            roles.append(role.jsonify())
+        connect_pg.disconnect(conn)
+        return jsonify(roles)
 
 #--------------------Role Fonction----------------------------#
 class RolesFonction :

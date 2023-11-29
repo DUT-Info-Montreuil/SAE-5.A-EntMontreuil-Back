@@ -54,7 +54,10 @@ class MaterialService:
 
 #-------------------- Ajouter un équipement--------------------------------------#
 
+
+
     def add_material(self, data):
+        conn = None
         try:
             conn = connect_pg.connect()
             query = "INSERT INTO ent.Materials (equipment) VALUES (%s) RETURNING equipment"
@@ -63,14 +66,18 @@ class MaterialService:
                 cursor.execute(query, values)
                 inserted_equipment = cursor.fetchone()
 
-            return {"message": f"Équipement ajouté avec succès : {inserted_equipment}"}
+            return {"message": f"Équipement ajouté avec succès : {inserted_equipment}"},200
 
         except psycopg2.Error as e:
-            return {"message": f"Erreur lors de l'ajout de l'équipement : {str(e)}"}
+            if 'unique constraint' in str(e):
+                return {"message": f"Erreur lors de l'ajout de l'équipement : un équipement avec le même nom existe déjà."},500
+            else:
+                return {"message": f"Erreur lors de l'ajout de l'équipement : {str(e)}"},500
 
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+
 
 #-------------------- Supprimer un équipement--------------------------------------#
 

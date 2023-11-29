@@ -80,9 +80,9 @@ class UsersServices :
         """ Add one user"""
         try:
             if not RolesFonction.name_exists(data["role"]) :
-                return jsonify({"error": f"Role name '{data.get('role')}' not exist, the role name is :'{UsersFonction.get_all_role_name()}' "}), 400
+                return jsonify({"error": f"Le rôle '{data.get('role')}' n'existe pas, veuillez choisir un rôle présenté dans le menu déroulant."}), 400
             if data['role'] == 'student' or data['role'] == 'teacher' :
-                return jsonify({"error": f"You can't add {data.get('role')}, with function add user"}), 400
+                return jsonify({"error": f"Vous ne prouvez pas ajouté d'étudiant ou d'enseignant via ce formulaire. Pour ajouter un étudiant ou un enseignant veuillez aller dans l'onglet ADMINISTRATEUR et sélectionner l'entité que vous voulez ajouter."}), 400
             return UsersFonction.add_users(data) 
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}) , 400
@@ -192,13 +192,13 @@ class UsersFonction :
                     return jsonify({"error": f"Id for user '{data.get('id')}' already exist"}), 400
             # Verifiez username taille > 4
             if len(data["username"]) < 4:
-                return jsonify({"error": "Username need to have minimum 4 characters"}), 400
+                return jsonify({"error": "Le pseudo doit contenir minimums 4 caractères."}), 400
             # Verifiez si le nom d'utilisateur est deja utilise
             if UsersFonction.field_exists('username', data["username"]):
-                return jsonify({"error": f"Username '{data.get('username')}' already exists"}), 400
+                return jsonify({"error": f"Le pseudo '{data.get('username')}' est déjà utilisé, veuillez en entrer un nouveau."}), 400
             # Verification de la syntaxe de l'email
             if not UsersFonction.is_valid_email(data["email"]):
-                return jsonify({"error": "Invalid email format"}), 400
+                return jsonify({"error": f"Le format de cet email '{data.get('email')}' est invalid, (test@test.com)."}), 400
             # Hashage du password avec md5 + salt password with bcrypt
             salt = bcrypt.gensalt()
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')  
@@ -241,15 +241,15 @@ class UsersFonction :
     ############  VERIFICATION PASSWORD ################
     def is_valid_password(password):
         if len(password) < 12 : # plus de 12 caracteres
-            return jsonify({"error": "password need to contains minimum 12 characters"}), 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 12 caractères"}), 400
         if not re.search(r'[A-Z]', password) : # au moins 1 majuscule
-            return jsonify({"error": "Password need to contains minimum 1 capital"}), 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 capitale"}), 400
         if not re.search(r'[a-z]', password) : # au moins une minuscule
-            return jsonify({"error": "Password need to contains minimum 1 minuscule"}), 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 minuscule"}), 400
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password) :  # Au moins un caractere special
-            return jsonify({"error": "Password need to contains minimum 1 special characters"}) , 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 caractères speciale (! - @ - # - $ - % - ^ - & - *, ...)"}) , 400
         if not re.search(r'[1-9]', password) : # au moins 1 chiffre
-            return jsonify({"error": "Password need to contains minimum 1 number"}) , 400
+            return jsonify({"error": "Le mot de passe doit contenir au minimum 1 chiffre"}) , 400
         return True , 200
 
     ############  GENERATE PASSWORD ################

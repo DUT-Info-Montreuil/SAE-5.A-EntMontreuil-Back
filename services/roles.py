@@ -88,7 +88,7 @@ class RolesServices :
     
         # Route pour obtenir tous les rôles
     def get_roles_not_student_teacher(self):
-        query = "select * from ent.roles order by id not in ('teacher', 'student')"
+        query = "select * from ent.roles where name not in ('teacher', 'student') order by id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         roles = []

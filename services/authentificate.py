@@ -15,7 +15,7 @@ class AuthentificateService:
         password = data.get('password')
         username = data.get('username')
         if not UsersFonction.field_exists('username' , username) :
-            return jsonify({"error" : "username or password incorrect"}) , 400
+            return jsonify({"error" : "Identifiant ou mot de passe incorrect."}) , 400
         
         user = AuthentificateFonction.get_user_by_username(username)
         password_in_db = user[2]
@@ -24,7 +24,7 @@ class AuthentificateService:
         password_in_db = password_in_db.encode('utf-8')
         result = bcrypt.checkpw(password, password_in_db) 
         if not result :
-            return jsonify({"error" : "username or password incorrect"}) , 400
+            return jsonify({"error" : "Identifiant ou mot de passe incorrect."}) , 400
         else :
             return jsonify({"username" : username, "id_user" : user[0] , "first_name" : user[4] , "last_name" : user[3] , "role" : user[9] , "isAdmin" : user[7]} ) , 200
         #utilisateur test : 

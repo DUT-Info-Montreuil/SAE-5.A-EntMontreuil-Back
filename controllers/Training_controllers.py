@@ -56,7 +56,7 @@ responses:
 """
 
     try:
-        output_format = request.args.get('output_format', default='DTO', type=str)
+        output_format = request.args.get('output_format', default='model', type=str)
         id_Degree = request.args.get('id_Degree', default=None, type=int)  # Ajout de la récupération de id_degree
         
         # Appel de la fonction get_all_trainings avec ou sans id_degree en fonction de sa présence

@@ -148,7 +148,7 @@ def add_training():
         message = training_service.add_training(training)
 
         # Retourne un message de confirmation
-        return jsonify({"message": message}), 200
+        return jsonify(message)
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500

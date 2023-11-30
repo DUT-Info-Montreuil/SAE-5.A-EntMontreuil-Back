@@ -64,14 +64,14 @@ class TrainingService:
                 "message": f"Le parcours '{training.name}' a été ajouté avec succès.",
                 "id": new_training_id
             }
-            return success_message
+            return success_message,200
 
         except psycopg2.IntegrityError as e:
             if 'trainings_id_degree_name_key' in str(e):
-                return {"message": "Un parcours avec le même nom existe déjà pour ce diplôme."}
+                return {"message": "Un parcours avec le même nom existe déjà pour ce diplôme."},501
 
         except Exception as e:
-            return {"message": f"Erreur lors de l'ajout du parcours : {str(e)}"}
+            return {"message": f"Erreur lors de l'ajout du parcours : {str(e)}"},500
 
         finally:
             connect_pg.disconnect(conn)

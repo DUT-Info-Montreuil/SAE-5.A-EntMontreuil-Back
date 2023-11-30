@@ -305,3 +305,50 @@ class ClassroomService:
                     cursor.close()
                 if conn:
                     conn.close()
+
+    # Dans la classe ClassroomService
+    def update_classroom(self, id_classroom, new_name=None, new_capacity=None):
+        conn = None
+        cursor = None
+
+        try:
+            conn = connect_pg.connect()  # Utilisez votre fonction de connexion
+            cursor = conn.cursor()
+
+            # Vérifiez si la salle de classe spécifiée existe
+            if not connect_pg.does_entry_exist("Classroom", id_classroom):
+                raise Exception("La salle de classe spécifiée n'existe pas.")
+
+            # Mettez à jour le nom et/ou la capacité de la salle de classe
+            update_query = "UPDATE ent.Classroom SET"
+            update_fields = []
+
+            if new_name is not None:
+                update_fields.append(f" name = %s")
+            if new_capacity is not None:
+                update_fields.append(f" capacity = %s")
+
+            update_query += ", ".join(update_fields)
+            update_query += " WHERE id = %s"
+
+            if new_name is not None and new_capacity is not None:
+                cursor.execute(update_query, (new_name, new_capacity, id_classroom))
+            elif new_name is not None:
+                cursor.execute(update_query, (new_name, id_classroom))
+            elif new_capacity is not None:
+                cursor.execute(update_query, (new_capacity, id_classroom))
+
+            conn.commit()
+
+            return {"message": "Salle de classe mise à jour avec succès."}, 200
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return {"error": str(e)}
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()

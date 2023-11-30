@@ -449,3 +449,61 @@ responses:
         return jsonify(result), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@Classroom_bp.route('/classrooms/<int:id_classroom>', methods=['PUT'])
+def update_classroom(id_classroom):
+    """
+    Modifier une salle de classe.
+
+    ---
+    tags:
+      - Classrooms
+    parameters:
+      - name: id_classroom
+        in: path
+        description: L'identifiant unique de la salle de classe à modifier.
+        required: true
+        type: integer
+      - in: body
+        name: datas
+        required: true
+        schema:
+          type: object
+          properties:
+            datas:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Le nouveau nom de la salle de classe (optionnel).
+                capacity:
+                  type: integer
+                  description: La nouvelle capacité de la salle de classe (optionnel).
+    responses:
+      200:
+        description: Salle de classe modifiée avec succès.
+      400:
+        description: Données invalides fournies.
+      404:
+        description: Salle de classe non trouvée.
+      500:
+        description: Erreur serveur lors de la modification de la salle de classe.
+    """
+    try:
+        data = request.json.get('datas', {})
+        name = data.get('name', None)
+        capacity = data.get('capacity', None)
+
+        # Validation : Vérifiez si le nom est un chiffre ou si la capacité est une chaîne de caractères
+        if name is not None and not isinstance(name, str):
+            return jsonify({"error": "Le nom doit être une chaîne de caractères."}), 400
+        if capacity is not None and not isinstance(capacity, int):
+            return jsonify({"error": "La capacité doit être un nombre entier."}), 400
+
+        result = Classroom_service.update_classroom(id_classroom, name, capacity)
+
+        if "error" in result:
+            return jsonify(result), 500
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

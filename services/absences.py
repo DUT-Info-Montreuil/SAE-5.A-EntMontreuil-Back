@@ -34,7 +34,7 @@ class AbsencesService:
                         sql_query += " AND A.justify = true"
                     else:
                         sql_query += " AND A.justify = FALSE"
-                sql_query += "order by A.id"
+                sql_query += "ORDER BY C.dateCourse DESC, C.startTime DESC"
                 cursor.execute(sql_query, (student_identifier,))
                 rows = cursor.fetchall()
                 absences_list = []

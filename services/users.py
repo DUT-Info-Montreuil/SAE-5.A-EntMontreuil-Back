@@ -109,27 +109,29 @@ class UsersFonction :
                     user_data["password"] = hashed_password
             # Si id est présent 
             if "id" in user_data :
-                return jsonify({"error": "Unable to modify user id, remove id field"}) , 400
+                return jsonify({"error": "Unable to modify user id, remove id field"}) , 400                
             # Si username est présent
             if "username" in user_data :
                 username = user_data["username"]
-                # Verification username existe deja
-                if UsersFonction.field_exists('username' , username):
-                    return jsonify({"error": f"Username '{username}' already exists"}), 400
+                # Verification username existe deja,
+                oldUsername = user_data["oldUsername"]
+                del user_data["oldUsername"]  
+                if UsersFonction.username_exist( username, oldUsername):
+                    return jsonify({"error": f"Le pseudo '{username}' est déjà utilisé"}), 400
                 # Verification username plus de 4 caracteres
                 if len(username) < 4:
-                    return jsonify({"error": "Username need to have minimum 4 characters"}), 400
+                    return jsonify({"error": "Le pseudo doit contenir minimums 4 caractères."}), 400
             # Si email est present
             if "email" in user_data :
                 email = user_data["email"]
                 # Verification email
                 if not UsersFonction.is_valid_email(email):
-                    return jsonify({"error": "Invalid email format"}), 400
+                    return jsonify({"error": f"Le format de cet email '{user_data.get('email')}' est invalid, (test@test.com)."}), 400
             if "role" in user_data :
                 if not RolesFonction.name_exists(user_data["role"]) :
-                    return jsonify({"error": f"Role name '{user_data.get('role')}' not exist, existing role : '{UsersFonction.get_all_role_name()}' "}), 400
+                    return jsonify({"error": f"Le rôle '{user_data.get('role')}' n'existe pas, veuillez choisir un rôle présenté dans le menu déroulant."}), 400
                 if user_data['role'] == 'student' or user_data['role'] == 'teacher' :
-                    return jsonify({"error": f"Can't modifie role on {data.get('role')}"}), 400
+                    return jsonify({"error": f"Vous ne prouvez pas ajouté d'étudiant ou d'enseignant via ce formulaire. Pour ajouter un étudiant ou un enseignant veuillez aller dans l'onglet ADMINISTRATEUR et sélectionner l'entité que vous voulez ajouter."}), 400
                 id_role = UsersFonction.get_role_id_by_name(user_data["role"])
                 del user_data["role"]  # Supprimez le champ du nom du rôle
                 user_data["id_Role"] = id_role
@@ -228,6 +230,17 @@ class UsersFonction :
         cursor = conn.cursor()
         query = f"SELECT COUNT(*) FROM ent.users WHERE {field} = %s"
         cursor.execute(query, (data,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    
+    ############  VERIFICATION USERNAME EXIST ################
+    # Fonction pour verifier un champ existe deja dans la base de donnees
+    def username_exist( username, oldUsername):
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = f"SELECT COUNT(*) FROM ent.users WHERE username = '{username}' AND username != '{oldUsername}'"
+        cursor.execute(query,)
         count = cursor.fetchone()[0]
         conn.close()
         return count > 0

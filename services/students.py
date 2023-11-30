@@ -165,7 +165,7 @@ class StudentsServices :
             # Validez la transaction et fermez la connexion
             conn.commit()
             conn.close()  
-            return jsonify({"message": "Student added, save the password for this user it will not be recoverable", "id": row[0], "username" : user_data["username"] , "password" : password }) , 200  
+            return jsonify({"message": "Veuillez à bien enregistrer le mot de passe générer aléatoirement, il ne sera pas récupérable.", "id": row[0], "username" : user_data["username"] , "password" : password }) , 200  
 
     ############ STUDENTS/REMOVE/<int:id_student> ############
     def delete_students(self, id_student):

@@ -37,7 +37,7 @@ class TeachersService :
         user_data["role"] = "teacher"
         
         if TeachersFonction.field_exists('initial', data.get("initial")) :
-            return jsonify({"error": f"Initial '{data.get('initial')}' already exists"}), 400
+            return jsonify({"error": f"Les initials '{data.get('initial')}' sont déjà utilisé"}), 400
          # Si data est present
         if "id" in data :
             if TeachersFonction.field_exists('id', data["id"]) :

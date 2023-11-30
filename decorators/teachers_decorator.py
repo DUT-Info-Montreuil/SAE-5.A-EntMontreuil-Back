@@ -23,7 +23,7 @@ schema_add_teacher = {
                     "required": ["first_name", "last_name", "username", "email"],  # Champs obligatoires dans 'user'
                     "additionalProperties": False  
                 },
-                "desktop" : {"type" : "string", "minLength": 1},
+                "desktop" : {"type" : "string"},
                 "initial" : {"type" : "string", "minLength": 1},
                 "id" : {"type" : "integer", "minimum": 1}
             },

@@ -342,13 +342,19 @@ class ClassroomService:
 
             return {"message": "Salle de classe mise à jour avec succès."}, 200
 
+        except psycopg2.errors.UniqueViolation as e:  # Gestion spécifique de l'erreur de violation de contrainte unique
+            if conn:
+                conn.rollback()
+            return {"message": "Une salle de classe avec ce nom existe déjà."}, 409  # Code 409 pour Conflit
+
         except Exception as e:
             if conn:
                 conn.rollback()
-            return {"error": str(e)}
+            return {"error": str(e)}, 500  # Code 500 pour Erreur Interne du Serveur
 
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 conn.close()
+

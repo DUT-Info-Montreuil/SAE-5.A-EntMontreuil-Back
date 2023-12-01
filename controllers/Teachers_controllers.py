@@ -266,6 +266,58 @@ def get_teacher(id_teacher):
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
 
+@teachers_bp.route('/teachers/commentaries', methods=['GET'])
+def get_all_commentaries():
+    try:
+        output_format = request.args.get('output_format', default='dto')
+        all_commentaries = teachers_service.get_commentaries(output_format)
+        return jsonify(all_commentaries)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+@teachers_bp.route('/teachers/commentaries', methods=['POST'])
+def add_commentary():
+    try:
+        datas = request.json
+        response, https_status = teachers_service.add_commentary(datas)
+        return response, https_status
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@teachers_bp.route('/teachers/commentaries/update/<int:id_commentary>', methods=['PUT'])
+def update_commentary(id_commentary):
+    try:
+        datas = request.json
+        response, https_status = teachers_service.update_commentary(id_commentary, datas)
+        return response, https_status
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@teachers_bp.route('/teachers/commentaries/remove/<int:id_commentary>', methods=['DELETE'])
+def delete_commentary(id_commentary):
+    try:
+        response, https_status = teachers_service.delete_commentary(id_commentary)
+        return response, https_status
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@teachers_bp.route('/teachers/commentaries/get/<int:id_commentary>', methods=['GET'])
+def get_commentary(id_commentary):
+    try:
+        output_format = request.args.get('output_format', default='dto')
+        commentary = teachers_service.get_commentary(id_commentary, output_format)
+        return jsonify(commentary)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
     

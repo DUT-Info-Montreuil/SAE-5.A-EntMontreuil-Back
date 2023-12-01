@@ -49,15 +49,17 @@ schema_update_student = {
                         "last_name": {"type": "string", "minLength": 1},
                         "username" : {"type": "string", "minLength": 1},
                         "email" : {"type": "string", "minLength": 1},
-                        "password" : {"type": "string", "minLength": 1}
+                        "password" : {"type": "string", "minLength": 1},
+                        "oldUsername" : {"type": "string", "minLength": 1}
                     },
                     "additionalProperties": False  
                 },
                 "apprentice" : {"type" : "boolean"},
                 "ine" : {"type" : "string", "minLength": 1},
-                "nip" : {"type" : "string", "minLength": 1}
+                "nip" : {"type" : "string", "minLength": 1},
+                "old_ine" : {"type" : "string", "minLength": 1},
+                "old_nip" : {"type" : "string", "minLength": 1},
             },
-            "required": ["user"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }
     },
@@ -105,7 +107,7 @@ class StudentsDecorators :
                 # Si la validation réussit, exécute la fonction de vue
                 return f(*args, **kwargs)
             except Exception as e:
-                return jsonify({'error': 'JSON invalide - {}'}), 400
+                return jsonify({'error': "Certaines données sont manquantes, veuillez remplir chaque champ"}), 400
         return decorated_function
     
     

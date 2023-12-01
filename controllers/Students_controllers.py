@@ -322,7 +322,7 @@ def update_students(id_student):
     try:
         request_data = request.json
         # Utilisez la fonction du service pour modifier un etudiant
-        message, status_code = students_services.update_students(id_student,request_data)
+        message, status_code = students_services.update_students(id_student,request_data['datas'])
         # Retournez la réponse au format JSON
         return message, status_code
     except Exception as e:

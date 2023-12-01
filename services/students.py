@@ -185,16 +185,16 @@ class StudentsServices :
 
 
     ############ STUDENTS/UPDATE/<int:id_student> ############
-    def update_students(self, id_student, datas):
+    def update_students(self, id_student, student_data):
         # Si il manque datas renvoie une erreur
         if not StudentsFonction.field_exists('id' , id_student) : 
             return jsonify({"error": f"id '{id_student} not exist"}) , 400
         if "ine" in student_data : 
-            if StudentsFonction.field_exists('ine' , student_data["ine"] ) :
-                return jsonify({"error": f"ine '{student_data.get('ine')}' already exist"}), 400
+            if StudentsFonction.field_exists_with_old_field('ine' , student_data["ine"], student_data["old_ine"] ) :
+                return jsonify({"error": f"INE '{student_data.get('ine')}' déjà existant"}), 400
         if "nip" in student_data :
-            if StudentsFonction.field_exists('nip' , student_data["nip"] ) :
-                return jsonify({"error": f"nip '{student_data.get('nip')}' already exist"}), 400
+            if StudentsFonction.field_exists_with_old_field('nip' , student_data["nip"], student_data["old_nip"] ) :
+                return jsonify({"error": f"NIP '{student_data.get('nip')}' déjà existant"}), 400
         # Si il manque user renvoie une erreur
         if "user" in student_data:
             user_data = student_data["user"]
@@ -202,8 +202,7 @@ class StudentsServices :
             
             del student_data["user"]
             # Si user data est vide
-            if UsersFonction.field_exists('email' , user_data["email"] ) :
-                return jsonify({"error": f"email '{user_data.get('email')}' already exist"}), 400
+
             # Recuperation du user id
             id_user = StudentsFonction.get_user_id_with_id_student(id_student)
             user_response, http_status = UsersFonction.update_users(user_data, id_user)
@@ -212,6 +211,8 @@ class StudentsServices :
                 return user_response, http_status
         # Si student data n'est pas vide
         if student_data :
+            del student_data['old_ine']
+            del student_data['old_nip']
             conn = connect_pg.connect()
             cursor = conn.cursor()
             update_clause = ", ".join([f"{key} = %s" for key in student_data.keys()])
@@ -305,6 +306,15 @@ class StudentsFonction :
         conn = connect_pg.connect()
         cursor = conn.cursor()
         query = f"SELECT COUNT(*) FROM ent.students WHERE {field} = %s"
+        cursor.execute(query, (data,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    
+    def field_exists_with_old_field( field,data, old_data):
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = f"SELECT COUNT(*) FROM ent.students WHERE {field} = %s AND {field} != '{old_data}'"
         cursor.execute(query, (data,))
         count = cursor.fetchone()[0]
         conn.close()

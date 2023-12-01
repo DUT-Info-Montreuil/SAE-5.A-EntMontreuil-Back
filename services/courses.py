@@ -198,50 +198,50 @@ class CourseService:
             if conn:
                 connect_pg.disconnect(conn)
 
-def copy_day_courses(self, source_date, target_date):
-        try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                    INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                             id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
-                    SELECT startTime, endTime, %s, control, id_Resource,
-                           id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
-                    FROM ent.Courses
-                    WHERE dateCourse = %s
-                """
+    def copy_day_courses(self, source_date, target_date):
+            try:
+                conn = connect_pg.connect()
+                with conn.cursor() as cursor:
+                    sql_query = """
+                        INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
+                                                id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
+                        SELECT startTime, endTime, %s, control, id_Resource,
+                            id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
+                        FROM ent.Courses
+                        WHERE dateCourse = %s
+                    """
 
-                cursor.execute(sql_query, (target_date, source_date))
-                conn.commit()
+                    cursor.execute(sql_query, (target_date, source_date))
+                    conn.commit()
 
-                return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
-        except Exception as e:
-            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-        finally:
-            conn.close()
+                    return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
+            except Exception as e:
+                return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
+            finally:
+                conn.close()
 
-def copy_week_courses(self, source_week_start_date, target_week_start_date):
-        try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                    INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                             id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
-                    SELECT startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
-                           id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
-                    FROM ent.Courses
-                    WHERE dateCourse >= %s AND dateCourse < %s
-                """
+    def copy_week_courses(self, source_week_start_date, target_week_start_date):
+            try:
+                conn = connect_pg.connect()
+                with conn.cursor() as cursor:
+                    sql_query = """
+                        INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
+                                                id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
+                        SELECT startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
+                            id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
+                        FROM ent.Courses
+                        WHERE dateCourse >= %s AND dateCourse < %s
+                    """
 
-                cursor.execute(sql_query, (target_week_start_date, source_week_start_date,
-                                           source_week_start_date, source_week_start_date + 7))
-                conn.commit()
+                    cursor.execute(sql_query, (target_week_start_date, source_week_start_date,
+                                            source_week_start_date, source_week_start_date + 7))
+                    conn.commit()
 
-                return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
-        except Exception as e:
-            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-        finally:
-            conn.close()
+                    return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
+            except Exception as e:
+                return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
+            finally:
+                conn.close()
 
 def get_courses_by_day(self, target_date):
         try:

@@ -1,11 +1,10 @@
 from flask import request, jsonify, Blueprint
-from services.users import UsersServices  , ValidationError, UsersFonction
 import json
 from decorators.users_decorator import UsersDecorators
 from flask_jwt_extended import get_jwt_identity , jwt_required
 from services.students import StudentsServices
 from services.teachers import TeachersService
-
+from services.users import UsersServices, ValidationError, UsersFonction
 # Création d'un Blueprint pour les routes liées 
 users_bp = Blueprint('users', __name__)
 
@@ -333,6 +332,60 @@ def delete_user(id_user):
     try:
         response , https_status = UsersFonction.remove_users(id_user)
         return response , https_status
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/reminders', methods=['GET'])
+def get_all_reminders():
+    try:
+        output_format = request.args.get('output_format', default='dto')
+        all_reminders = UsersFonction.get_all_reminders(output_format)
+        return jsonify(all_reminders)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/reminders/<int:reminder_id>', methods=['GET'])
+def get_reminder_by_id(reminder_id):
+    try:
+        output_format = request.args.get('output_format', default='dto')
+        reminder = UsersFonction.get_reminder_by_id(reminder_id, output_format)
+        return jsonify(reminder)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/reminders', methods=['POST'])
+def add_reminder():
+    try:
+        data = request.json
+        response, https_status = UsersFonction.add_reminder(data)
+        return response, https_status
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/reminders/<int:reminder_id>', methods=['PUT'])
+def update_reminder(reminder_id):
+    try:
+        data = request.json
+        response, https_status = UsersFonction.update_reminder(data, reminder_id)
+        return response, https_status
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/reminders/<int:reminder_id>', methods=['DELETE'])
+def delete_reminder(reminder_id):
+    try:
+        response, https_status = UsersFonction.delete_reminder(reminder_id)
+        return response, https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:

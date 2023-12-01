@@ -86,9 +86,9 @@ class TeachersService :
         if "initial" in teacher_data :
             
             # Verification initial existe deja
-            if TeachersFonction.field_exists('initial' , teacher_data.get('initial')) :
-                
-                return jsonify({"error": f"Initial '{teacher_data.get('initial')}' already exists"}), 400
+            if TeachersFonction.field_exists_initial( teacher_data.get('initial'), teacher_data.get('old_initial')) :
+                return jsonify({"error": f"Les initials '{teacher_data.get('initial')}'éxiste déjà"}), 400
+            del teacher_data["old_initial"]
         # Si id est present
         if "id" in teacher_data :
             return jsonify({"error": "Unable to modify user id, remove id field"}), 400
@@ -189,6 +189,16 @@ class TeachersFonction :
         cursor = conn.cursor()
         query = f"SELECT COUNT(*) FROM ent.teachers WHERE {field} = %s"
         cursor.execute(query, (data,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    
+    
+    def field_exists_initial( initial,old_initial):
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        query = f"SELECT COUNT(*) FROM ent.teachers WHERE initial = %s AND initial != '{old_initial}'"
+        cursor.execute(query, (initial,))
         count = cursor.fetchone()[0]
         conn.close()
         return count > 0

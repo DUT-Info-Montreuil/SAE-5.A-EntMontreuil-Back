@@ -382,7 +382,7 @@ class StudentsFonction :
             duplicate_fields = []
             for field, lines in duplicates.items():
                 duplicate_fields.append(f"duplicates {param} : '{field}' at lines : {' , '.join(map(str, lines))}")
-            return jsonify({"message": f"Your csv file contains duplicate {field}s", f"duplicate {param}": duplicate_fields }) , 400
+            return jsonify({"message": f"Your csv file contains duplicate {param}", f"duplicate {param}": duplicate_fields }) , 400
         else:
             return jsonify({"message":f"Your csv dont contains duplicate '{param}'"}) , 200
 

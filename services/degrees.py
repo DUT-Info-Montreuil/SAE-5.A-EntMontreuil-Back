@@ -37,6 +37,8 @@ class DeegreeService:
             if conn is not None:
                 conn.close()
 
+
+
     def create_degree(self, degree):
         conn = None
         cursor = None
@@ -53,16 +55,30 @@ class DeegreeService:
             return {
                 "message": "Formation créée avec succès.",
                 "id": degree_id
-            }
+            }, 200
 
+        except psycopg2.errors.UniqueViolation as unique_err:
+            if "degrees_name_unique" in str(unique_err):
+                conn.rollback()
+                return {
+                    "error": "Unique constraint violation",
+                    "message": "Une formation avec ce nom existe déjà.",
+                }, 409  # HTTP status code 409 Conflict for unique constraint violation
+            else:
+                conn.rollback()
+                return {
+                    "error": "Unique constraint violation",
+                    "message": str(unique_err)
+                }, 409  # HTTP status code 409 Conflict for unique constraint violation
         except Exception as e:
             conn.rollback()
-            return {"error": str(e)}
+            return {"error": str(e)}, 401
         finally:
             if cursor is not None:
                 cursor.close()
             if conn is not None:
                 conn.close()
+
 
     # Méthode pour supprimer une formation par son ID
     def delete_degree(self, degree_id):

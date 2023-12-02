@@ -322,6 +322,12 @@ class StudentsFonction :
 
     ############ VERIFICATION CSV VALIDE ############
     def verification_csv_file(csv_path):
+        
+        
+        response , http_status = StudentsFonction.all_field_csv(csv_path)
+        if http_status != 200 :
+            return response , http_status
+
         if not os.path.exists(csv_path):
             return jsonify({"error": "file not found" , "invalid path" : csv_path }), 400
 
@@ -438,6 +444,20 @@ class StudentsFonction :
                         if not field:
                             return jsonify({"message": f"Field {row} is empty in row {row_number}"}), 400
             return jsonify({"message": "No empty fields found in CSV"}), 200
+        except Exception as e:
+            return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+        
+    ############ VERIFICATION ALL FIELD IN CSV ############
+    def all_field_csv(path) :
+        try:
+            field_obligatoire = ['username','email','ine','nip','last_name','first_name']
+            with open(path, newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    for field in field_obligatoire:
+                        if field not in row:
+                            return jsonify({"error" : f"Il manque le champ {field}"}) , 400
+                return jsonify({"message" : "Valide CSV"}) , 200
         except Exception as e:
             return jsonify({"error": f"An error occurred: {str(e)}"}), 400
 #----------------------------------ERROR-------------------------------------

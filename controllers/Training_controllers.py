@@ -311,7 +311,7 @@ responses:
 """
 
     try:
-        result, status_code = training_service.delete_training(id_training)
-        return jsonify(result), status_code
+        result = training_service.delete_training(id_training)
+        return jsonify(result)
     except Exception as e:
         return jsonify({"message": f"Erreur lors de la suppression du parcours : {str(e)}"}), 500

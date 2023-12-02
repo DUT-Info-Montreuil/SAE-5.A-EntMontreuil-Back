@@ -125,7 +125,7 @@ responses:
 """
 
     try:
-        if not connect_pg.does_entry_exist("Students", id_Classroom):
+        if not connect_pg.does_entry_exist("Classroom", id_Classroom):
           return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
 
         output_format = request.args.get('output_format', 'model')  

@@ -82,11 +82,11 @@ class DeegreeService:
             cursor.execute("DELETE FROM ent.Degrees WHERE id = %s", (degree_id,))
             conn.commit()
 
-            return {"message": "Formation supprimée avec succès."}
+            return {"message": "Formation supprimée avec succès."},200
 
         except Exception as e:
             conn.rollback()
-            return {"error": str(e)}
+            return {"message": str(e)};401
         finally:
             if cursor is not None:
                 cursor.close()
@@ -127,6 +127,7 @@ class DeegreeService:
             if conn is not None:
                 conn.close()
 
+
     # Méthode pour modifier une formation
     def update_degree(self, degree_id, new_name):
         conn = None
@@ -140,11 +141,18 @@ class DeegreeService:
             cursor.execute("UPDATE ent.Degrees SET name = %s WHERE id = %s", (new_name, degree_id))
             conn.commit()
 
-            return {"message": "Formation mise à jour avec succès."}
+            return {"message": "Formation mise à jour avec succès."}, 200
+
+        except psycopg2.errors.UniqueViolation as unique_error:
+            conn.rollback()
+            # Gérez l'erreur de clé unique ici, en retournant un message personnalisé
+            error_message = f"Erreur de duplication : Le nom '{new_name}' existe déjà."
+            return {"message": error_message}, 409  # Utilisez le code 409 Conflict pour indiquer la duplication
 
         except Exception as e:
             conn.rollback()
-            return {"error": str(e)}
+            return {"message": str(e)}
+
         finally:
             if cursor is not None:
                 cursor.close()

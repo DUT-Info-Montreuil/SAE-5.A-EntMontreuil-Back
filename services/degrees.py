@@ -86,7 +86,7 @@ class DeegreeService:
 
         except Exception as e:
             conn.rollback()
-            return {"message": str(e)};401
+            return {"message": str(e)},401
         finally:
             if cursor is not None:
                 cursor.close()

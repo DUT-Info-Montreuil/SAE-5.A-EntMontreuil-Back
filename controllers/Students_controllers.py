@@ -4,6 +4,7 @@ from services.absences import AbsencesService
 import json
 from flask_jwt_extended import get_jwt_identity , jwt_required
 from decorators.students_decorator import StudentsDecorators
+import os
 # Création d'un Blueprint pour les routes liées
 students_bp = Blueprint('students', __name__)
 
@@ -331,36 +332,16 @@ def update_students(id_student):
     
 #-----------update students--------------
 @students_bp.route('/students/add_csv', methods=['POST'])
-@StudentsDecorators.validate_json_add_student_csv
 def csv_add_students():
-    """
-    Add multiple students from a CSV file.
-    ---
-    tags:
-      - Students
-    parameters:
-      - name: file_path
-        in: body
-        description: Path to the CSV file containing student data.
-        required: true
-        schema:
-          type: object
-          properties:
-            file_path:
-              type: string
-              example: "C:/Users/xxp90/Documents/BUT INFO/SAE EDT/csv_students.csv"
-    responses:
-      200:
-        description: Students successfully added from the CSV file.
-      400:
-        description: Bad request or validation error.
-      500:
-        description: Server error in case of a problem during student addition from the CSV file.
-    """
     try:
-        request_data = request.json
-        path = request_data["file_path"]
-        message, status_code = students_services.csv_add_students(path)
+      
+        if 'file' not in request.files:
+          return jsonify({'message': 'No file part'}), 400
+      
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'message': 'No selected file'}), 400
+        message, status_code = students_services.csv_add_students(file)
         # Retournez la réponse au format JSON
         return message, status_code
     except Exception as e:

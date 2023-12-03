@@ -232,9 +232,6 @@ class StudentsServices :
         stream = io.StringIO(file.stream.read().decode("utf-8"))
         reader = csv.DictReader(stream, delimiter=',')
         data_list = list(reader)
-        response, http_status = StudentsFonction.verification_csv_file(data_list)
-        if http_status != 200 :
-            return response, http_status
         # Tableau de tout les mdp des user ajouter
         passwords = []
         # Recuperation du nom du fichier
@@ -248,6 +245,48 @@ class StudentsServices :
             json_with_password = add_student_response.json.get("json")
             passwords.append(json_with_password)
         return jsonify({"csv file": f"All students add from {filename}" ,"message" : "Saved all passwords for all user they will not be recoverable", "password" : passwords} ) , 200 
+    
+    ############ VERIFICATION CSV VALIDE ############
+    def verification_csv_file(self, file):
+        stream = io.StringIO(file.stream.read().decode("utf-8"))
+        reader = csv.DictReader(stream, delimiter=',')
+        data_list = list(reader)
+        response , http_status = StudentsFonction.all_field_csv(data_list)
+        if http_status !=200:
+            return response , http_status
+        # verification des champs dupliquer dans le fichier csv
+        duplicate_fields = ['username', 'email', 'ine', 'nip']
+        for field in duplicate_fields : 
+            response_duplicate , http_status_2 = StudentsFonction.find_duplicate_field(data_list, field)
+            if http_status_2 != 200 :
+                return response_duplicate , http_status_2
+        
+        # verification emails syntaxe in csv
+        response_emails_syntaxe_csv , http_status_es = StudentsFonction.emails_syntaxe_csv(data_list)
+        if http_status_es != 200 :
+            return response_emails_syntaxe_csv , http_status_es
+        
+        
+        # verification des champs de users deja existant dans la bd    
+        existing_user_field = ['email', 'username']
+        for user_field in existing_user_field : 
+            response_existing_user_field , http_status_u = StudentsFonction.field_users_exists_csv(data_list, user_field)
+            if http_status_u != 200 :
+                return response_existing_user_field , http_status_u
+            
+        # verification des champs de students deja existant dans la bd    
+        existing_student_field = ['ine', 'nip']
+        for field in existing_student_field : 
+            response_existing_student_field , http_status_sf = StudentsFonction.field_students_exists_csv(data_list, field)
+            if http_status_sf != 200 :
+                return response_existing_student_field , http_status_sf
+            
+        # verification username len < 4 in csv
+        response_username_csv , http_status_uc = StudentsFonction.username_4_char_csv(data_list)
+        if http_status_uc != 200 :
+            return response_username_csv , http_status_uc
+            
+        return jsonify({"error": "OUIIII", "valide_csv" : "true" }), 200 
 
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
@@ -319,39 +358,7 @@ class StudentsFonction :
         conn.close()
         return count > 0
 
-    ############ VERIFICATION CSV VALIDE ############
-    def verification_csv_file(data_list):
-        response , http_status = StudentsFonction.all_field_csv(data_list)
-        if http_status !=200:
-            return response , http_status
-        # verification des champs dupliquer dans le fichier csv
-        duplicate_fields = ['username', 'email', 'ine', 'nip']
-        for field in duplicate_fields : 
-            response_duplicate , http_status_2 = StudentsFonction.find_duplicate_field(data_list, field)
-            if http_status_2 != 200 :
-                return response_duplicate , http_status
-        
-        # verification emails syntaxe in csv
-        response_emails_syntaxe_csv , http_status_es = StudentsFonction.emails_syntaxe_csv(data_list)
-        if http_status_es != 200 :
-            return response_emails_syntaxe_csv , http_status_es
-        
-        
-        # verification des champs de users deja existant dans la bd    
-        existing_user_field = ['email', 'username']
-        for user_field in existing_user_field : 
-            response_existing_user_field , http_status = StudentsFonction.field_users_exists_csv(data_list, user_field)
-            if http_status != 200 :
-                return response_existing_user_field , http_status
-            
-        # verification des champs de students deja existant dans la bd    
-        existing_student_field = ['ine', 'nip']
-        for field in existing_student_field : 
-            response_existing_student_field , http_status = StudentsFonction.field_students_exists_csv(data_list, field)
-            if http_status != 200 :
-                return response_existing_student_field , http_status
-            
-        return jsonify({"messsage": "Valid CSV"}), 200 
+    
     
     ############ VERIFICATION DUPLICATE FILDS IN CSV ############
     def find_duplicate_field(data_list, param):
@@ -369,8 +376,8 @@ class StudentsFonction :
             if duplicates:
                 duplicate_fields = []
                 for field, lines in duplicates.items():
-                    duplicate_fields.append(f"Duplicates {param}: '{field}' at lines: {', '.join(map(str, lines))}")
-                return jsonify({"message": f"Your CSV file contains duplicate '{param}'", f"duplicate {param}": duplicate_fields}), 400
+                    duplicate_fields.append(f"il y a une duplication du champ {param} : '{field}' à la ligne : {', '.join(map(str, lines))}")
+                return jsonify({"error": duplicate_fields}), 400
             else:
                 return jsonify({"message": f"Your CSV file doesn't contain duplicate '{param}'"}), 200
 
@@ -384,7 +391,7 @@ class StudentsFonction :
         for row in data_list:
             field = row[param]
             if UsersFonction.field_exists(param,field) :
-                existing_field.append(f"Existing {param} : '{field}' , line {line_number} in CSV")
+                existing_field.append(f"{param} déjà existant : '{field}' à la ligne {line_number} du fichier CSV")
             line_number += 1
         if existing_field :
             return jsonify({"error": existing_field}) , 400
@@ -398,7 +405,7 @@ class StudentsFonction :
         for row in data_list:
             field = row[param]
             if StudentsFonction.field_exists(param,field) :
-                existing_field.append(f"Existing {param}   : '{field}' , line {line_number} in CSV")
+                existing_field.append(f"{param} déjà existant : '{field}' à la ligne {line_number} du fichier CSV")
             line_number += 1
         if existing_field :
             return jsonify({"error": existing_field}) , 400
@@ -412,7 +419,7 @@ class StudentsFonction :
         for row in data_list:
             email = row.get("email")
             if not UsersFonction.is_valid_email(email) :
-                invalid_email.append( f"Invalid email format for : {email} , line {line_number} in CSV") , 400
+                invalid_email.append( f"Le format de l'email : '{email}' est invalid à la ligne {line_number} du fichier CSV") , 400
             line_number += 1
         if invalid_email :
             return jsonify({"error": invalid_email}) , 400
@@ -427,10 +434,28 @@ class StudentsFonction :
             for row in data_list:
                 for field in field_obligatoire:
                     if field not in row:
-                        return jsonify({"error" : f"Il manque le champ {field}"}) , 400
+                        return jsonify({"error" : f"Le champ {field} n'est pas présent ou mal écrit dans votre fichier CSV."}) , 400
             return jsonify({"message" : "Valide CSV all field"}) , 200
         except Exception as e:
             return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+        
+    ############ VERIFICATION EMAILS SYNTAXE IN CSV ############
+    def username_4_char_csv(data_list):
+        invalid_username = []
+        line_number = 1  
+        for row in data_list:
+            username = row.get("username")
+            if len(username) < 4:
+                invalid_username.append( f"Le username : '{username}' doit contenir minimum 4 caractères à la ligne {line_number} du fichier CSV") , 400
+            line_number += 1
+        if invalid_username :
+            return jsonify({"error": invalid_username}) , 400
+        else :
+            return jsonify({"message" : "Valide CSV"}) , 200
+        
+        
+
+
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :
     pass

@@ -347,3 +347,20 @@ def csv_add_students():
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
+      
+@students_bp.route('/students/verify_csv', methods=['POST'])
+def csv_verify_students():
+    try:
+      
+        if 'file' not in request.files:
+          return jsonify({'message': 'No file part'}), 400
+      
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'message': 'No selected file'}), 400
+        message, status_code = students_services.verification_csv_file(file)
+        # Retournez la réponse au format JSON
+        return message, status_code
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 400

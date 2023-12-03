@@ -68,15 +68,6 @@ schema_update_student = {
 }
 
 
-schema_add_student_csv = {
-    "type": "object",
-    "properties": {
-        "file_path": {"type": "string", "minLength": 1}
-    },
-    "required": ["file_path"],  # Champs obligatoires dans le schéma global
-    "additionalProperties": False  
-}
-
 class StudentsDecorators : 
     # Décorateur pour la validation JSON
     def validate_json_add_student(f):
@@ -111,19 +102,6 @@ class StudentsDecorators :
         return decorated_function
     
     
-    def validate_json_add_student_csv(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not request.is_json:
-                return jsonify({'error': 'Le contenu de la requête n\'est pas au format JSON'}), 400
-            try:
-                data = request.get_json()
-                # Validation du JSON avec le schéma
-                validate(instance=data, schema=schema_add_student_csv)
-                # Si la validation réussit, exécute la fonction de vue
-                return f(*args, **kwargs)
-            except Exception as e:
-                return jsonify({'error': 'JSON invalide - {}'.format(str(e))}), 400
-        return decorated_function
+
 
 

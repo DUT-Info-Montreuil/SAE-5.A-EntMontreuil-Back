@@ -50,7 +50,7 @@ schema_update_user = {
                         "role" : {"type": "string", "minLength": 1},
                         "password" : {"type": "string", "minLength": 1},
                         "isAdmin" : {"type": "boolean"},
-                        "oldUsername" : {"type": "string", "minLength": 1}
+                        "oldUsername" : {"type": "string"}
                     },
                     "additionalProperties": False  
                 }

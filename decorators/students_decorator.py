@@ -50,15 +50,15 @@ schema_update_student = {
                         "username" : {"type": "string", "minLength": 1},
                         "email" : {"type": "string", "minLength": 1},
                         "password" : {"type": "string", "minLength": 1},
-                        "oldUsername" : {"type": "string", "minLength": 1}
+                        "oldUsername" : {"type": "string"}
                     },
                     "additionalProperties": False  
                 },
                 "apprentice" : {"type" : "boolean"},
                 "ine" : {"type" : "string", "minLength": 1},
                 "nip" : {"type" : "string", "minLength": 1},
-                "old_ine" : {"type" : "string", "minLength": 1},
-                "old_nip" : {"type" : "string", "minLength": 1},
+                "old_ine" : {"type" : "string"},
+                "old_nip" : {"type" : "string"},
             },
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }

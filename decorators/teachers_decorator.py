@@ -52,14 +52,14 @@ schema_update_teacher = {
                         "username" : {"type": "string", "minLength": 1},
                         "email" : {"type": "string", "minLength": 1},
                         "password" : {"type": "string", "minLength": 1},
-                        "oldUsername" : {"type": "string", "minLength": 1},
+                        "oldUsername" : {"type": "string"},
                         "isAdmin": {"type": "boolean"}
                     },
                     "additionalProperties": False  
                 },
                 "desktop" : {"type" : "string", "minLength": 1},
                 "initial" : {"type" : "string", "minLength": 1},
-                "old_initial": {"type" : "string", "minLength": 1}
+                "old_initial": {"type" : "string"}
             },
             "required": ["user"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 

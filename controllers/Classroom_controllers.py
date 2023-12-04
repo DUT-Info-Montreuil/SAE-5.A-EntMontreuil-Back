@@ -390,7 +390,7 @@ def delete_classroom(id_classroom):
         description: Erreur serveur lors de la suppression de la salle de classe.
     """
     try:
-        if not connect_pg.does_entry_exist("Students", id_classroom):
+        if not connect_pg.does_entry_exist("Classroom", id_classroom):
           return jsonify({"message": "La salle de classe spécifiée n'existe pas."}), 404
         result = Classroom_service.delete_classroom(id_classroom)
         if "error" in result:

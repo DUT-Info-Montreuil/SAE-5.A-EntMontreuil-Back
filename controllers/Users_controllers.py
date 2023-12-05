@@ -395,18 +395,16 @@ def delete_reminder(reminder_id):
 @jwt_required()
 def get_user_notifications():
     try:
-        # Extraire le user id du token JWT
         current_user = get_jwt_identity()
         user_id = current_user["id"]
 
-        # Vérifier si le paramètre 'reading' est présent et vaut 'true'
         if request.args.get('reading') == 'true':
             UsersFonction.set_notifications_to_read(user_id)
 
-        # Appeler la fonction du service en passant le id
-        notifications = UsersFonction.get_notifications(user_id)
+        # Récupérer le paramètre display, s'il est présent
+        display = request.args.get('display')
+        notifications = UsersFonction.get_notifications(user_id, display)
 
-        # Retourner la réponse
         return jsonify(notifications)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400

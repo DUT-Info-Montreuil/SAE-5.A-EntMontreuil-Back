@@ -451,18 +451,30 @@ class UsersFonction :
             if conn:
                 connect_pg.disconnect(conn)
     
-    def get_notifications(user_id):
+    def get_notifications(user_id, display=None):
         query = """
         SELECT N.id, N.id_user, N.content, N.is_read, N.created_at, N.title, N.icon, N."icon-color", N.route
         FROM ent.notifications N
         WHERE N.id_user = %s
         ORDER BY N.created_at DESC
         """
+
+        # Ajout de la clause LIMIT si display est spécifié
+        if display and display.isdigit():
+            query += " LIMIT %s"
+
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        cursor.execute(query, (user_id,))
-        rows = cursor.fetchall()
-        notifications = []
+
+        # Exécuter la requête avec ou sans LIMIT
+        if display and display.isdigit():
+            cursor.execute(query, (user_id, int(display)))
+            rows = cursor.fetchall()
+            notifications = []
+        else:
+            cursor.execute(query, (user_id,))
+            rows = cursor.fetchall()
+            notifications = []
 
         totalUnread = 0  # Compteur pour les notifications non lues
 

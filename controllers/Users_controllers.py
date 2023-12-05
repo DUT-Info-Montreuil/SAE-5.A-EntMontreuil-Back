@@ -397,9 +397,14 @@ def get_user_notifications():
     try:
         # Extraire le user id du token JWT
         current_user = get_jwt_identity()
+        user_id = current_user["id"]
+
+        # Vérifier si le paramètre 'reading' est présent et vaut 'true'
+        if request.args.get('reading') == 'true':
+            UsersFonction.set_notifications_to_read(user_id)
 
         # Appeler la fonction du service en passant le id
-        notifications = UsersFonction.get_notifications(current_user["id"])
+        notifications = UsersFonction.get_notifications(user_id)
 
         # Retourner la réponse
         return jsonify(notifications)
@@ -407,4 +412,3 @@ def get_user_notifications():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-      

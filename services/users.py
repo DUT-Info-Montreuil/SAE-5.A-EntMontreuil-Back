@@ -453,7 +453,7 @@ class UsersFonction :
     
     def get_notifications(user_id):
         query = """
-        SELECT N.id, N.id_user, N.content, N.is_read, N.created_at, N.title, N.icon, N."icon-color"
+        SELECT N.id, N.id_user, N.content, N.is_read, N.created_at, N.title, N.icon, N."icon-color", N.route
         FROM ent.notifications N
         WHERE N.id_user = %s
         ORDER BY N.created_at DESC
@@ -475,7 +475,8 @@ class UsersFonction :
                 created_at=row[4],
                 title=row[5],
                 icon=row[6],
-                icon_color=row[7]
+                icon_color=row[7],
+                route=row[8]
             )
             if not row[3]:  # Si la notification n'est pas lue (is_read est False)
                 totalUnread += 1
@@ -492,6 +493,18 @@ class UsersFonction :
             "notifications": notifications
         }
         return response
+    
+    def set_notifications_to_read(user_id):
+        update_query = """
+        UPDATE ent.notifications
+        SET is_read = TRUE
+        WHERE id_user = %s AND is_read = FALSE
+        """
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        cursor.execute(update_query, (user_id,))
+        conn.commit()  # Ne pas oublier de valider les changements dans la base de données
+        conn.close()
 
 
 #----------------------------------ERROR-------------------------------------

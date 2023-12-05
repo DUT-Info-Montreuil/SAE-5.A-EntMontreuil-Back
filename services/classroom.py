@@ -295,7 +295,7 @@ class ClassroomService:
                 return {
                     "message": "Salle de classe créée avec succès.",
                     "id": classroom_id
-                }
+                },201
             except psycopg2.errors.UniqueViolation as e:
                 if conn:
                     conn.rollback()  # Annulez la transaction en cours pour éviter un état incohérent

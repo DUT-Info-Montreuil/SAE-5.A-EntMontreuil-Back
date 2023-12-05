@@ -446,7 +446,7 @@ responses:
         result = Classroom_service.create_classroom(classroom)
         if "error" in result:
             return jsonify(result), 500
-        return jsonify(result), 201
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

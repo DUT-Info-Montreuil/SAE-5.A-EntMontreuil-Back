@@ -390,3 +390,21 @@ def delete_reminder(reminder_id):
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/user/notifications', methods=['GET'])
+@jwt_required()
+def get_user_notifications():
+    try:
+        # Extraire le user id du token JWT
+        current_user = get_jwt_identity()
+
+        # Appeler la fonction du service en passant le id
+        notifications = UsersFonction.get_notifications(current_user["id"])
+
+        # Retourner la réponse
+        return jsonify(notifications)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+      

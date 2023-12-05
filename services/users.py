@@ -8,6 +8,7 @@ import string
 from entities.DTO.users import Users
 from entities.model.usersm import UsersModel
 from entities.model.remindersm import ReminderModel
+from entities.model.notificationsm import NotificationModel
 from services.roles import RolesFonction
 
 class UsersServices :
@@ -450,6 +451,48 @@ class UsersFonction :
             if conn:
                 connect_pg.disconnect(conn)
     
+    def get_notifications(user_id):
+        query = """
+        SELECT N.id, N.id_user, N.content, N.is_read, N.created_at, N.title, N.icon, N."icon-color"
+        FROM ent.notifications N
+        WHERE N.id_user = %s
+        ORDER BY N.created_at DESC
+        """
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id,))
+        rows = cursor.fetchall()
+        notifications = []
+
+        totalUnread = 0  # Compteur pour les notifications non lues
+
+        for row in rows:
+            notification = NotificationModel(
+                id=row[0],
+                id_user=row[1],
+                content=row[2],
+                is_read=row[3],
+                created_at=row[4],
+                title=row[5],
+                icon=row[6],
+                icon_color=row[7]
+            )
+            if not row[3]:  # Si la notification n'est pas lue (is_read est False)
+                totalUnread += 1
+            
+            notifications.append(notification.jsonify())
+
+        conn.close()
+        total = len(rows)  # Nombre total de notifications
+
+        # Créer la réponse JSON
+        response = {
+            "total": total,
+            "totalUnread": totalUnread,
+            "notifications": notifications
+        }
+        return response
+
 
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :

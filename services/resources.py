@@ -98,7 +98,7 @@ class ResourceService:
                     resource_info = {
                         "id": row[0],
                         "name": row[1],
-                        "id_Promotion": row[2],
+                        "id_Training": row[2],
                         "color" : row[3]
                     }
                     return jsonify(resource_info), 200
@@ -119,7 +119,7 @@ class ResourceService:
             with conn.cursor() as cursor:
                 # Requête SQL pour récupérer toutes les ressources
                 sql_query = """
-                    SELECT R.id, R.name, R.id_Promotion, R.color
+                    SELECT R.id, R.name, R.id_Training, R.color
                     FROM ent.Resources R
                 """
 
@@ -131,7 +131,7 @@ class ResourceService:
                     resource = {
                         "id": row[0],
                         "name": row[1],
-                        "id_Promotion": row[2],
+                        "id_Training": row[2],
                         "color" : row[3]
                     }
                     resources_list.append(resource)

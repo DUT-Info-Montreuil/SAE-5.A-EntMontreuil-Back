@@ -1,6 +1,6 @@
 class CourseModel:
     def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom,
-                 resource_name, tp_name, td_name, promotion_year, teacher_initial, classroom_name):
+                 resource_name, tp_name, td_name, promotion_year, teacher_initial, classroom_name, resource_color):
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
@@ -15,6 +15,7 @@ class CourseModel:
 
         # resource
         self.resource_name = resource_name
+        self.resource_color = resource_color
 
         # tp
         self.tp_name = tp_name
@@ -52,5 +53,6 @@ class CourseModel:
             "td_name": self.td_name,
             "promotion_year": self.promotion_year,
             "teacher_initial": self.teacher_initial,
-            "classroom_name": self.classroom_name
+            "classroom_name": self.classroom_name,
+            "resource_color" : self.resource_color
         }

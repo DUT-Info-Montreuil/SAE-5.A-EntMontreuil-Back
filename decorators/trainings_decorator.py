@@ -10,11 +10,11 @@ schema_add_training = {
             "type": "object",
             "properties": {
                 "name": {"type": "string", "minLength": 1},
-                "id_Degree": {"type": "integer", "minimum": 1},
-                    
+                "id_Promotion": {"type": "integer", "minimum": 1},
+                "semester": {"type": "integer", "minimum": 1},
                 
             },
-            "required": ["name", "id_Degree" ],  # Champs obligatoires dans 'datas'
+            "required": ["name", "id_Promotion","semester"],  # Champs obligatoires dans 'datas'
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }
     },
@@ -30,7 +30,8 @@ schema_update_training = {
             "type": "object",
             "properties": {
                 "name": {"type": "string", "minLength": 1},
-                "id_Degree": {"type": "integer", "minimum": 1},
+                "id_Promotion": {"type": "integer", "minimum": 1},
+                "semester": {"type": "integer", "minimum": 1},
             },
             "additionalProperties": False  # Aucun autre attribut ne peut être ajouté 
         }

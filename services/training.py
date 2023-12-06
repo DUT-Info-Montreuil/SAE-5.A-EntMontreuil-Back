@@ -13,7 +13,7 @@ class TrainingService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                sql_query = "SELECT T.id, T.name, T.id_Degree, D.name FROM ent.Trainings T INNER JOIN ent.Degrees D ON T.id_Degree = D.id"
+                sql_query = "SELECT T.id, T.name, T.id_Promotion, P.year, T.semester, P.level, D.id, D.name FROM ent.Trainings T INNER JOIN ent.Promotions P ON T.id_Promotion = P.id INNER JOIN ent.Degrees D on P.id_Degree = D.id"
                 
                 # Si id_Degree est passé en paramètre, ajoute une clause WHERE pour filtrer par ID de diplôme
                 if id_Degree is not None:
@@ -30,15 +30,20 @@ class TrainingService:
                         training = Training(
                             id=row[0],
                             name=row[1],
-                            id_Degree=row[2]
+                            id_Promotion=row[2],
+                            semester = row[4]
                         )
                         trainings_list.append(training.jsonify())
                     else:
                         training = TrainingModel(
-                            id=row[0],
-                            name=row[1],
-                            id_Degree=row[2],
-                            degree_name=row[3]
+                            id = row[0],
+                            name = row[1],
+                            id_Promotion = row[2],
+                            semester = row[4],
+                            promotion_year = row[3],
+                            promotion_level = row[5],
+                            id_Degree = row[6],
+                            degree_name = row[7]
                         )
                         trainings_list.append(training.jsonify())
 
@@ -53,8 +58,8 @@ class TrainingService:
     def add_training(self, training):
         try:
             conn = connect_pg.connect()
-            query = "INSERT INTO ent.Trainings (name, id_Degree) VALUES (%s, %s) RETURNING id"
-            data = (training.name, training.id_Degree)
+            query = "INSERT INTO ent.Trainings (name, id_Promotion, semester) VALUES (%s, %s,%s) RETURNING id"
+            data = (training.name, training.id_Promotion, training.semester)
 
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, data)
@@ -81,7 +86,7 @@ class TrainingService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("SELECT * FROM ent.Trainings T INNER JOIN ent.Degrees D ON T.id_Degree = D.id WHERE T.id = %s", (id_training,))
+                cursor.execute("SELECT T.id, T.name, T.id_Promotion, P.year, T.semester, P.level, D.id, D.name FROM ent.Trainings T INNER JOIN ent.Promotions P ON T.id_Promotion = P.id INNER JOIN ent.Degrees D on P.id_Degree = D.id WHERE T.id = %s", (id_training,))
                 row = cursor.fetchone()
                 if row:
                       if output_format == "DTO":
@@ -89,15 +94,20 @@ class TrainingService:
                             training = Training(
                                 id=row[0],
                                 name=row[1],
-                                id_Degree=row[2]
+                                id_Promotion=row[2],
+                                semester = row[4]
                             )
                           
                       else :
-                             training = TrainingModel(
-                                id=row[0],
-                                name=row[1],
-                                id_Degree=row[2],
-                                degree_name=row[3]
+                            training = TrainingModel(
+                                id = row[0],
+                                name = row[1],
+                                id_Promotion = row[2],
+                                semester = row[4],
+                                promotion_year = row[3],
+                                promotion_level = row[5],
+                                id_Degree = row[6],
+                                degree_name = row[7]
                             )
                 
                 return training.jsonify()
@@ -128,8 +138,8 @@ class TrainingService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "UPDATE ent.Trainings SET name = %s, id_Degree = %s WHERE id = %s RETURNING ID",
-                    (training.name, training.id_Degree, training.id)
+                    "UPDATE ent.Trainings SET name = %s, id_Promotion = %s, semester=%s WHERE id = %s RETURNING ID",
+                    (training.name, training.id_Promotion, training.semester, training.id)
                 )
                 updated_row = cursor.fetchone()
                 if updated_row:

@@ -45,6 +45,8 @@ class ResourceService:
                 else:
                     return jsonify({"message": "Ressource non trouvée ou déjà supprimée"}), 404
 
+        except psycopg2.errors.ForeignKeyViolation as e:
+            return jsonify({"message": "Impossible de supprimer la ressource car elle est utilisée dans d'autres cours."}), 400
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression de la ressource : {str(e)}"}), 500
 

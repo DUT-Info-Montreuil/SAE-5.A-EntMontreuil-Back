@@ -10,8 +10,8 @@ class ResourceService:
     def add_resource(self, data):
         try:
             conn = connect_pg.connect()
-            query = "INSERT INTO ent.Resources (name, id_Promotion) VALUES (%s, %s) RETURNING id"
-            values = (data["name"], data["id_Promotion"])
+            query = "INSERT INTO ent.Resources (name, id_Training, color) VALUES (%s, %s,%s) RETURNING id"
+            values = (data["name"], data["id_Training"], data["color"])
 
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
@@ -58,8 +58,8 @@ class ResourceService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "UPDATE ent.Resources SET name = %s, id_Promotion = %s WHERE id = %s RETURNING id",
-                    (data["name"], data["id_Promotion"], data["id"])
+                    "UPDATE ent.Resources SET name = %s, id_Training = %s, color = %s WHERE id = %s RETURNING id",
+                    (data["name"], data["id_Training"],data["color"], data["id"])
                 )
                 updated_resource_id = cursor.fetchone()
 
@@ -86,7 +86,7 @@ class ResourceService:
             with conn.cursor() as cursor:
                 # Requête SQL pour récupérer les informations de la ressource
                 sql_query = """
-                    SELECT R.id, R.name, R.id_Promotion
+                    SELECT R.id, R.name, R.id_Training, R.color
                     FROM ent.Resources R
                     WHERE R.id = %s
                 """
@@ -98,7 +98,8 @@ class ResourceService:
                     resource_info = {
                         "id": row[0],
                         "name": row[1],
-                        "id_Promotion": row[2]
+                        "id_Promotion": row[2],
+                        "color" : row[3]
                     }
                     return jsonify(resource_info), 200
                 else:
@@ -118,7 +119,7 @@ class ResourceService:
             with conn.cursor() as cursor:
                 # Requête SQL pour récupérer toutes les ressources
                 sql_query = """
-                    SELECT R.id, R.name, R.id_Promotion
+                    SELECT R.id, R.name, R.id_Promotion, R.color
                     FROM ent.Resources R
                 """
 
@@ -130,7 +131,8 @@ class ResourceService:
                     resource = {
                         "id": row[0],
                         "name": row[1],
-                        "id_Promotion": row[2]
+                        "id_Promotion": row[2],
+                        "color" : row[3]
                     }
                     resources_list.append(resource)
 

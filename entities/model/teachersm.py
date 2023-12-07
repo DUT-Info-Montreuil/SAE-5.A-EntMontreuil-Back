@@ -36,7 +36,7 @@ class TeachersModel:
                     "id" : self.id_role,
                     "name" : self.role_name,
                 },
-                "user_isTTManager" : self.user_isTTManager
+                "isTTManager" : self.user_isTTManager
                 
             },
                 

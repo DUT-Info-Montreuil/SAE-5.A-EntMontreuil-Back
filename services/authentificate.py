@@ -18,7 +18,7 @@ class AuthentificateService:
             return jsonify({"error" : "Identifiant ou mot de passe incorrect."}) , 400
         
         user = AuthentificateFonction.get_user_by_username(username)
-        password_in_db = user[2]
+        password_in_db = user[1]
         
         password = password.encode('utf-8') 
         password_in_db = password_in_db.encode('utf-8')
@@ -26,7 +26,7 @@ class AuthentificateService:
         if not result :
             return jsonify({"error" : "Identifiant ou mot de passe incorrect."}) , 400
         else :
-            return jsonify({"username" : username, "id_user" : user[0] , "first_name" : user[4] , "last_name" : user[3] , "role" : user[9] , "isAdmin" : user[7]} ) , 200
+            return jsonify({"username" : username, "id_user" : user[0] , "first_name" : user[2] , "last_name" : user[3] , "role" : user[4] , "isAdmin" : user[5] , "isTTManager" : user[6]} ) , 200
         #utilisateur test : 
         #username : oudssi
         #mdp : aldp~o8xUwa8
@@ -37,7 +37,7 @@ class AuthentificateFonction:
     def get_user_by_username(username):
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = "select * from ent.users inner join ent.roles on users.id_role = roles.id WHERE username = %s"
+        query = "select u.id, u.password, u.first_name, u.last_name, r.name, u.isAdmin, u.isTTManager from ent.users u inner join ent.roles r on u.id_role = r.id WHERE username = %s"
         cursor.execute(query, (username,))
         user = cursor.fetchone()
         conn.close()

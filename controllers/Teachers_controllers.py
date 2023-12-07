@@ -1,7 +1,9 @@
 from flask import request, jsonify, Blueprint
 from services.teachers import TeachersService 
 import json
+from flask_jwt_extended import get_jwt_identity , jwt_required
 from decorators.teachers_decorator import TeachersDecorators
+from services.teachers import TeachersFonction
 
 # Création d'un Blueprint pour les routes liées
 teachers_bp = Blueprint('teachers', __name__)
@@ -191,6 +193,7 @@ def update_teachers(id_teacher):
 #-----------delete teachers--------------
 # Définissez la route pour supprimer un enseignant
 @teachers_bp.route('/teachers/<int:id_teacher>', methods=['DELETE'])
+@jwt_required()
 def delete_teachers(id_teacher):
     """
     Delete a specific teacher by ID.
@@ -212,6 +215,10 @@ def delete_teachers(id_teacher):
         description: Server error in case of a problem during teacher deletion.
     """
     try:
+        current_user = get_jwt_identity()
+        id_user = TeachersFonction.get_user_id_with_id_teacher(id_teacher)
+        if (current_user["id"] == id_user) :
+          return jsonify({'error':"Vous ne pouvez supprimer cette utilisateur"}), 403
         # Utilisez la fonction du service pour supprimer un enseignant
         message, status_code = teachers_service.delete_teachers(id_teacher)
 

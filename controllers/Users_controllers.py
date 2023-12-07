@@ -309,6 +309,7 @@ def update_user(id_user):
       
 #------------delete user-------------
 @users_bp.route('/users/<int:id_user>', methods=['DELETE'])
+@jwt_required()
 def delete_user(id_user):
     """
     Delete user by ID.
@@ -329,7 +330,12 @@ def delete_user(id_user):
       500:
         description: Server error in case of a problem during user deletion.
     """
+    
     try:
+        current_user = get_jwt_identity()
+        if (current_user["id"] == id_user) :
+          return jsonify({'error':"Vous ne pouvez supprimer cette utilisateur"}), 403
+        
         response , https_status = UsersFonction.remove_users(id_user)
         return response , https_status
     except ValidationError as e:

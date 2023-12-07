@@ -40,34 +40,6 @@ def get_all_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
       
-      
-@users_bp.route('/users/user', methods=['GET'])
-def get_all_users_not_teacher_student():
-    """
-    Get a list of all users.
-    ---
-    tags:
-      - Users
-    parameters:
-      - name: output_format
-        in: query
-        description: Output format (default is "dto").
-        required: false
-        type: string
-        default: "dto"
-        enum: ["dto", "model"]
-    responses:
-      200:
-        description: List of all users retrieved from the database.
-      500:
-        description: Server error in case of a problem during user retrieval.
-    """
-    try:
-        output_format = request.args.get('output_format', default='dto')
-        all_users = users_service.get_users_not_teacher_student(output_format).json
-        return jsonify(all_users)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
     
 #------------get one user with id-------------
 @users_bp.route('/users/<int:id>', methods=['GET'])
@@ -227,9 +199,9 @@ def get_user_info():
     """
     try:
         current_user = get_jwt_identity()
-        if current_user['role'] == 'student' :
+        if current_user['role'] == 'étudiant' :
           user = StudentsServices.get_student(StudentsServices, current_user['username'])
-        elif current_user['role'] == 'teacher' :
+        elif current_user['role'] == 'enseignant' :
           user = TeachersService.get_teacher(TeachersService, current_user['username'] , 'model')
         else: 
           user = users_service.get_users_with_id(current_user['id'] ,'model')

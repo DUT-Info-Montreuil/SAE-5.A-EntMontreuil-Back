@@ -121,7 +121,7 @@ class StudentsServices :
             return jsonify({"error": f"email {data.get('email')} already exist"}) , 400
         
         #Attribution du role student
-        user_data["role"] = "student"
+        user_data["role"] = "étudiant"
         
         # Si apprentice est mentionner sinon valeur par defaut a false
         if "apprentice" in data :
@@ -311,7 +311,7 @@ class StudentsFonction :
                 "first_name" : data["first_name"],
                 "username" : data["username"]
             }
-            user_data["role"] = "student"
+            user_data["role"] = "étudiant"
             student_data = {
                 "apprentice" : False,
                 "ine" : data["ine"],

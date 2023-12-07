@@ -15,7 +15,7 @@ class TeachersService :
     ############  TEACHERS/GET ################
     def get_teachers(self, output_format):
         """ Return all teachers in JSON format """
-        query = "select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role order by t.id asc"
+        query = "select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name, u.isTTManager from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role order by t.id asc"
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         returnStatement = []
@@ -37,7 +37,7 @@ class TeachersService :
 
         data = datas["datas"]
         user_data = data["user"]
-        user_data["role"] = "teacher"
+        user_data["role"] = "enseignant"
         
         if TeachersFonction.field_exists('initial', data.get("initial")) :
             return jsonify({"error": f"Les initials '{data.get('initial')}' sont déjà utilisé"}), 400
@@ -156,7 +156,7 @@ class TeachersService :
                 where_clause = "u.username = %s"
             conn = connect_pg.connect()
             cursor = conn.cursor()
-            query = f"select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role where {where_clause}"
+            query = f"select t.id, initial, desktop, id_User, u.last_name, u.first_name, u.username, u.email, u.isAdmin, r.id, r.name, u.isTTManager from ent.teachers t inner join ent.users u on u.id = t.id_User inner join ent.roles r on r.id = u.id_role where {where_clause}"
             cursor.execute(query, (teacher_identifier,))
             row = cursor.fetchone()
             conn.commit()

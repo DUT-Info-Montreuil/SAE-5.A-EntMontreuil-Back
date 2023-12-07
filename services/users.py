@@ -18,41 +18,23 @@ class UsersServices :
     ############ GET /USERS ################
     def get_users(self , output_format):
         """ Return all users in JSON format """
-        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id  order by u.id "
+        query = "select u.id, password, username, last_name, first_name , email, r.id,isAdmin, isTTManager, name from ent.users u inner join ent.roles r on u.id_role = r.id  order by u.id "
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
         users = []
 
         for row in rows:
             if output_format == 'dto' :
-                user = Users(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+                user = Users(id = row[0], password=row[1] ,username = row[2], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7], isTTManager=row[8])
             elif output_format == 'model' :
-                user = UsersModel(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+                user = UsersModel(id = row[0], password=row[1], username = row[2], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7],isTTManager=row[8] ,role_name=row[9])
             else :
                 raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
             users.append(user.jsonify())
         connect_pg.disconnect(conn)
         return jsonify(users)
     
-    
-        ############ GET /USERS ################
-    def get_users_not_teacher_student(self , output_format):
-        """ Return all users in JSON format """
-        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id Where r.name not in ('teacher','student') order by u.id "
-        conn = connect_pg.connect()
-        rows = connect_pg.get_query(conn, query)
-        users = []
 
-        for row in rows:
-            if output_format == 'dto' :
-                user = Users(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
-            elif output_format == 'model' :
-                user = UsersModel(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
-            else :
-                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
-            users.append(user.jsonify())
-        connect_pg.disconnect(conn)
-        return jsonify(users)
 
     ############ GET /USERS/<int:id_user> ################
     def get_users_with_id(self, id_user, output_format):
@@ -62,13 +44,13 @@ class UsersServices :
             raise ValidationError(f"id_user : '{id_user}' not exists")
         conn = connect_pg.connect()
         cursor = conn.cursor()
-        query = "select * from ent.users u inner join ent.roles r on u.id_role = r.id where u.id = %s"
+        query = "select u.id, password, username, last_name, first_name , email, r.id,isAdmin, isTTManager, name from ent.users u inner join ent.roles r on u.id_role = r.id where u.id = %s"
         cursor.execute(query, (id_user,))
         row = cursor.fetchone()
         if output_format == 'dto' :
-            user = Users(id = row[0], password=row[2], username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7])
+            user = Users(id = row[0], password=row[1] ,username = row[2], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7], isTTManager=row[8])
         elif output_format == 'model' :
-            user = UsersModel(id = row[0], password=row[2] ,username = row[1], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] ,role_name=row[9], isAdmin=row[7])
+            user = UsersModel(id = row[0], password=row[1], username = row[2], last_name = row[3], first_name=row[4], email=row[5] , id_Role=row[6] , isAdmin=row[7],isTTManager=row[8] ,role_name=row[9])
         else :
             raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         conn.commit()
@@ -82,7 +64,7 @@ class UsersServices :
         try:
             if not RolesFonction.name_exists(data["role"]) :
                 return jsonify({"error": f"Le rôle '{data.get('role')}' n'existe pas, veuillez choisir un rôle présenté dans le menu déroulant."}), 400
-            if data['role'] == 'student' or data['role'] == 'teacher' :
+            if data['role'] == 'enseignant' or data['role'] == 'étudiant' :
                 return jsonify({"error": f"Vous ne prouvez pas ajouté d'étudiant ou d'enseignant via ce formulaire. Pour ajouter un étudiant ou un enseignant veuillez aller dans l'onglet ADMINISTRATEUR et sélectionner l'entité que vous voulez ajouter."}), 400
             return UsersFonction.add_users(data) 
         except Exception as e:
@@ -184,6 +166,8 @@ class UsersFonction :
             # isAdmin false par defaut
             if "isAdmin" not in data :
                 data["isAdmin"] = False
+            if "isTTManager" not in data :
+                data["isTTManager"] = False
              
             id_role = UsersFonction.get_role_id_by_name(data["role"])
             del data["role"]  # Supprimez le champ du nom du rôle

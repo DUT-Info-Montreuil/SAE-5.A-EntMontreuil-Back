@@ -19,6 +19,7 @@ schema_add_teacher = {
                         "email" : {"type": "string", "minLength": 1},
                         "password" : {"type": "string", "minLength": 1},
                         "isAdmin": {"type": "boolean"},
+                        "isTTManager": {"type": "boolean"}
                         
                     },
                     "required": ["first_name", "last_name", "username", "email"],  # Champs obligatoires dans 'user'
@@ -53,7 +54,8 @@ schema_update_teacher = {
                         "email" : {"type": "string", "minLength": 1},
                         "password" : {"type": "string", "minLength": 1},
                         "oldUsername" : {"type": "string"},
-                        "isAdmin": {"type": "boolean"}
+                        "isAdmin": {"type": "boolean"},
+                        "isTTManager": {"type": "boolean"}
                     },
                     "additionalProperties": False  
                 },

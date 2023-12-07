@@ -1,5 +1,5 @@
 class Users:
-    def __init__(self, id, password, username, last_name, first_name, email , id_Role , isAdmin):
+    def __init__(self, id, password, username, last_name, first_name, email , id_Role , isAdmin, isTTManager):
         self.id = id
         self.password = password
         self.username = username
@@ -8,6 +8,7 @@ class Users:
         self.email = email
         self.id_Role = id_Role
         self.isAdmin = isAdmin
+        self.isTTManager = isTTManager
 
     def __str__(self):
         return f"User id: {self.id}, username: {self.username}"
@@ -22,4 +23,5 @@ class Users:
             "email": self.email,
             "id_Role" : self.id_Role,
             "isAdmin" : self.isAdmin,
+            "isTTManager" : self.isTTManager
         }

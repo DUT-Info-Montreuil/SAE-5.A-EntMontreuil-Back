@@ -130,9 +130,6 @@ def add_training():
         json_data = request.json
         training_data = json_data['datas']
 
-        # Valide le nom du parcours et s'assure qu'il n'est pas vide
-        if not training_data['name']:
-          return jsonify({"message": "Le nom du parcours est requis"}), 400
         # Valide que la formation spécifiée existe
         if not connect_pg.does_entry_exist("Degrees", training_data['id_Degree']):
             return jsonify({"message": "La formation spécifiée n'existe pas."}), 400
@@ -141,7 +138,7 @@ def add_training():
         training = Training(
             id=0,
             name=training_data["name"],
-            id_Degree=training_data["id_Degree"]
+            id_Promotion=training_data["id_Promotion"]
         )
 
         # Appelle le service pour ajouter la formation
@@ -271,7 +268,7 @@ responses:
         training = Training(
             id=id_training,
             name=training_data['name'],
-            id_Degree=training_data['id_Degree']
+            id_Promotion=training_data['id_Promotion']
         )
         message= training_service.update_training(training)
         return jsonify(message)

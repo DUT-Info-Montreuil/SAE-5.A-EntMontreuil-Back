@@ -518,6 +518,16 @@ class UsersFonction :
         conn.commit()  # Ne pas oublier de valider les changements dans la base de données
         conn.close()
 
+    def delete_user_notifications(user_id):
+        delete_query = """
+        DELETE FROM ent.notifications
+        WHERE id_user = %s
+        """
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        cursor.execute(delete_query, (user_id,))
+        conn.commit()  # Valider les changements
+        conn.close()
 
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :

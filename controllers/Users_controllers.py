@@ -410,3 +410,18 @@ def get_user_notifications():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+      
+@users_bp.route('/user/notifications', methods=['DELETE'])
+@jwt_required()
+def delete_all_user_notifications():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+
+        UsersFonction.delete_user_notifications(user_id)
+
+        return jsonify({'message': 'Toutes les notifications ont été supprimées.'}), 200
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

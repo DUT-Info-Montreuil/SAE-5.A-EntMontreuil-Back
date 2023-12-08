@@ -1,11 +1,11 @@
 class ResourceModel:
-    def __init__(self, id, name, id_Training, color, training_name, training_sermester ):
+    def __init__(self, id, name, id_Training, color, training_name, training_semester ):
         self.id = id
         self.name = name
         self.id_Training = id_Training
         self.color = color
         self.training_name = training_name
-        self.training_sermester = training_sermester
+        self.training_sermester = training_semester
 
     def __str__(self):
         return f"Resource id: {self.id}, name: {self.name}"

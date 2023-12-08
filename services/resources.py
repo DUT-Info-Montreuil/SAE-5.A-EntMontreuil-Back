@@ -119,10 +119,11 @@ class ResourceService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                # Requête SQL pour récupérer toutes les ressources
+                # Updated SQL query to join Resources with Trainings
                 sql_query = """
-                    SELECT R.id, R.name, R.id_Training, R.color
+                    SELECT R.id, R.name, R.id_Training, R.color, T.name, T.semester
                     FROM ent.Resources R
+                    LEFT JOIN ent.Trainings T ON R.id_Training = T.id
                 """
 
                 cursor.execute(sql_query)
@@ -134,7 +135,9 @@ class ResourceService:
                         "id": row[0],
                         "name": row[1],
                         "id_Training": row[2],
-                        "color" : row[3]
+                        "color": row[3],
+                        "training_name": row[4],
+                        "training_semester": row[5]
                     }
                     resources_list.append(resource)
 
@@ -146,3 +149,4 @@ class ResourceService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+

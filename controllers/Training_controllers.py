@@ -138,7 +138,8 @@ def add_training():
         training = Training(
             id=0,
             name=training_data["name"],
-            id_Promotion=training_data["id_Promotion"]
+            id_Promotion=training_data["id_Promotion"],
+            semester=training_data["semester"]
         )
 
         # Appelle le service pour ajouter la formation
@@ -268,7 +269,8 @@ responses:
         training = Training(
             id=id_training,
             name=training_data['name'],
-            id_Promotion=training_data['id_Promotion']
+            id_Promotion=training_data['id_Promotion'],
+            semester=training_data["semester"]
         )
         message= training_service.update_training(training)
         return jsonify(message)

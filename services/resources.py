@@ -123,7 +123,7 @@ class ResourceService:
                 sql_query = """
                     SELECT R.id, R.name, R.id_Training, R.color, T.name, T.semester
                     FROM ent.Resources R
-                    LEFT JOIN ent.Trainings T ON R.id_Training = T.id
+                    LEFT JOIN ent.Trainings T ON R.id_Training = T.id order by R.id
                 """
 
                 cursor.execute(sql_query)

@@ -1,5 +1,5 @@
 class Course:
-    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom):
+    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Training, id_Promotion, id_Teacher, id_classroom):
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
@@ -8,6 +8,7 @@ class Course:
         self.id_Resource = id_Resource
         self.id_Tp = id_Tp
         self.id_Td = id_Td
+        self.id_Training = id_Training
         self.id_Promotion = id_Promotion
         self.id_Teacher = id_Teacher
         self.id_classroom = id_classroom
@@ -28,4 +29,5 @@ class Course:
             "id_Promotion": self.id_Promotion,
             "id_Teacher": self.id_Teacher,
             "id_classroom": self.id_classroom,
+            "id_Training" : self.id_Training
         }

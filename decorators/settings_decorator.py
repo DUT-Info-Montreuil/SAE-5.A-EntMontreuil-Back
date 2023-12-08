@@ -6,11 +6,10 @@ from jsonschema import validate
 schema_role = {
     "type": "object",
     "properties": {
-        "id_user": {"type": "integer", "minimum": 1},
         "notification_mail": {"type": "boolean"},
         "notification_website": {"type": "boolean"}
     },
-    "required": ["id_user","notification_mail","notification_website"],  # Champs obligatoires dans le schéma global
+    "required": ["notification_mail","notification_website"],  # Champs obligatoires dans le schéma global
     "additionalProperties": False  
 }
 

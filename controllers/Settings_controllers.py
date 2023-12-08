@@ -25,7 +25,14 @@ def update_settings(user_id):
         description: JSON data for updating user settings.
         required: true
         schema:
-          $ref: '#/definitions/Settings'
+          type: object
+          properties:
+            notification_mail:
+              type: boolean
+              example: true
+            notification_website:
+              type: boolean
+              example: true
     responses:
       200:
         description: User settings successfully updated.
@@ -64,25 +71,5 @@ def get_settings(user_id):
     try:
         user_settings = settings_service.get_settings(user_id)
         return user_settings
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# une route pour obtenir tous les paramètres
-@settings_bp.route('/settings', methods=['GET'])
-def get_all_settings():
-    """
-    Get all user settings.
-    ---
-    tags:
-      - Settings
-    responses:
-      200:
-        description: List of all user settings retrieved from the database.
-      500:
-        description: Server error in case of a problem during retrieval.
-    """
-    try:
-        all_settings = settings_service.get_all_settings()
-        return all_settings
     except Exception as e:
         return jsonify({'error': str(e)}), 500

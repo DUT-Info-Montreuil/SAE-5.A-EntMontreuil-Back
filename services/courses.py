@@ -9,6 +9,8 @@ class CourseService:
     def get_course_by_id(self, course_id):
         try:
             conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("Courses", 'id', course_id) :
+                return {"error": f"l'id : {course_id} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
@@ -98,6 +100,9 @@ class CourseService:
     #------------------get by classroom!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------
     def get_course_by_classroom(self, classroom_name):
         try:
+            
+            if not CoursesFonction.field_exist("Classroom", 'name', classroom_name) :
+                return {"error": f"la nom : {classroom_name} n'existe pas"}, 400
             response, status = CoursesFonction.get_all_id_courses_with_classroom_name(classroom_name)
             if status == 200 : 
                 all_id_courses = response["courses"]
@@ -115,6 +120,8 @@ class CourseService:
     def get_course_by_promotion(self, promotion_year):
         try:
             conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("Promotions", 'year', promotion_year) :
+                return {"error": f"la promotion de : {promotion_year} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
@@ -208,6 +215,8 @@ class CourseService:
     def get_course_by_training(self,training_id):
         try:
             conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("Trainings", 'id', training_id) :
+                return {"error": f"l'id : {training_id} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 # Supposons que la date soit au format 'YYYY-MM-DD'
                 sql_query = '''
@@ -252,6 +261,8 @@ class CourseService:
     #------------------get by teacher!!!!!!!!!!!!!!!-----------------------
     def get_course_by_teacher(self, teacher_username):
         try:
+            if not CoursesFonction.teacher_username_exist(teacher_username) :
+                return {"error": f"l'identifiant : {teacher_username} n'existe pas"}, 400
             response, status = CoursesFonction.get_all_id_courses_with_teacher_username(teacher_username)
             if status == 200 : 
                 all_id_courses = response["courses"]
@@ -271,6 +282,8 @@ class CourseService:
     def get_course_by_td(self, id_td):
         try:
             conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("TD", 'id', id_td) :
+                return {"error": f"l'id' : {id_td} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
@@ -316,6 +329,8 @@ class CourseService:
     def get_course_by_tp(self, id_tp):
         try:
             conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("TP", 'id', id_tp) :
+                return {"error": f"l'id' : {id_tp} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
@@ -606,6 +621,7 @@ def _format_courses(self, rows):
 
 
 class CoursesFonction : 
+    #---------------recupere les information du teacher d'un cour
     def get_all_teacher_courses_with_id_courses (id_courses) : 
         try:
             conn = connect_pg.connect()
@@ -640,7 +656,7 @@ class CoursesFonction :
         finally:
             conn.close()
             
-            
+    #---------------recupere les information d'une classe selon un cour
     def get_all_classroom_courses_with_id_courses (id_courses) : 
         try:
             conn = connect_pg.connect()
@@ -673,7 +689,7 @@ class CoursesFonction :
         finally:
             conn.close()
             
-            
+    #---------------recupere les id_courses d'un teacher selon son username
     def get_all_id_courses_with_teacher_username (teacher_username) : 
         try:
             conn = connect_pg.connect()
@@ -701,7 +717,7 @@ class CoursesFonction :
         finally:
             conn.close()
             
-            
+    #---------------recupere les id_courses d'une salle selon son nom 
     def get_all_id_courses_with_classroom_name (classroom_name) : 
         try:
             conn = connect_pg.connect()
@@ -723,6 +739,48 @@ class CoursesFonction :
                     return {"courses": courses_list}, 200
                 else:
                     return {"message": f"Aucune cour n'est attribuée dans la salle {classroom_name}"},400
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+        
+    #---------------permet de savoir si un champ existe dans une table        
+    def field_exist (table, field, value) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = f"""
+                    SELECT COUNT(*)
+                    FROM ent.{table} 
+                    WHERE {field} = %s
+                """
+
+                cursor.execute(sql_query, (value,))
+                row = cursor.fetchone()
+                return row[0]>0
+
+
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+            
+    #---------------permet de savoir si le username d'un teaccher existe        
+    def teacher_username_exist (teacher_username) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                    SELECT COUNT(*)
+                    FROM ent.Teachers t INNER JOIN ent.Users u on u.id = t.id_User
+                    WHERE u.username = %s
+                """
+
+                cursor.execute(sql_query, (teacher_username,))
+                row = cursor.fetchone()
+                return row[0]>0
+
+
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
         finally:

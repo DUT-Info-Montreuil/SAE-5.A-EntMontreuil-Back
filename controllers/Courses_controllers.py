@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.courses import CourseService
 from datetime import datetime, timedelta
+from decorators.courses_decorator import CoursesDecorators
 
 courses_bp = Blueprint("courses_bp", __name__)
 course_service = CourseService() 
@@ -68,6 +69,7 @@ def get_course_by_tp(id_tp):
 
 ##-----------------POST----------------
 @courses_bp.route("/courses", methods=["POST"])
+@CoursesDecorators.validate_json_add_course
 def add_course():
     data = request.get_json()
     return course_service.add_course(data)

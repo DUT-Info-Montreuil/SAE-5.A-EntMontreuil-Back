@@ -5,6 +5,7 @@ from entities.model.coursesm import CourseModel
 from datetime import datetime, timedelta
 
 class CourseService:
+    ####################### GETTER ######################
     #------------------get by id-----------------------
     def get_course_by_id(self, course_id):
         try:
@@ -262,7 +263,7 @@ class CourseService:
     def get_course_by_teacher(self, teacher_username):
         try:
             if not CoursesFonction.teacher_username_exist(teacher_username) :
-                return {"error": f"l'identifiant : {teacher_username} n'existe pas"}, 400
+                return {"error": f"l'identifiant : {teacher_usernameesz} n'existe pas"}, 400
             response, status = CoursesFonction.get_all_id_courses_with_teacher_username(teacher_username)
             if status == 200 : 
                 all_id_courses = response["courses"]
@@ -413,42 +414,69 @@ class CourseService:
         finally:
             conn.close()
 
+    ########################### POST ###################################
     #----------------------add courses----------------------------------
     def add_course(self, data):
         try:
             conn = connect_pg.connect()
+            
+            fields_present = ["id_tp", "id_td", "id_promotion", "id_training"]
+            present_count = sum(1 for field in fields_present if field in data)
+
+            if present_count != 1:
+                return {"error": "Un seul champ parmi [ id_tp - id_td - id_promotion - id_training ] doit être présent"}, 400
+        
+            if 'id_tp' in data :
+                if not CoursesFonction.field_exist('TP', 'id' , data["id_tp"]) :
+                    return {"error": f"l'id_tp {data.get('id_tp')} n'existe pas"}, 400
+            if 'id_td' in data :
+                if not CoursesFonction.field_exist('TD', 'id' , data["id_td"]) :
+                    return {"error": f"l'id_td {data.get('id_td')} n'existe pas"}, 400
+            if 'id_promotion' in data :
+                if not CoursesFonction.field_exist('Promotions', 'id' , data["id_promotion"]) :
+                    return {"error": f"l'id_promotion {data.get('id_promotion')} n'existe pas"}, 400
+            if 'id_training' in data :
+                if not CoursesFonction.field_exist('Trainings', 'id' , data["id_training"]) :
+                    return {"error": f"l'id_training {data.get('id_training')} n'existe pas"}, 400
+            if not CoursesFonction.field_exist('Resources', 'id' , data["id_resource"]) :
+                    return {"error": f"l'id_resource {data.get('id_resource')} n'existe pas"}, 400
+                
+            time_format = '%H:%M'  # Format HH-MM
+            data["startTime"] = datetime.strptime(data.get('startTime'), '%H:%M').strftime(time_format)
+            
+            data['endTime'] = datetime.strptime(data.get('endTime'), '%H:%M').strftime(time_format)
+            data['dateCourse'] = datetime.strptime(data.get('dateCourse'), '%Y-%m-%d').strftime('%Y-%m-%d')
+            
+            if not CoursesFonction.check_course_overlap(data) :
+                return {"error": f"Certains cours sont déjà présents pour la plage horaire entrée"}, 400
+            
+            # Vérification des champs présents et validation réussie, procédez à l'insertion
             query = """
-                INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Training)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """
-            values = (
-                data["startTime"],
-                data["endTime"],
-                data["dateCourse"],
-                data["control"],
-                data["resource_id"],
-                data["tp_id"],
-                data["td_id"],
-                data["promotion_id"],
-                data["teacher_id"],
-                data["classroom_id"]
-            )
+            
+            
+            id_Tp = data.get('id_tp') if 'id_tp' in data else None
+            id_Td = data.get('id_td') if 'id_td' in data else None
+            id_Promotion = data.get('id_promotion') if 'id_promotion' in data else None
+            id_Training = data.get('id_training') if 'id_training' in data else None
+            cursor = conn.cursor()
+            cursor.execute(query, (data.get('startTime'), data.get('endTime'), data.get('dateCourse'), data.get('control'), data.get('id_resource'), id_Tp, id_Td, id_Promotion, id_Training))
+            new_course_id = cursor.fetchone()[0] 
+            conn.commit()
 
-            with conn, conn.cursor() as cursor:
-                cursor.execute(query, values)
-                inserted_course_id = cursor.fetchone()[0]
-
-            return jsonify({
-                "message": f"Cours ajouté avec succès, ID : {inserted_course_id}"
-            }), 200
+            if new_course_id :
+                return {"message": "Cours ajouté avec succès"}, 200
+            else :
+                return {"error": "Une erreur est survenue lors de l'ajout du cours"}, 400
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de l'ajout du cours : {str(e)}"}), 500
 
         finally:
-            if conn:
-                connect_pg.disconnect(conn)
+            conn.close()
 
     def update_course(self, data):
         try:
@@ -565,58 +593,25 @@ class CourseService:
             finally:
                 conn.close()
 
-def get_courses_by_day(self, target_date):
-        try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                    SELECT * FROM ent.Courses
-                    WHERE dateCourse = %s
-                """
-                cursor.execute(sql_query, (target_date,))
-                rows = cursor.fetchall()
-                courses_list = self._format_courses(rows)
-                return courses_list, 200
-        except Exception as e:
-            return {"message": f"Erreur lors de la récupération des cours pour la journée : {str(e)}"}, 500
-        finally:
-            conn.close()
 
-def get_courses_by_week(self, target_week_start_date):
-    try:
-        conn = connect_pg.connect()
-        with conn.cursor() as cursor:
-            sql_query = """
-                SELECT * FROM ent.Courses
-                WHERE dateCourse >= %s AND dateCourse < %s
-            """
-            cursor.execute(sql_query, (target_week_start_date, target_week_start_date + 7))
-            rows = cursor.fetchall()
-            courses_list = self._format_courses(rows)
-            return courses_list, 200
-    except Exception as e:
-        return {"message": f"Erreur lors de la récupération des cours pour la semaine : {str(e)}"}, 500
-    finally:
-        conn.close()
-
-def _format_courses(self, rows):
-    courses_list = []
-    for row in rows:
-        course = {
-            "id": row[0],
-            "startTime": str(row[1]),
-            "endTime": str(row[2]),
-            "dateCourse": str(row[3]),
-            "control": row[4],
-            "resource_id": row[5],
-            "tp_id": row[6],
-            "td_id": row[7],
-            "promotion_id": row[8],
-            "teacher_id": row[9],
-            "classroom_id": row[10]
-        }
-        courses_list.append(course)
-    return courses_list            
+    def _format_courses(self, rows):
+        courses_list = []
+        for row in rows:
+            course = {
+                "id": row[0],
+                "startTime": str(row[1]),
+                "endTime": str(row[2]),
+                "dateCourse": str(row[3]),
+                "control": row[4],
+                "resource_id": row[5],
+                "tp_id": row[6],
+                "td_id": row[7],
+                "promotion_id": row[8],
+                "teacher_id": row[9],
+                "classroom_id": row[10]
+            }
+            courses_list.append(course)
+        return courses_list            
 
 
 
@@ -785,3 +780,34 @@ class CoursesFonction :
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
         finally:
             conn.close()
+            
+            
+    def check_course_overlap( data):
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Convertir les dates et heures en objets datetime pour la comparaison
+            start_time = datetime.strptime(data['startTime'], '%H:%M').time()
+            end_time = datetime.strptime(data['endTime'], '%H:%M').time()
+            date_course = datetime.strptime(data['dateCourse'], '%Y-%m-%d').date()
+
+            query = """
+                SELECT * FROM ent.Courses
+                WHERE dateCourse = %s
+                AND (
+                    (startTime < %s AND endTime > %s)
+                    OR (startTime < %s AND endTime > %s)
+                    OR (startTime = %s AND endTime = %s)
+                )
+            """
+
+            cursor.execute(query, (date_course, start_time, start_time, end_time, end_time, start_time, end_time))
+            overlapping_courses = cursor.fetchall()
+
+            if not overlapping_courses :
+                return True
+            return False
+
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500

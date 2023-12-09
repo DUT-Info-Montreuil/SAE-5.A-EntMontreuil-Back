@@ -1,6 +1,6 @@
 class CourseModel:
-    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom, id_Training, training_name, training_semester,
-                 resource_name, tp_name, td_name, promotion_year, promotion_level, teacher_initial, classroom_name, resource_color, classroom_capacity, teacher_username):
+    def __init__(self, id, startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Training, training_name, training_semester,
+                 resource_name, tp_name, td_name, promotion_year, promotion_level, resource_color, teacher, classroom):
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
@@ -10,8 +10,6 @@ class CourseModel:
         self.id_Tp = id_Tp
         self.id_Td = id_Td
         self.id_Promotion = id_Promotion
-        self.id_Teacher = id_Teacher
-        self.id_classroom = id_classroom
         self.id_Training = id_Training
 
         # resource
@@ -27,13 +25,12 @@ class CourseModel:
         # promotion
         self.promotion_year = promotion_year
         self.promotion_level = promotion_level
+        
         # teacher
-        self.teacher_initial = teacher_initial
-        self.teacher_username = teacher_username
+        self.teacher = teacher
 
         # classroom
-        self.classroom_name = classroom_name
-        self.classroom_capacity = classroom_capacity
+        self.classroom = classroom
         
         # training
         self.training_name = training_name
@@ -43,6 +40,22 @@ class CourseModel:
         return f"Course id: {self.id}, startTime: {self.startTime}, endTime: {self.endTime}"
 
     def jsonify(self):
+        teacher_list=[]
+        for t in self.teacher :
+            teacher_list.append({
+                "id" : t["id"],
+                "first_name" : t["first_name"],
+                "last_name" : t["last_name"],
+                "username" : t["username"],
+                "initial" : t["initial"]
+            })
+        classroom_list=[]
+        for c in self.classroom :
+            classroom_list.append({
+                "id" : c["id"],
+                "name" : c["name"],
+                "capacity" : c["capacity"]
+            })
         return {
             "courses" : {
                 "id": self.id,
@@ -69,16 +82,8 @@ class CourseModel:
                 "year": self.promotion_year,
                 "level" : self.promotion_level,
             },
-            "teacher" : {
-                "id": self.id_Teacher,
-                "initial": self.teacher_initial,
-                "username" : self.teacher_username
-            },
-            "classroom" : {
-                "id": self.id_classroom,
-                "name": self.classroom_name,
-                "capacity" : self.classroom_capacity,
-            },
+            "teacher" : teacher_list,
+            "classroom" : classroom_list,
             "training" : {
                 "id" : self.id_Training,
                 "semester" : self.training_semester,

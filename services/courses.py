@@ -11,18 +11,13 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     WHERE C.id = %s
                 """
 
@@ -30,8 +25,23 @@ class CourseService:
                 row = cursor.fetchone()
 
                 if row:
-                    course_info = CourseModel(*row).jsonify()
-                    return  {"courses": course_info}, 200
+                    
+                    
+                    teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(course_id)
+                    if status_code == 200:
+                        teachers = teachers_result["teachers"]
+                    else:
+                        teachers = [] 
+                        
+                    classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(course_id)
+                    if status_code == 200:
+                        classrooms = classrooms_result["classrooms"]
+                    else:
+                        classrooms = [] 
+                        
+                    course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                    
+                    return  {"courses": course_info.jsonify()}, 200
                 else:
                     return {"courses": []}, 200
         except Exception as e:
@@ -45,18 +55,13 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     WHERE C.dateCourse = %s
                 """
 
@@ -67,7 +72,20 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -77,61 +95,35 @@ class CourseService:
         finally:
             conn.close()
 
-    #------------------get by classroom-----------------------
-    def get_course_by_classroom(self, classroom):
+    #------------------get by classroom!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------
+    def get_course_by_classroom(self, classroom_name):
         try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
-                    FROM ent.Courses C
-                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
-                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
-                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
-                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
-                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
-                    WHERE CL.name = %s
-                """
-
-                cursor.execute(sql_query, (classroom,))
-                rows = cursor.fetchall()
-
-                if rows :
-                    courses_list = []
-
-                    for row in rows:
-                        course_info = CourseModel(*row)
-                        courses_list.append(course_info.jsonify())
-                    return {"courses": courses_list}, 200
-                else:
-                    return {"courses": []}, 200
+            response, status = CoursesFonction.get_all_id_courses_with_classroom_name(classroom_name)
+            if status == 200 : 
+                all_id_courses = response["courses"]
+            else : 
+                return {"courses": []}, 200
+            courses_info = []
+            for id_course in all_id_courses:
+                course_details, status_code = self.get_course_by_id(id_course)
+                if status_code == 200:
+                    courses_info.append(course_details["courses"])
+            return {"courses": courses_info}, 200
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
-        finally:
-            conn.close()
     #------------------get by promotion-----------------------
     def get_course_by_promotion(self, promotion_year):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     WHERE P.year = %s
                 """
 
@@ -142,7 +134,19 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -158,22 +162,17 @@ class CourseService:
             with conn.cursor() as cursor:
                 # Supposons que la date soit au format 'YYYY-MM-DD'
                 sql_query = '''
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                            C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                            CL.capacity, U.username
-                            FROM ent.Courses C
-                            LEFT JOIN ent.Resources R ON C.id_Resource = R.id
-                            LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
-                            LEFT JOIN ent.TD TD ON C.id_Td = TD.id
-                            LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
-                            LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                            LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                            LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                            LEFT JOIN ent.Users U ON T.id_User = U.id
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                    FROM ent.Courses C
+                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
+                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
+                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
+                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
                     WHERE C.dateCourse >= %s AND C.dateCourse <= %s
                 '''
             
-                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                start_date = datetime.strptime(start_date, '%d-%m-%Y')
                 end_date = start_date + timedelta(days=4)
                 
                 cursor.execute(sql_query, (start_date, end_date))
@@ -183,7 +182,19 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -200,18 +211,13 @@ class CourseService:
             with conn.cursor() as cursor:
                 # Supposons que la date soit au format 'YYYY-MM-DD'
                 sql_query = '''
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                            C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                            CL.capacity, U.username
-                            FROM ent.Courses C
-                            LEFT JOIN ent.Resources R ON C.id_Resource = R.id
-                            LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
-                            LEFT JOIN ent.TD TD ON C.id_Td = TD.id
-                            LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
-                            LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                            LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                            LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                            LEFT JOIN ent.Users U ON T.id_User = U.id
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                    FROM ent.Courses C
+                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
+                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
+                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
+                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
                     WHERE tr.id = %s
                 '''
                 
@@ -222,7 +228,19 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -231,43 +249,23 @@ class CourseService:
             return jsonify({'error': str(e)}), 500
         finally:
             conn.close()
-    #------------------get by teacher-----------------------
+    #------------------get by teacher!!!!!!!!!!!!!!!-----------------------
     def get_course_by_teacher(self, teacher_username):
         try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
-                    FROM ent.Courses C
-                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
-                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
-                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
-                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
-                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
-                    WHERE U.username = %s
-                """
-
-                cursor.execute(sql_query, (teacher_username,))
-                rows = cursor.fetchall()
-
-                if rows :
-                    courses_list = []
-
-                    for row in rows:
-                        course_info = CourseModel(*row)
-                        courses_list.append(course_info.jsonify())
-                    return {"courses": courses_list}, 200
-                else:
-                    return {"courses": []}, 200
+            response, status = CoursesFonction.get_all_id_courses_with_teacher_username(teacher_username)
+            if status == 200 : 
+                all_id_courses = response["courses"]
+            else : 
+                return {"courses": []}, 200
+            courses_info = []
+            for id_course in all_id_courses:
+                course_details, status_code = self.get_course_by_id(id_course)
+                if status_code == 200:
+                    courses_info.append(course_details["courses"])
+            return {"courses": courses_info}, 200
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
-        finally:
-            conn.close()
+
            
     #------------------get by td----------------------- 
     def get_course_by_td(self, id_td):
@@ -275,18 +273,13 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     WHERE C.id_Td = %s
                 """
 
@@ -297,7 +290,19 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -313,18 +318,13 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     WHERE C.id_Tp = %s
                 """
 
@@ -335,7 +335,19 @@ class CourseService:
                     courses_list = []
 
                     for row in rows:
-                        course_info = CourseModel(*row)
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -351,18 +363,13 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Teacher,
-                    C.id_classroom, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, T.initial, CL.name, R.color, 
-                    CL.capacity, U.username
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    LEFT JOIN ent.Teachers T ON C.id_Teacher = T.id
-                    LEFT JOIN ent.Classroom CL ON C.id_classroom = CL.id
-                    LEFT JOIN ent.Users U ON T.id_User = U.id
                     order by C.id
                 """
 
@@ -371,7 +378,19 @@ class CourseService:
                 courses_list = []
 
                 for row in rows:
-                    course_info = CourseModel(*row)
+                    teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                    if status_code == 200:
+                        teachers = teachers_result["teachers"]
+                    else:
+                        teachers = [] 
+                        
+                    classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                    if status_code == 200:
+                        classrooms = classrooms_result["classrooms"]
+                    else:
+                        classrooms = [] 
+                        
+                    course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
                     courses_list.append(course_info.jsonify())
                 return {"courses" : courses_list}, 200
         except Exception as e:
@@ -583,3 +602,128 @@ def _format_courses(self, rows):
         }
         courses_list.append(course)
     return courses_list            
+
+
+
+class CoursesFonction : 
+    def get_all_teacher_courses_with_id_courses (id_courses) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                    SELECT t.id, u.username, u.first_name, u.last_name, t.initial  FROM ent.Courses_Teachers ct 
+                    LEFT JOIN ent.Teachers t ON ct.id_Teacher = t.id
+                    LEFT JOIN ent.Users u ON t.id_User = u.id
+                    WHERE ct.id_Course = %s
+                """
+
+                cursor.execute(sql_query, (id_courses,))
+                rows = cursor.fetchall()
+
+                if rows :
+                    teacher_list = []
+
+                    for row in rows:
+                        teacher_info = {
+                            "id" : row[0],
+                            "first_name" : row[2],
+                            "last_name" : row[3],
+                            "username" : row[1],
+                            "initial" : row[4]
+                        }
+                        teacher_list.append(teacher_info)
+                    return {"teachers": teacher_list}, 200
+                else:
+                    return {"message": "aucun prof"},400
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+            
+            
+    def get_all_classroom_courses_with_id_courses (id_courses) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                    SELECT c.id, c.name, c.capacity
+                    FROM ent.Courses_Classrooms ct 
+                    LEFT JOIN ent.Classroom c ON ct.id_Classroom = c.id
+                    WHERE ct.id_Course = %s
+                """
+
+                cursor.execute(sql_query, (id_courses,))
+                rows = cursor.fetchall()
+
+                if rows :
+                    classroom_list = []
+
+                    for row in rows:
+                        classroom_info = {
+                            "id" : row[0],
+                            "name" : row[1],
+                            "capacity" : row[2]
+                        }
+                        classroom_list.append(classroom_info)
+                    return {"classrooms": classroom_list}, 200
+                else:
+                    return {"message": "aucune salle"},400
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+            
+            
+    def get_all_id_courses_with_teacher_username (teacher_username) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                    SELECT ct.id_course
+                    FROM ent.Courses_Teachers ct 
+                    LEFT JOIN ent.Teachers t ON ct.id_Teacher = t.id
+                    INNER JOIN ent.Users u ON t.id_User = u.id
+                    WHERE u.username = %s
+                """
+
+                cursor.execute(sql_query, (teacher_username,))
+                rows = cursor.fetchall()
+
+                if rows :
+                    courses_list = []
+                    for row in rows:
+                        courses_list.append(row[0])
+                    return {"courses": courses_list}, 200
+                else:
+                    return {"message": f"Aucune cour n'est attribuée à l'enseignant {teacher_username}"},400
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+            
+            
+    def get_all_id_courses_with_classroom_name (classroom_name) : 
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                    SELECT ct.id_course
+                    FROM ent.Courses_Classrooms ct 
+                    LEFT JOIN ent.Classroom c ON ct.id_Classroom = c.id
+                    WHERE c.name = %s
+                """
+
+                cursor.execute(sql_query, (classroom_name,))
+                rows = cursor.fetchall()
+
+                if rows :
+                    courses_list = []
+                    for row in rows:
+                        courses_list.append(row[0])
+                    return {"courses": courses_list}, 200
+                else:
+                    return {"message": f"Aucune cour n'est attribuée dans la salle {classroom_name}"},400
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()

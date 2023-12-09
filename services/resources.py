@@ -18,10 +18,16 @@ class ResourceService:
                 inserted_resource_id = cursor.fetchone()[0]
 
             return jsonify({
-                "message": f"Ressource ajoutée avec succès, ID : {inserted_resource_id}"
+                "message": f"Ressource ajoutée avec succès, ID : {inserted_resource_id}","id": inserted_resource_id,
             }), 200
 
+
+        except psycopg2.IntegrityError as e:
+            # Gérer la violation de contrainte unique
+            return jsonify({"message": "Une ressource avec ce nom et ce parcours existe déjà"}), 409
+
         except psycopg2.Error as e:
+            # Gérer les autres erreurs PostgreSQL
             return jsonify({"message": f"Erreur lors de l'ajout de la ressource : {str(e)}"}), 500
 
         finally:
@@ -119,11 +125,10 @@ class ResourceService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                # Updated SQL query to join Resources with Trainings
+                # Requête SQL pour récupérer toutes les ressources
                 sql_query = """
-                    SELECT R.id, R.name, R.id_Training, R.color, T.name, T.semester
+                    SELECT R.id, R.name, R.id_Training, R.color
                     FROM ent.Resources R
-                    LEFT JOIN ent.Trainings T ON R.id_Training = T.id order by R.id
                 """
 
                 cursor.execute(sql_query)
@@ -135,9 +140,7 @@ class ResourceService:
                         "id": row[0],
                         "name": row[1],
                         "id_Training": row[2],
-                        "color": row[3],
-                        "training_name": row[4],
-                        "training_semester": row[5]
+                        "color" : row[3]
                     }
                     resources_list.append(resource)
 
@@ -149,4 +152,3 @@ class ResourceService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
-

@@ -363,7 +363,8 @@ class UsersFonction :
                 inserted_reminder_id = cursor.fetchone()[0]
 
             return jsonify({
-                "message": f"Reminder added successfully, ID: {inserted_reminder_id}"
+                "message": f"Reminder added successfully, ID: {inserted_reminder_id}",
+                "id": inserted_reminder_id
             }), 200
 
         except Exception as e:
@@ -411,19 +412,14 @@ class UsersFonction :
 
     def delete_reminder(reminder_id):
         try:
-            if not UsersFonction.field_exists('id', reminder_id):
-                return jsonify({"message": f"Reminder id: '{reminder_id}' not found"}), 404
 
             query = "DELETE FROM ent.reminders WHERE id = %s RETURNING id"
             values = (reminder_id,)
-
             conn = connect_pg.connect()
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 deleted_reminder_id = cursor.fetchone()
-
             conn.commit()
-
             if deleted_reminder_id:
                 return jsonify({
                     "message": f"Reminder deleted successfully, ID: {deleted_reminder_id[0]}"

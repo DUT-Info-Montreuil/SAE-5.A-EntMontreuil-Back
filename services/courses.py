@@ -468,7 +468,7 @@ class CourseService:
             conn.commit()
 
             if new_course_id :
-                return {"message": "Cours ajouté avec succès"}, 200
+                return {"message": "Cours ajouté avec succès" , "id" : new_course_id}, 200
             else :
                 return {"error": "Une erreur est survenue lors de l'ajout du cours"}, 400
 

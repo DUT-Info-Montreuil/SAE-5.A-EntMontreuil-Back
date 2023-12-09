@@ -26,7 +26,10 @@ class SettingsService:
         conn.commit()  # Valider la transaction
         conn.close()   # Fermer la connexion à la base de données
 
-        return jsonify({"message": "Paramètres mis à jour avec succès", "user_id": user_id}), 200
+        status_code = 200 if cursor.rowcount > 0 else 400
+
+
+        return jsonify({"message": "Paramètres mis à jour avec succès", "user_id": user_id, "status_code": status_code}), 200
 
     def get_settings(self, user_id):
         conn = connect_pg.connect()  # Établir une connexion à la base de données

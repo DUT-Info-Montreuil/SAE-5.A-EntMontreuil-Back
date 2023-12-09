@@ -292,7 +292,7 @@ class UsersFonction :
             SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
             FROM ent.reminders R
             INNER JOIN ent.users U ON R.id_User = U.id
-            ORDER BY R.id
+            ORDER BY R.id DESC
         """
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)

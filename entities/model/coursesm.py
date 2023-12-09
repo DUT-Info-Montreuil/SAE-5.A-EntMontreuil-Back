@@ -52,35 +52,36 @@ class CourseModel:
                 "control": self.control
             },
             "resource" :{
-                "id_Resource": self.id_Resource,
-                "resource_name": self.resource_name,
-                "resource_color" : self.resource_color,
+                "id": self.id_Resource,
+                "name": self.resource_name,
+                "color" : self.resource_color,
             },
             "tp" : {
-                "id_Tp": self.id_Tp,
-                "tp_name": self.tp_name,
+                "id": self.id_Tp,
+                "name": self.tp_name,
             },
             "td" : {
-                "id_Td": self.id_Td,
-                "td_name": self.td_name,
+                "id": self.id_Td,
+                "name": self.td_name,
             },
             "promotion" : {
-                "id_Promotion": self.id_Promotion,
-                "promotion_year": self.promotion_year,
-                "promotion_level" : self.promotion_level,
+                "id": self.id_Promotion,
+                "year": self.promotion_year,
+                "level" : self.promotion_level,
             },
             "teacher" : {
-                "id_Teacher": self.id_Teacher,
-                "teacher_initial": self.teacher_initial,
-                "teacher_username" : self.teacher_username
+                "id": self.id_Teacher,
+                "initial": self.teacher_initial,
+                "username" : self.teacher_username
             },
             "classroom" : {
-                "id_classroom": self.id_classroom,
-                "classroom_name": self.classroom_name,
-                "classroom_capacity" : self.classroom_capacity,
+                "id": self.id_classroom,
+                "name": self.classroom_name,
+                "capacity" : self.classroom_capacity,
             },
             "training" : {
-                "training_semester" : self.training_semester,
-                "training_name" : self.training_name
+                "id" : self.id_Training,
+                "semester" : self.training_semester,
+                "name" : self.training_name
             }            
         }

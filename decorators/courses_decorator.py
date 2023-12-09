@@ -14,9 +14,17 @@ schema__add_course = {
     "id_tp": {"type": ["integer", "null"]},
     "id_td": {"type": ["integer", "null"]},
     "id_promotion": {"type": ["integer", "null"]},
-    "id_training": {"type": ["integer", "null"]}
+    "id_training": {"type": ["integer", "null"]},
+    "teachers_id" : {
+        "type": "array",
+        "items": {"type": "integer"}
+    },
+    "classrooms_id": {
+        "type": "array",
+        "items": {"type": "integer"}
+    }
   },
-  "required": ["startTime", "endTime", "dateCourse", "control", "id_resource"],
+  "required": ["startTime", "endTime", "dateCourse", "control", "id_resource", "teachers_id","classrooms_id" ],
   "additionalProperties": False
 }
 

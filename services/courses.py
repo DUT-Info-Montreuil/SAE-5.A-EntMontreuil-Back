@@ -450,6 +450,17 @@ class CourseService:
             if not CoursesFonction.check_course_overlap(data) :
                 return {"error": f"Certains cours sont déjà présents pour la plage horaire entrée"}, 400
             
+            # Vérification des teachers id
+            if data["teachers_id"] :
+                for id in data["teachers_id"] :
+                    if not CoursesFonction.field_exist('Teachers', 'id' , id) :
+                        return {"error": f"l'id de l'enseignant : {id} n'existe pas"}, 400
+            
+            if data["classrooms_id"] :
+                for id in data["classrooms_id"] :
+                    if not CoursesFonction.field_exist('Classroom', 'id' , id) :
+                        return {"error": f"l'id de la classe : {id} n'existe pas"}, 400
+            
             # Vérification des champs présents et validation réussie, procédez à l'insertion
             query = """
                 INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource, id_Tp, id_Td, id_Promotion, id_Training)
@@ -468,6 +479,23 @@ class CourseService:
             conn.commit()
 
             if new_course_id :
+                if data["teachers_id"] :
+                    query_sql = """
+                                    INSERT INTO ent.Courses_Teachers (id_Course, id_Teacher)
+                                    VALUES (%s, %s)
+                                """
+                    for id in data["teachers_id"] :
+                        cursor.execute(query_sql, (new_course_id, id))
+                        conn.commit()
+                if data["classrooms_id"] :
+                    query_sql = """
+                                    INSERT INTO ent.Courses_Classrooms (id_Course, id_Classroom)
+                                    VALUES (%s, %s)
+                                """
+                    for id in data["classrooms_id"] :
+                        cursor.execute(query_sql, (new_course_id, id))
+                        conn.commit()
+                    
                 return {"message": "Cours ajouté avec succès" , "id" : new_course_id}, 200
             else :
                 return {"error": "Une erreur est survenue lors de l'ajout du cours"}, 400

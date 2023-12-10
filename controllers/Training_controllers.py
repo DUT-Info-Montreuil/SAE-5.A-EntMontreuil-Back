@@ -131,8 +131,8 @@ def add_training():
         training_data = json_data['datas']
 
         # Valide que la formation spécifiée existe
-        if not connect_pg.does_entry_exist("Degrees", training_data['id_Degree']):
-            return jsonify({"message": "La formation spécifiée n'existe pas."}), 400
+        if not connect_pg.does_entry_exist("Promotions", training_data['id_Promotion']):
+            return jsonify({"message": "La promotion spécifiée n'existe pas."}), 400
 
         # Crée un objet Training (DTO) à partir des données JSON
         training = Training(

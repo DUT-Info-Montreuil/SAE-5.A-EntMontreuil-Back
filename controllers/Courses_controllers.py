@@ -96,9 +96,19 @@ def update_course(course_id):
     return course_service.update_course(data)
 
 ##-----------------DELETE----------------
-@courses_bp.route("/courses/<int:course_id>", methods=["DELETE"])
-def delete_course(course_id):
-    return course_service.delete_course(course_id)
+@courses_bp.route("/courses/id/<int:course_id>", methods=["DELETE"])
+def delete_course_with_id(course_id):
+    return course_service.delete_course_with_id(course_id)
+
+@courses_bp.route("/courses/day/<day>", methods=["DELETE"])
+def delete_course_with_day(day):
+    return course_service.delete_course_with_day(day)
+
+@courses_bp.route("/courses/days", methods=["DELETE"])
+def delete_course_with_many_day():
+    data = request.get_json()
+    
+    return course_service.delete_course_with_many_day(data["startDay"], data["endDay"])
 
 
 

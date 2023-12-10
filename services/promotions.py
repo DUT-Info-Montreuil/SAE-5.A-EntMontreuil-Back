@@ -57,7 +57,7 @@ class PromotionService:
             with conn.cursor() as cursor:
                 # Requête SQL pour récupérer toutes les promotions
                 sql_query = """
-                    SELECT P.id, P.year, P.level, D.id AS degree_id
+                    SELECT P.id, P.year, P.level, D.id AS degree_id , D.name AS degree_name
                     FROM ent.Promotions P
                     INNER JOIN ent.Degrees D ON P.id_Degree = D.id
                 """
@@ -80,7 +80,8 @@ class PromotionService:
                             id=row[0],
                             year=row[1],
                             level=row[2],
-                            id_Degree=row[3]
+                            id_Degree=row[3],
+                            degree_name=row[4]
                         )
                         promotions_list.append(promotion.jsonify())
 

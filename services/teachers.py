@@ -274,6 +274,36 @@ class TeachersService :
         else:
             raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
         
+
+    ############ TEACHERS : GET_NUMBER_OF_HOURS  <int:id_teacher> ############
+    def get_number_of_hours(self, id_teacher):
+        try:
+            # Votre logique pour vérifier si l'enseignant existe
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL avec conversion des heures au format TIME pour PostgreSQL
+            query = """
+                SELECT (SUM(EXTRACT(EPOCH FROM ent.Courses.endTime) - EXTRACT(EPOCH FROM ent.Courses.startTime)) * INTERVAL '1 second') AS total_hours
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s
+            """
+            cursor.execute(query, (id_teacher,))
+            total_hours = cursor.fetchone()[0]
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'total_hours': str(total_hours)}), 200
+        except Exception as e:
+            # Gérez les erreurs selon vos besoins
+            return jsonify({'error': str(e)}), 500
+        
 #--------------------------------------------------FONCTION--------------------------------------------------#
 class TeachersFonction :
 
@@ -309,6 +339,9 @@ class TeachersFonction :
         conn.close()
         return count > 0
     
+
+    
+
 #--------------------------------------------------ERROR--------------------------------------------------#
 
 class ValueError(Exception):

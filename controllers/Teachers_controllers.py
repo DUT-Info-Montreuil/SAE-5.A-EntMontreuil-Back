@@ -328,3 +328,35 @@ def get_commentary(id_commentary):
         return jsonify({'error': str(e)}), 500
 
     
+#-----------get teacher hours number--------------
+# Define the route to get the total hours of a specific teacher
+@teachers_bp.route('/teachers/hours/<int:id_teacher>', methods=['GET'])
+def get_teacher_hours_number(id_teacher):
+    """
+    Get the total hours of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve total hours.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Total hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during total hours retrieval.
+    """
+    try:
+        # Utilisez la fonction du service pour obtenir le nombre total d'heures d'un enseignant
+        hours_data = teachers_service.get_number_of_hours(id_teacher)
+
+        # Retournez les données au format JSON
+        return hours_data
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 500

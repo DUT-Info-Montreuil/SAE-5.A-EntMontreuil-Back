@@ -312,46 +312,59 @@ class UsersFonction :
         connect_pg.disconnect(conn)
         return reminders
 
-    def get_reminder_by_id(reminder_id, output_format='DTO'):
-        if not UsersFonction.field_exists('id', reminder_id):
-            raise ValidationError(f"Reminder id: '{reminder_id}' not exists")
-
-        query = """
-            SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
-            FROM ent.reminders R
-            INNER JOIN ent.users U ON R.id_User = U.id
-            WHERE R.id = %s
-        """
-        conn = connect_pg.connect()
-        cursor = conn.cursor()
-        cursor.execute(query, (reminder_id,))
-        row = cursor.fetchone()
-
-        if not row:
-            raise ValidationError(f"Reminder id: '{reminder_id}' not found")
-
-        reminder = ReminderModel(
-            id=row[0],
-            id_User=row[1],
-            user_username=row[2],
-            title=row[3],
-            reminder_text=row[4],
-            reminder_date=row[5],
-        )
-
-        conn.commit()
-        conn.close()
-        return reminder.jsonify()
-
-    def add_reminder(data):
+    def get_reminder_by_id(id_User, reminder_id, output_format='DTO'):
         try:
+            # Vérifier si l'identifiant du rappel existe
+            if not UsersFonction.field_exists('id', reminder_id):
+                raise ValidationError(f"Reminder id: '{reminder_id}' does not exist")
+
+            # Requête SQL pour récupérer les détails du rappel pour un utilisateur spécifique
+            query = """
+                SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
+                FROM ent.reminders R
+                INNER JOIN ent.users U ON R.id_User = U.id
+                WHERE R.id = %s AND R.id_User = %s
+            """
+
+            # Établir la connexion à la base de données
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, (reminder_id, id_User))
+                row = cursor.fetchone()
+
+                # Si le rappel n'est pas trouvé, déclencher une exception
+                if not row:
+                    raise ValidationError(f"Reminder id: '{reminder_id}' not found")
+
+                # Créer un objet ReminderModel à partir des résultats de la requête
+                reminder = ReminderModel(
+                    id_User=row[1],
+                    user_username=row[2],
+                    title=row[3],
+                    reminder_text=row[4],
+                    reminder_date=row[5],
+                )
+
+                return reminder.jsonify()
+
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
+        except Exception as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 500
+
+    def add_reminder(id_User, data):
+        try:
+            # Ensure that the provided user ID matches the authenticated user's ID
+            if not UsersFonction.field_exists('id', id_User):
+                raise ValidationError(f"User id: '{id_User}' does not exist")
+
             query = """
                 INSERT INTO ent.reminders (id_User, title, reminder_text, reminder_date)
                 VALUES (%s, %s, %s, %s)
                 RETURNING id
             """
             values = (
-                data["id_User"],
+                id_User,
                 data["title"],
                 data["reminder_text"],
                 data["reminder_date"],
@@ -367,26 +380,35 @@ class UsersFonction :
                 "id": inserted_reminder_id
             }), 200
 
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
         except Exception as e:
             return jsonify({"message": f"Error adding reminder: {str(e)}"}), 500
+
         finally:
             if conn:
                 connect_pg.disconnect(conn)
 
-    def update_reminder(data, reminder_id):
+    def update_reminder(id_User, data, reminder_id):
         try:
+            # Ensure that the provided user ID matches the authenticated user's ID
+            if not UsersFonction.field_exists('id', id_User):
+                raise ValidationError(f"User id: '{id_User}' does not exist")
+
             query = """
                 UPDATE ent.reminders
                 SET id_User = %s, title=%s, reminder_text = %s, reminder_date = %s
-                WHERE id = %s
+                WHERE id = %s AND id_User = %s
                 RETURNING id
             """
             values = (
-                data["id_User"],
+                id_User,
                 data["title"],
                 data["reminder_text"],
                 data["reminder_date"],
                 reminder_id,
+                id_User,  # Ensure the reminder belongs to the specified user
             )
 
             conn = connect_pg.connect()
@@ -403,6 +425,9 @@ class UsersFonction :
             else:
                 return jsonify({"message": "Reminder not found or no changes made"}), 404
 
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
         except Exception as e:
             return jsonify({"message": f"Error updating reminder: {str(e)}"}), 500
 
@@ -410,15 +435,20 @@ class UsersFonction :
             if conn:
                 connect_pg.disconnect(conn)
 
-    def delete_reminder(reminder_id):
+    def delete_reminder(id_User, reminder_id):
         try:
+            # Ensure that the provided user ID matches the authenticated user's ID
+            if not UsersFonction.field_exists('id', id_User):
+                raise ValidationError(f"User id: '{id_User}' does not exist")
 
-            query = "DELETE FROM ent.reminders WHERE id = %s RETURNING id"
-            values = (reminder_id,)
+            query = "DELETE FROM ent.reminders WHERE id = %s AND id_User = %s RETURNING id"
+            values = (reminder_id, id_User)
+
             conn = connect_pg.connect()
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 deleted_reminder_id = cursor.fetchone()
+
             conn.commit()
             if deleted_reminder_id:
                 return jsonify({
@@ -427,13 +457,15 @@ class UsersFonction :
             else:
                 return jsonify({"message": "Reminder not found or already deleted"}), 404
 
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
         except Exception as e:
             return jsonify({"message": f"Error deleting reminder: {str(e)}"}), 500
 
         finally:
             if conn:
                 connect_pg.disconnect(conn)
-    
 
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :

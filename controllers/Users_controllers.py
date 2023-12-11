@@ -327,10 +327,12 @@ def get_all_reminders():
         return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/reminders/<int:reminder_id>', methods=['GET'])
+@jwt_required()
 def get_reminder_by_id(reminder_id):
     try:
+        current_user = get_jwt_identity()
         output_format = request.args.get('output_format', default='dto')
-        reminder = UsersFonction.get_reminder_by_id(reminder_id, output_format)
+        reminder = UsersFonction.get_reminder_by_id(current_user['id'], reminder_id, output_format)
         return jsonify(reminder)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
@@ -338,10 +340,12 @@ def get_reminder_by_id(reminder_id):
         return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/reminders', methods=['POST'])
+@jwt_required()
 def add_reminder():
     try:
+        current_user = get_jwt_identity()
         data = request.json
-        response, https_status = UsersFonction.add_reminder(data)
+        response, https_status = UsersFonction.add_reminder(current_user['id'], data)
         return response, https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
@@ -349,10 +353,12 @@ def add_reminder():
         return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/reminders/<int:reminder_id>', methods=['PUT'])
+@jwt_required()
 def update_reminder(reminder_id):
     try:
+        current_user = get_jwt_identity()
         data = request.json
-        response, https_status = UsersFonction.update_reminder(data, reminder_id)
+        response, https_status = UsersFonction.update_reminder(current_user['id'], data, reminder_id)
         return response, https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
@@ -360,9 +366,11 @@ def update_reminder(reminder_id):
         return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/reminders/<int:reminder_id>', methods=['DELETE'])
+@jwt_required()
 def delete_reminder(reminder_id):
     try:
-        response, https_status = UsersFonction.delete_reminder(reminder_id)
+        current_user = get_jwt_identity()
+        response, https_status = UsersFonction.delete_reminder(current_user['id'], reminder_id)
         return response, https_status
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400

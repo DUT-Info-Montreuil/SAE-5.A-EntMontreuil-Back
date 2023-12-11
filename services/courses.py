@@ -422,7 +422,7 @@ class CourseService:
             
             fields_present = ["id_tp", "id_td", "id_promotion", "id_training"]
             present_count = sum(1 for field in fields_present if field in data)
-
+            
             if present_count != 1:
                 return {"error": "Un seul champ parmi [ id_tp - id_td - id_promotion - id_training ] doit être présent"}, 400
         
@@ -447,8 +447,9 @@ class CourseService:
             data['endTime'] = datetime.strptime(data.get('endTime'), '%H:%M').strftime(time_format)
             data['dateCourse'] = datetime.strptime(data.get('dateCourse'), '%Y-%m-%d').strftime('%Y-%m-%d')
             
-            if not CoursesFonction.check_course_overlap(data) :
-                return {"error": f"Certains cours sont déjà présents pour la plage horaire entrée"}, 400
+            response, status =  CoursesFonction.check_course_overlap(data) 
+            if status != 200 :
+                return response, status
             
             # Vérification des teachers id
             if data["teachers_id"] :
@@ -858,27 +859,70 @@ class CoursesFonction :
         finally:
             conn.close()
             
-            
+    # check si il y a deja un cours présent
     def check_course_overlap( data):
         try:
             conn = connect_pg.connect()
             cursor = conn.cursor()
-
+            
             # Convertir les dates et heures en objets datetime pour la comparaison
             start_time = datetime.strptime(data['startTime'], '%H:%M').time()
             end_time = datetime.strptime(data['endTime'], '%H:%M').time()
             date_course = datetime.strptime(data['dateCourse'], '%Y-%m-%d').date()
             
             where_clause = ""
+            group = ""
         
             if "id_tp" in data :
-                where_clause = f"AND id_Tp = {data.get('id_tp')}" 
+                group = f"le tp {data.get('id_tp')}"
+                response , status = CoursesFonction.get_group_of_tp(data["id_tp"])
+                if status != 200 :
+                    return response , status
+                where_clause = f"AND (id_Tp = {data.get('id_tp')} OR id_Training = {response.get('training')} OR id_Promotion = {response.get('promotion')} OR id_Td = {response.get('td')})"
+                
             if "id_td" in data :
-                where_clause = f"AND id_Td = {data.get('id_td')}"
+                group = f"le td {data.get('id_td')}"
+                response , status = CoursesFonction.get_group_of_td(data["id_td"])
+                if status != 200 :
+                    return response , status
+                tp_list = response["tp"]
+                where_clause = f"AND (id_Td = {data.get('id_td')} OR id_Training = {response.get('training')} OR id_Promotion = {response.get('promotion')}"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
+                where_clause += ")"   
+                
             if "id_training" in data :
-                where_clause = f"AND id_Training = {data.get('id_training')}"
+                group = f"le parcour {data.get('id_training')}"
+                response , status = CoursesFonction.get_group_of_training(data["id_training"])
+                if status != 200 :
+                    return response , status
+                td_list = response["td"]
+                tp_list = response["tp"]
+                where_clause = f"AND (id_Training = {data.get('id_training')} OR id_Promotion = {response.get('promotion')}"
+                if td_list :
+                    where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
+                  
             if "id_promotion" in data :
                 where_clause = f"AND id_Promotion = {data.get('id_promotion')}"
+                group = f"la promotion {data.get('id_promotion')}"
+                response , status = CoursesFonction.get_group_of_promotion(data["id_promotion"])
+                if status != 200 :
+                    return response , status
+                td_list = response["td"]
+                tp_list = response["tp"]
+                training_list = response["training"]
+                
+                where_clause = f"AND (id_Promotion = {data.get('id_promotion')}"
+                if td_list :
+                    where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})" 
+                if training_list :
+                    where_clause += f" OR id_Training IN ({', '.join(map(str, training_list))})"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
+                
+                
 
             query = """
                 SELECT * FROM ent.Courses
@@ -893,8 +937,141 @@ class CoursesFonction :
             cursor.execute(query, (date_course, start_time, start_time, end_time, end_time, start_time, end_time))
             overlapping_courses = cursor.fetchall()
             if not overlapping_courses :
-                return True
-            return False
+                return {"message": f"Validation , le cour peut etre ajouté"}, 200
+            return {"error": f"Un cours est déjà présent"}, 400
 
         except Exception as e:
-            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+            return {"message": f"Erreur dans check_course_overlap : {str(e)}"}, 500
+
+    # recuperation des groupes liés au tp
+    def get_group_of_tp(id_tp) :
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()   
+            TD = None
+            Training = None         
+            Promotion = None
+            query = """
+                SELECT td.id, td.id_training, td.id_promotion FROM ent.TP tp
+                INNER JOIN ent.TD td on tp.id_Td = td.id
+                WHERE tp.id = %s
+            """
+            cursor.execute(query, (id_tp,))
+            row = cursor.fetchone()
+            if row:
+                TD = row[0]
+                Training = row[1]
+                Promotion = row[2]
+            else:
+                return {"message": "Aucun TP trouvé avec cet ID"}, 400
+            return {"td": TD, "training" : Training, "promotion" : Promotion}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur dans get_group_of_tp : {str(e)}"}, 500
+     
+    # recuperation des groupes liés au td   
+    def get_group_of_td(id_td) :
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()            
+            training = None
+            promotion = None
+            tps = None
+            query = """
+                SELECT id_training,id_promotion FROM ent.TD 
+                Where id = %s
+
+            """
+            cursor.execute(query, (id_td,))
+            row = cursor.fetchone()
+            if row:
+                training, promotion = row
+            else:
+                return {"message": "Aucun TD trouvé avec cet ID"}, 400
+            
+            query2 = """
+                SELECT tp.id FROM ent.TP tp
+                INNER JOIN ent.TD td on tp.id_Td = td.id
+                Where td.id = %s
+
+            """
+            cursor.execute(query2, (id_td,))
+            rows = cursor.fetchall()
+            if rows :
+                tps = []
+                for row in rows :
+                    tps.append(row[0])
+            conn.close()
+            return {"tp": tps, "training" : training, "promotion" : promotion}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur dans get_group_of_td : {str(e)}"}, 500
+        
+        
+    # recuperation des groupes liés au training   
+    def get_group_of_training(id_training) :
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()            
+            promotion = None
+            tds = None
+            tps = None
+            
+            query = """
+                SELECT id,id_promotion FROM ent.TD 
+                Where id_training = %s
+            """
+            cursor.execute(query, (id_training,))
+            rows = cursor.fetchall()
+            if rows :
+                tds = []
+                for row in rows :
+                    tds.append(row[0])
+                promotion = rows[0][1]
+            
+            query_2 = """
+                SELECT tp.id FROM ent.TD td
+                INNER JOIN ent.TP tp on tp.id_Td = td.id
+                Where td.id = %s
+
+            """
+            if tds :
+                tps = []
+                for td in tds :
+                    cursor.execute(query_2, (td,))
+                    rows = cursor.fetchall()
+                    if rows :
+                        for row in rows :
+                            tps.append(row[0])
+            
+            return {"tp": tps, "td" : tds, "promotion" : promotion}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur get_group_of_training : {str(e)}"}, 500
+        
+    # recuperation des groupes liés a une promotion  
+    def get_group_of_promotion(id_promotion):
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            
+            query = """
+                SELECT tr.id AS training_id, td.id AS td_id, tp.id AS tp_id 
+                FROM ent.Trainings tr
+                LEFT JOIN ent.TD td ON tr.id = td.id_training
+                LEFT JOIN ent.TP tp ON td.id = tp.id_td
+                WHERE tr.id_promotion = %s
+            """
+            cursor.execute(query, (id_promotion,))
+            rows = cursor.fetchall()
+            
+            trainings = list(set([row[0] for row in rows if row[0] is not None]))
+            tds = list(set([row[1] for row in rows if row[1] is not None]))
+            tps = list(set([row[2] for row in rows if row[2] is not None]))
+            
+            conn.close()
+            
+            return {"tp": tps, "td": tds, "training": trainings}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500

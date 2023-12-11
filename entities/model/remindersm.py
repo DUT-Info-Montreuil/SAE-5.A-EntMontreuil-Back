@@ -1,8 +1,9 @@
 class ReminderModel:
-    def __init__(self, id, id_User, user_username, reminder_text, reminder_date):
+    def __init__(self, id, id_User, user_username, title, reminder_text, reminder_date):
         self.id = id
         self.id_User = id_User
         self.user_username = user_username
+        self.title = title
         self.reminder_text = reminder_text
         self.reminder_date = reminder_date
 
@@ -11,13 +12,10 @@ class ReminderModel:
 
     def jsonify(self):
         return {
-            "reminder": {
                 "id": self.id,
-                "user": {
-                    "id": self.id_User,
-                    "username": self.user_username,
-                },
+                "id_User": self.id_User,
+                "username": self.user_username,
+                "title": self.title,
                 "reminder_text": self.reminder_text,
                 "reminder_date": str(self.reminder_date),
             }
-        }

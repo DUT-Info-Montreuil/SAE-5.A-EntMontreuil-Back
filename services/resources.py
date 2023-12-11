@@ -18,10 +18,16 @@ class ResourceService:
                 inserted_resource_id = cursor.fetchone()[0]
 
             return jsonify({
-                "message": f"Ressource ajoutée avec succès, ID : {inserted_resource_id}"
+                "message": f"Ressource ajoutée avec succès, ID : {inserted_resource_id}","id": inserted_resource_id,
             }), 200
 
+
+        except psycopg2.IntegrityError as e:
+            # Gérer la violation de contrainte unique
+            return jsonify({"message": "Une ressource avec ce nom et ce parcours existe déjà"}), 409
+
         except psycopg2.Error as e:
+            # Gérer les autres erreurs PostgreSQL
             return jsonify({"message": f"Erreur lors de l'ajout de la ressource : {str(e)}"}), 500
 
         finally:

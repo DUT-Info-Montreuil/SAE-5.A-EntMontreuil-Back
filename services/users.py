@@ -290,10 +290,10 @@ class UsersFonction :
 
     def get_all_reminders(self, output_format='DTO'):
         query = """
-            SELECT R.id, R.id_User, U.username, R.reminder_text, R.reminder_date
+            SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
             FROM ent.reminders R
             INNER JOIN ent.users U ON R.id_User = U.id
-            ORDER BY R.id
+            ORDER BY R.id DESC
         """
         conn = connect_pg.connect()
         rows = connect_pg.get_query(conn, query)
@@ -304,8 +304,9 @@ class UsersFonction :
                 id=row[0],
                 id_User=row[1],
                 user_username=row[2],
-                reminder_text=row[3],
-                reminder_date=row[4],
+                title=row[3],
+                reminder_text=row[4],
+                reminder_date=row[5],
             )
             reminders.append(reminder.jsonify())
 
@@ -317,7 +318,7 @@ class UsersFonction :
             raise ValidationError(f"Reminder id: '{reminder_id}' not exists")
 
         query = """
-            SELECT R.id, R.id_User, U.username, R.reminder_text, R.reminder_date
+            SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
             FROM ent.reminders R
             INNER JOIN ent.users U ON R.id_User = U.id
             WHERE R.id = %s
@@ -334,8 +335,9 @@ class UsersFonction :
             id=row[0],
             id_User=row[1],
             user_username=row[2],
-            reminder_text=row[3],
-            reminder_date=row[4],
+            title=row[3],
+            reminder_text=row[4],
+            reminder_date=row[5],
         )
 
         conn.commit()
@@ -345,12 +347,13 @@ class UsersFonction :
     def add_reminder(data):
         try:
             query = """
-                INSERT INTO ent.reminders (id_User, reminder_text, reminder_date)
-                VALUES (%s, %s, %s)
+                INSERT INTO ent.reminders (id_User, title, reminder_text, reminder_date)
+                VALUES (%s, %s, %s, %s)
                 RETURNING id
             """
             values = (
                 data["id_User"],
+                data["title"],
                 data["reminder_text"],
                 data["reminder_date"],
             )
@@ -361,7 +364,8 @@ class UsersFonction :
                 inserted_reminder_id = cursor.fetchone()[0]
 
             return jsonify({
-                "message": f"Reminder added successfully, ID: {inserted_reminder_id}"
+                "message": f"Reminder added successfully, ID: {inserted_reminder_id}",
+                "id": inserted_reminder_id
             }), 200
 
         except Exception as e:
@@ -374,12 +378,13 @@ class UsersFonction :
         try:
             query = """
                 UPDATE ent.reminders
-                SET id_User = %s, reminder_text = %s, reminder_date = %s
+                SET id_User = %s, title=%s, reminder_text = %s, reminder_date = %s
                 WHERE id = %s
                 RETURNING id
             """
             values = (
                 data["id_User"],
+                data["title"],
                 data["reminder_text"],
                 data["reminder_date"],
                 reminder_id,
@@ -408,19 +413,14 @@ class UsersFonction :
 
     def delete_reminder(reminder_id):
         try:
-            if not UsersFonction.field_exists('id', reminder_id):
-                return jsonify({"message": f"Reminder id: '{reminder_id}' not found"}), 404
 
             query = "DELETE FROM ent.reminders WHERE id = %s RETURNING id"
             values = (reminder_id,)
-
             conn = connect_pg.connect()
             with conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 deleted_reminder_id = cursor.fetchone()
-
             conn.commit()
-
             if deleted_reminder_id:
                 return jsonify({
                     "message": f"Reminder deleted successfully, ID: {deleted_reminder_id[0]}"

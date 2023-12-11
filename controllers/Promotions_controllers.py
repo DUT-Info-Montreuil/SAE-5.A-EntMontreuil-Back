@@ -11,7 +11,7 @@ def get_promotion_info(promotion_id):
 
 @promotions_bp.route("/promotions", methods=["GET"])
 def get_all_promotions():
-    output_format = request.args.get("format", default="DTO")
+    output_format = request.args.get("format", default="model")
     return promotion_service.get_all_promotions(output_format)
 
 @promotions_bp.route("/promotions", methods=["POST"])

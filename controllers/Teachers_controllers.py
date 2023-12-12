@@ -427,3 +427,86 @@ def get_teacher_number_of_hours_passed(id_teacher):
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
+    
+#-----------get_teacher_hours_by_month--------------
+# Define the route to get the total hours of a specific teacher by month
+@teachers_bp.route('/teachers/<int:id_teacher>/hours/<string:year>/<string:month>', methods=['GET'])
+def get_teacher_hours_by_month(id_teacher, year, month):
+    """
+    Get the hours by month of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by month.
+        required: true
+        type: integer
+      - name: year
+        in: path
+        description: Year you want to get the month from
+        required: true
+        type: string
+      - name: month
+        in: path
+        description: Month you want to get the hours from
+        required: true
+        type: string
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_hours_by_month(id_teacher, year, month)
+
+        # Retournez les données au format JSON
+        return hours_data
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 500
+
+  
+
+#-----------get_teacher_hours_by_resource--------------
+# Define the route to get the total hours of a specific teacher by resource
+@teachers_bp.route('/teachers/<int:id_teacher>/hours/<int:id_resource>', methods=['GET'])
+def get_teacher_hours_by_resource(id_teacher, id_resource):
+    """
+    Get the hours by resource of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by resource.
+        required: true
+        type: integer
+      - name: id_resource
+        in: path
+        description: ID of the resource.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_hours_by_resource(id_teacher, id_resource)
+
+        # Retournez les données au format JSON
+        return hours_data
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 500

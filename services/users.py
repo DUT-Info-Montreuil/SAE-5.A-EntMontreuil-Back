@@ -8,6 +8,7 @@ import string
 from entities.DTO.users import Users
 from entities.model.usersm import UsersModel
 from entities.model.remindersm import ReminderModel
+from entities.model.notificationsm import NotificationModel
 from services.roles import RolesFonction
 
 class UsersServices :
@@ -466,6 +467,84 @@ class UsersFonction :
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+    
+    def get_notifications(user_id, display=None):
+        query = """
+        SELECT N.id, N.id_user, N.content, N.is_read, N.created_at, N.title, N.icon, N."icon-color", N.route
+        FROM ent.notifications N
+        WHERE N.id_user = %s
+        ORDER BY N.created_at DESC
+        """
+
+        # Ajout de la clause LIMIT si display est spécifié
+        if display and display.isdigit():
+            query += " LIMIT %s"
+
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+
+        # Exécuter la requête avec ou sans LIMIT
+        if display and display.isdigit():
+            cursor.execute(query, (user_id, int(display)))
+            rows = cursor.fetchall()
+            notifications = []
+        else:
+            cursor.execute(query, (user_id,))
+            rows = cursor.fetchall()
+            notifications = []
+
+        totalUnread = 0  # Compteur pour les notifications non lues
+
+        for row in rows:
+            notification = NotificationModel(
+                id=row[0],
+                id_user=row[1],
+                content=row[2],
+                is_read=row[3],
+                created_at=row[4],
+                title=row[5],
+                icon=row[6],
+                icon_color=row[7],
+                route=row[8]
+            )
+            if not row[3]:  # Si la notification n'est pas lue (is_read est False)
+                totalUnread += 1
+            
+            notifications.append(notification.jsonify())
+
+        conn.close()
+        total = len(rows)  # Nombre total de notifications
+
+        # Créer la réponse JSON
+        response = {
+            "total": total,
+            "totalUnread": totalUnread,
+            "notifications": notifications
+        }
+        return response
+    
+    def set_notifications_to_read(user_id):
+        update_query = """
+        UPDATE ent.notifications
+        SET is_read = TRUE
+        WHERE id_user = %s AND is_read = FALSE
+        """
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        cursor.execute(update_query, (user_id,))
+        conn.commit()  # Ne pas oublier de valider les changements dans la base de données
+        conn.close()
+
+    def delete_user_notifications(user_id):
+        delete_query = """
+        DELETE FROM ent.notifications
+        WHERE id_user = %s
+        """
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+        cursor.execute(delete_query, (user_id,))
+        conn.commit()  # Valider les changements
+        conn.close()
 
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :

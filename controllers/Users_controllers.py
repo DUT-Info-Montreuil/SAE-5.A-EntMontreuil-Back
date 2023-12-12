@@ -376,3 +376,38 @@ def delete_reminder(reminder_id):
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/user/notifications', methods=['GET'])
+@jwt_required()
+def get_user_notifications():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+
+        if request.args.get('reading') == 'true':
+            UsersFonction.set_notifications_to_read(user_id)
+
+        # Récupérer le paramètre display, s'il est présent
+        display = request.args.get('display')
+        notifications = UsersFonction.get_notifications(user_id, display)
+
+        return jsonify(notifications)
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+      
+@users_bp.route('/user/notifications', methods=['DELETE'])
+@jwt_required()
+def delete_all_user_notifications():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+
+        UsersFonction.delete_user_notifications(user_id)
+
+        return jsonify({'message': 'Toutes les notifications ont été supprimées.'}), 200
+    except ValidationError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

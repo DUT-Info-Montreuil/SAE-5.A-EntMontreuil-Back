@@ -7,6 +7,7 @@ from entities.DTO.commentary import Commentary
 from entities.model.commentarym import CommentaryModel
 from services.users import UsersFonction
 from datetime import datetime as D
+from datetime import timedelta
 
 
 #--------------------------------------------------ROUTE--------------------------------------------------#
@@ -278,7 +279,6 @@ class TeachersService :
     ############ TEACHERS : GET_NUMBER_OF_HOURS  <int:id_teacher> ############
     def get_number_of_hours(self, id_teacher):
         try:
-            # Votre logique pour vérifier si l'enseignant existe
             if not TeachersFonction.field_exists('id', id_teacher):
                 return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
 
@@ -299,11 +299,83 @@ class TeachersService :
             # Fermeture de la connexion
             conn.close()
 
-            return jsonify({'total_hours': str(total_hours)}), 200
+            return jsonify({'id_Teacher': id_teacher,'total_hours': str(total_hours)}), 200
         except Exception as e:
             # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
         
+
+    ############ TEACHERS : GET_NUMBER_OF_HOURS_LEFT <int:id_teacher> ############
+    def get_number_of_hours_left(self, id_teacher):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures restantes (non encore passées)
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_left
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND (ent.Courses.dateCourse > CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime > CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher,))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_left = result[0]
+            else:
+                hours_left = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_left': str(hours_left)}), 200
+        except Exception as e:
+            # Gérez les erreurs selon vos besoins
+            return jsonify({'error': str(e)}), 500
+
+    ############ TEACHERS : GET_NUMBER_OF_HOURS_PASSED <int:id_teacher> ############    
+    def get_number_of_hours_passed(self, id_teacher):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures déjà passées
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_passed
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND (ent.Courses.dateCourse < CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime <= CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher,))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_passed = result[0]
+            else:
+                hours_passed = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_passed': str(hours_passed)}), 200
+        except Exception as e:
+            # Gérez les erreurs selon vos besoins
+            return jsonify({'error': str(e)}), 500
+
+
 #--------------------------------------------------FONCTION--------------------------------------------------#
 class TeachersFonction :
 

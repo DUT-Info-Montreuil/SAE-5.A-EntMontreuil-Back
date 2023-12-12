@@ -14,7 +14,7 @@ class CourseService:
                 return {"error": f"l'id : {course_id} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -28,8 +28,6 @@ class CourseService:
                 row = cursor.fetchone()
 
                 if row:
-                    
-                    
                     teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(course_id)
                     if status_code == 200:
                         teachers = teachers_result["teachers"]
@@ -41,9 +39,26 @@ class CourseService:
                         classrooms = classrooms_result["classrooms"]
                     else:
                         classrooms = [] 
+                    if row[8] :
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                    if row[9] :
+                        response, status = CoursesFonction.get_group_of_td(row[9])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                    if row[10] :
+                        response, status = CoursesFonction.get_group_of_promotion(row[10])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                    if row[11] :
+                        response, status = CoursesFonction.get_group_of_training(row[11])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         
-                    course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
-                    
                     return  {"courses": course_info.jsonify()}, 200
                 else:
                     return {"courses": []}, 200
@@ -58,7 +73,7 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -86,8 +101,26 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
@@ -125,7 +158,7 @@ class CourseService:
                 return {"error": f"la promotion de : {promotion_year} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                   SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -153,8 +186,27 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
+                        
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -170,7 +222,7 @@ class CourseService:
             with conn.cursor() as cursor:
                 # Supposons que la date soit au format 'YYYY-MM-DD'
                 sql_query = '''
-                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -180,7 +232,7 @@ class CourseService:
                     WHERE C.dateCourse >= %s AND C.dateCourse <= %s
                 '''
             
-                start_date = datetime.strptime(start_date, '%d-%m-%Y')
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 end_date = start_date + timedelta(days=4)
                 
                 cursor.execute(sql_query, (start_date, end_date))
@@ -202,7 +254,25 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -221,7 +291,7 @@ class CourseService:
             with conn.cursor() as cursor:
                 # Supposons que la date soit au format 'YYYY-MM-DD'
                 sql_query = '''
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -250,7 +320,25 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -287,7 +375,7 @@ class CourseService:
                 return {"error": f"l'id' : {id_td} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -316,7 +404,25 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -334,7 +440,7 @@ class CourseService:
                 return {"error": f"l'id' : {id_tp} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -363,7 +469,25 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        if row[10] :
+                            response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -379,7 +503,7 @@ class CourseService:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 sql_query = """
-                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training, tr.name, tr.semester, R.name, TP.name, TD.name, P.year, P.level, R.color
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
@@ -406,7 +530,25 @@ class CourseService:
                     else:
                         classrooms = [] 
                         
-                    course_info = CourseModel(*row, teacher = teachers, classroom= classrooms)
+                    if row[8] :
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                    if row[9] :
+                        response, status = CoursesFonction.get_group_of_td(row[9])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                    if row[10] :
+                        response, status = CoursesFonction.get_group_of_promotion(row[10])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                    if row[11] :
+                        response, status = CoursesFonction.get_group_of_training(row[11])
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                     courses_list.append(course_info.jsonify())
                 return {"courses" : courses_list}, 200
         except Exception as e:

@@ -50,7 +50,7 @@ def get_course_by_week(start_date):
     return reponse, http_status
 
 #get by training
-@courses_bp.route("/courses/trainings/<int:trainings_id>", methods=["GET"])
+@courses_bp.route("/courses/training/<int:trainings_id>", methods=["GET"])
 def get_course_by_training(trainings_id):
     reponse, http_status = course_service.get_course_by_training(trainings_id)
     return reponse, http_status

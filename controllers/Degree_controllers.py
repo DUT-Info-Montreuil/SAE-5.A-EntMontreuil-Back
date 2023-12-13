@@ -333,6 +333,7 @@ def get_cohort_tree():
                         td_children.append({
                             "td_id": td_id,
                             "label": td_name,
+                            "url": f"/resp/cohort/td/{td_id}",
                             "data": "TD",
                             "children": tp_children
                         })
@@ -372,14 +373,13 @@ def get_cohort_tree():
         if conn:
             conn.close()
 
+
 @degrees_bp.route('/promotion/<int:promotion_id>', methods=['GET'])
 def get_promotion_info(promotion_id):
     try:
-        # Connexion à la base de données
         conn = connect_pg.connect()
         cursor = conn.cursor()
 
-        # Récupérer les informations de la promotion
         cursor.execute("SELECT id, year, level, id_degree FROM ent.Promotions WHERE id = %s", (promotion_id,))
         promotion_row = cursor.fetchone()
         if promotion_row is None:
@@ -391,19 +391,14 @@ def get_promotion_info(promotion_id):
             "level": promotion_row[2],
             "degree": {},
             "students": [],
-            "trainings": []  # Ajout de l'attribut pour les formations
+            "trainings": []
         }
 
-        # Récupérer les informations du degree associé
         cursor.execute("SELECT id, name FROM ent.Degrees WHERE id = %s", (promotion_row[3],))
         degree_row = cursor.fetchone()
         if degree_row:
-            promotion_info["degree"] = {
-                "id": degree_row[0],
-                "name": degree_row[1]
-            }
+            promotion_info["degree"] = {"id": degree_row[0], "name": degree_row[1]}
 
-        # Récupérer les étudiants de la promotion
         cursor.execute("""
             SELECT u.*, s.apprentice, s.id_td, s.id_tp, s.id_promotion, s.id
             FROM ent.Users u
@@ -411,6 +406,7 @@ def get_promotion_info(promotion_id):
             WHERE s.id_promotion = %s
         """, (promotion_id,))
         students = cursor.fetchall()
+
         for student in students:
             student_info = {
                 "id": student[0],
@@ -421,37 +417,33 @@ def get_promotion_info(promotion_id):
                 "isApprentice": student[9],
                 "id_promotion": student[12],
                 "tp": [],
-                "td": []
+                "td": [],
+                "training": {}
             }
 
-            # Récupérer les informations de TP
             if student[11] is not None:
                 cursor.execute("SELECT * FROM ent.TP WHERE id = %s", (student[11],))
                 tp_info = cursor.fetchone()
                 if tp_info:
-                    student_info["tp"].append({
-                        "id_tp": tp_info[0],
-                        "name": tp_info[1],
-                    })
+                    student_info["tp"].append({"id_tp": tp_info[0], "name": tp_info[1]})
             
-            # Récupérer les informations de TD
             if student[10] is not None:
                 cursor.execute("SELECT * FROM ent.TD WHERE id = %s", (student[10],))
                 td_info = cursor.fetchone()
                 if td_info:
-                    student_info["td"].append({
-                        "id_td": td_info[0],
-                        "name": td_info[1],
-                    })
+                    student_info["td"].append({"id_td": td_info[0], "name": td_info[1]})
+
+                    cursor.execute("SELECT t.id, t.name, t.semester FROM ent.Trainings t JOIN ent.TD td ON t.id = td.id_training WHERE td.id = %s", (td_info[0],))
+                    training_info = cursor.fetchone()
+                    if training_info:
+                        student_info["training"] = {"id": training_info[0], "name": training_info[1], "semester": training_info[2]}
 
             promotion_info["students"].append(student_info)
 
-        # Récupérer les formations (trainings) associées à la promotion
         cursor.execute("SELECT t.id, t.name, t.semester FROM ent.Trainings t WHERE t.id_promotion = %s", (promotion_id,))
         trainings = cursor.fetchall()
 
         for training in trainings:
-            # Compter le nombre d'étudiants
             cursor.execute("""
                 SELECT COUNT(DISTINCT s.id)
                 FROM ent.Students s
@@ -460,7 +452,6 @@ def get_promotion_info(promotion_id):
             """, (training[0],))
             student_count = cursor.fetchone()[0]
 
-            # Compter le nombre de TD dans le training
             cursor.execute("SELECT COUNT(*) FROM ent.TD WHERE id_training = %s", (training[0],))
             td_count = cursor.fetchone()[0]
 
@@ -474,6 +465,231 @@ def get_promotion_info(promotion_id):
             promotion_info["trainings"].append(training_info)
 
         return jsonify(promotion_info)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+@degrees_bp.route('/training/<int:training_id>', methods=['GET'])
+def get_training_info(training_id):
+    try:
+        # Connexion à la base de données
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+
+        # Récupérer les informations du training
+        cursor.execute("SELECT id, name, semester, id_promotion FROM ent.Trainings WHERE id = %s", (training_id,))
+        training_row = cursor.fetchone()
+        if training_row is None:
+            return jsonify({"error": "Training not found"}), 404
+
+        training_info = {
+            "id": training_row[0],
+            "name": training_row[1],
+            "semester": training_row[2],
+            "degree": {},
+            "promotion": {},
+            "tds": [],
+            "students": []
+        }
+        
+        # Récupérer les informations du degree associé
+        cursor.execute("SELECT id, name FROM ent.Degrees WHERE id = %s", (training_row[3],))
+        degree_row = cursor.fetchone()
+        if degree_row:
+            training_info["degree"] = {
+                "id": degree_row[0],
+                "name": degree_row[1]
+            }
+            
+      # Récupérer les informations de la promotion associée
+        cursor.execute("SELECT id, year, level FROM ent.Promotions WHERE id = %s", (training_row[3],))
+        promotion_row = cursor.fetchone()
+        if promotion_row:
+            training_info["promotion"] = {
+                "id": promotion_row[0],
+                "year": promotion_row[1],
+                "level": promotion_row[2]
+            }
+
+        # Récupérer les TDs associés au training
+        cursor.execute("SELECT id, name FROM ent.TD WHERE id_training = %s", (training_id,))
+        tds = cursor.fetchall()
+
+        for td in tds:
+            cursor.execute("SELECT COUNT(*) FROM ent.TP WHERE id_td = %s", (td[0],))
+            tp_count = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(DISTINCT s.id)
+                FROM ent.Students s
+                WHERE s.id_td = %s
+            """, (td[0],))
+            student_count = cursor.fetchone()[0]
+
+            td_info = {
+                "id_td": td[0],
+                "name": td[1],
+                "tp_count": tp_count,
+                "student_count": student_count
+            }
+            training_info["tds"].append(td_info)
+
+        # Récupérer la liste des étudiants faisant partie du training
+        cursor.execute("""
+            SELECT DISTINCT u.*, s.id AS id_student, s.apprentice, s.id_td, s.id_tp
+            FROM ent.Users u
+            JOIN ent.Students s ON u.id = s.id_user
+            JOIN ent.TD td ON s.id_td = td.id
+            WHERE td.id_training = %s
+        """, (training_id,))
+        students = cursor.fetchall()
+
+        for student in students:
+            student_info = {
+                "id": student[0],
+                "username": student[1],
+                "last_name": student[3],
+                "first_name": student[4],
+                "isApprentice": student[10],
+                "id_student": student[9],
+                "tp": [],
+                "td": []
+            }
+
+            # Ajouter les informations de TP spécifique pour l'étudiant
+            if student[11] is not None:
+                cursor.execute("SELECT * FROM ent.TP WHERE id = %s", (student[11],))
+                tp_info = cursor.fetchone()
+                if tp_info:
+                    student_info["tp"].append({
+                        "id_tp": tp_info[0],
+                        "name": tp_info[1]
+                    })
+
+            # Ajouter les informations de TD
+            if student[10]:
+                td_info = next((td for td in training_info["tds"] if td["id_td"] == student[10]), None)
+                if td_info:
+                    student_info["td"].append(td_info)
+
+            training_info["students"].append(student_info)
+
+        return jsonify(training_info)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@degrees_bp.route('/td/<int:td_id>', methods=['GET'])
+def get_td_info(td_id):
+    try:
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+
+        # Récupérer les informations du TD
+        cursor.execute("SELECT id, name, id_training FROM ent.TD WHERE id = %s", (td_id,))
+        td_row = cursor.fetchone()
+        if td_row is None:
+            return jsonify({"error": "TD not found"}), 404
+
+        td_info = {
+            "id": td_row[0],
+            "name": td_row[1],
+            "training": {},
+            "promotion": {},
+            "degree": {},
+            "tps": [],
+            "students": []
+        }
+
+        # Récupérer les informations du training associé
+        cursor.execute("SELECT id, name, semester, id_promotion FROM ent.Trainings WHERE id = %s", (td_row[2],))
+        training_row = cursor.fetchone()
+        if training_row:
+            td_info["training"] = {
+                "id": training_row[0],
+                "name": training_row[1],
+                "semester": training_row[2]
+            }
+
+            # Récupérer les informations de la promotion et du degree associés
+            cursor.execute("SELECT id, year, level, id_degree FROM ent.Promotions WHERE id = %s", (training_row[3],))
+            promotion_row = cursor.fetchone()
+            if promotion_row:
+                td_info["promotion"] = {
+                    "id": promotion_row[0],
+                    "year": promotion_row[1],
+                    "level": promotion_row[2]
+                }
+
+                cursor.execute("SELECT id, name FROM ent.Degrees WHERE id = %s", (promotion_row[3],))
+                degree_row = cursor.fetchone()
+                if degree_row:
+                    td_info["degree"] = {
+                        "id": degree_row[0],
+                        "name": degree_row[1]
+                    }
+
+        # Récupérer les TP associés au TD
+        cursor.execute("SELECT id, name FROM ent.TP WHERE id_td = %s", (td_id,))
+        tps = cursor.fetchall()
+
+        for tp in tps:
+            cursor.execute("""
+                SELECT COUNT(DISTINCT s.id)
+                FROM ent.Students s
+                WHERE s.id_tp = %s
+            """, (tp[0],))
+            student_count = cursor.fetchone()[0]
+
+            tp_info = {
+                "id_tp": tp[0],
+                "name": tp[1],
+                "student_count": student_count
+            }
+            td_info["tps"].append(tp_info)
+
+        # Récupérer la liste des étudiants faisant partie du TD
+        cursor.execute("""
+            SELECT DISTINCT u.*, s.id AS id_student, s.apprentice, s.id_tp
+            FROM ent.Users u
+            JOIN ent.Students s ON u.id = s.id_user
+            WHERE s.id_td = %s
+        """, (td_id,))
+        students = cursor.fetchall()
+
+        for student in students:
+            student_info = {
+                "id": student[0],
+                "username": student[1],
+                "last_name": student[3],
+                "first_name": student[4],
+                "isApprentice": student[10],
+                "id_student": student[9],
+                "tp": []
+            }
+
+            # Ajouter les informations de TP spécifique pour l'étudiant
+            if student[11] is not None:
+                cursor.execute("SELECT * FROM ent.TP WHERE id = %s", (student[11],))
+                tp_info = cursor.fetchone()
+                if tp_info:
+                    student_info["tp"].append({
+                        "id_tp": tp_info[0],
+                        "name": tp_info[1]
+                    })
+
+            td_info["students"].append(student_info)
+
+        return jsonify(td_info)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

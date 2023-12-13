@@ -281,3 +281,91 @@ def get_degree_info(degree_id):
     finally:
         cursor.close()
         conn.close()
+
+@degrees_bp.route('/cohort', methods=['GET'])
+def get_cohort_tree():
+    try:
+        conn = connect_pg.connect()
+        cursor = conn.cursor()
+
+        # Récupérer tous les degrees
+        cursor.execute("SELECT id, name FROM ent.Degrees")
+        degrees = cursor.fetchall()
+
+        cohort_tree = []
+
+        for degree in degrees:
+            degree_id, degree_name = degree
+
+            # Récupérer les promotions pour chaque degree
+            cursor.execute("SELECT id, year, level FROM ent.Promotions WHERE id_degree = %s", (degree_id,))
+            promotions = cursor.fetchall()
+
+            promotion_children = []
+
+            for promo in promotions:
+                promo_id, promo_year, promo_level = promo
+
+                # Récupérer les formations pour chaque promotion
+                cursor.execute("SELECT id, name FROM ent.Trainings WHERE id_promotion = %s", (promo_id,))
+                trainings = cursor.fetchall()
+
+                training_children = []
+
+                for training in trainings:
+                    training_id, training_name = training
+
+                    # Récupérer les TDs pour chaque formation
+                    cursor.execute("SELECT id, name FROM ent.TD WHERE id_training = %s", (training_id,))
+                    tds = cursor.fetchall()
+
+                    td_children = []
+
+                    for td in tds:
+                        td_id, td_name = td
+
+                        # Récupérer les TPs pour chaque TD
+                        cursor.execute("SELECT id, name FROM ent.TP WHERE id_td = %s", (td_id,))
+                        tps = cursor.fetchall()
+
+                        tp_children = [{"label": tp[1], "data": "TP"} for tp in tps]
+
+                        td_children.append({
+                            "label": td_name,
+                            "data": "TD",
+                            "children": tp_children
+                        })
+
+                    training_children.append({
+                        "label": training_name,
+                        "data": "Parcours",
+                        "children": td_children
+                    })
+
+                # Modifier le label ici
+                promo_label = f"BUT {promo_level} {degree_name} {promo_year}"
+
+                promotion_children.append({
+                    "label": promo_label,
+                    "data": "Promotion",
+                    "url": f"/resp/cohort/promotion/{promo_id}",
+                    "children": training_children
+                })
+
+            cohort_tree.append({
+                "label": degree_name,
+                "icon": "pi pi-fw pi-compass",
+                "data": "degree",
+                "url": f"/resp/cohort/degree/{degree_id}",
+                "children": promotion_children
+            })
+
+        return jsonify(cohort_tree)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

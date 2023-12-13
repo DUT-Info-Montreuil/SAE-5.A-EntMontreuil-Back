@@ -22,6 +22,7 @@ from controllers.Tp_controllers import tp_bp
 from controllers.Courses_controllers import courses_bp
 from controllers.Ressources_controllers import resources_bp
 from controllers.Settings_controllers import settings_bp
+from controllers.Calls_controllers import calls_bp
 from flask_jwt_extended import JWTManager
 
 # Register the main controller
@@ -51,6 +52,7 @@ app.register_blueprint(tp_bp)
 app.register_blueprint(resources_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(courses_bp)
+app.register_blueprint(calls_bp)
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')

@@ -340,6 +340,7 @@ def get_cohort_tree():
                     training_children.append({
                         "label": training_name,
                         "data": "Parcours",
+                        "url": f"/resp/cohort/training/{training_id}",
                         "children": td_children
                     })
 
@@ -446,13 +447,29 @@ def get_promotion_info(promotion_id):
             promotion_info["students"].append(student_info)
 
         # Récupérer les formations (trainings) associées à la promotion
-        cursor.execute("SELECT id, name, semester FROM ent.Trainings WHERE id_promotion = %s", (promotion_id,))
+        cursor.execute("SELECT t.id, t.name, t.semester FROM ent.Trainings t WHERE t.id_promotion = %s", (promotion_id,))
         trainings = cursor.fetchall()
+
         for training in trainings:
+            # Compter le nombre d'étudiants
+            cursor.execute("""
+                SELECT COUNT(DISTINCT s.id)
+                FROM ent.Students s
+                JOIN ent.TD td ON s.id_td = td.id
+                WHERE td.id_training = %s
+            """, (training[0],))
+            student_count = cursor.fetchone()[0]
+
+            # Compter le nombre de TD dans le training
+            cursor.execute("SELECT COUNT(*) FROM ent.TD WHERE id_training = %s", (training[0],))
+            td_count = cursor.fetchone()[0]
+
             training_info = {
                 "id": training[0],
                 "name": training[1],
-                "semester": training[2]
+                "semester": training[2],
+                "student_count": student_count,
+                "td_count": td_count
             }
             promotion_info["trainings"].append(training_info)
 

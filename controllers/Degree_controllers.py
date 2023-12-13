@@ -328,9 +328,10 @@ def get_cohort_tree():
                         cursor.execute("SELECT id, name FROM ent.TP WHERE id_td = %s", (td_id,))
                         tps = cursor.fetchall()
 
-                        tp_children = [{"label": tp[1], "data": "TP"} for tp in tps]
+                        tp_children = [{"tp_id": tp[0], "label": tp[1], "data": "TP"} for tp in tps]
 
                         td_children.append({
+                            "td_id": td_id,
                             "label": td_name,
                             "data": "TD",
                             "children": tp_children
@@ -388,7 +389,8 @@ def get_promotion_info(promotion_id):
             "year": promotion_row[1],
             "level": promotion_row[2],
             "degree": {},
-            "students": []
+            "students": [],
+            "trainings": []  # Ajout de l'attribut pour les formations
         }
 
         # Récupérer les informations du degree associé
@@ -442,6 +444,17 @@ def get_promotion_info(promotion_id):
                     })
 
             promotion_info["students"].append(student_info)
+
+        # Récupérer les formations (trainings) associées à la promotion
+        cursor.execute("SELECT id, name, semester FROM ent.Trainings WHERE id_promotion = %s", (promotion_id,))
+        trainings = cursor.fetchall()
+        for training in trainings:
+            training_info = {
+                "id": training[0],
+                "name": training[1],
+                "semester": training[2]
+            }
+            promotion_info["trainings"].append(training_info)
 
         return jsonify(promotion_info)
 

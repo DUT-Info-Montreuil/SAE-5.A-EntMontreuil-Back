@@ -159,3 +159,31 @@ def get_role_by_id(role_id):
         return jsonify({'error': str(e)}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Route pour obtenir tous les rôles sauf étudiant et enseignant
+@roles_bp.route('/roles/nee', methods=['GET'])
+def get_roles_not_student_teacher():
+    """
+    Get a list of all roles.
+    ---
+    tags:
+      - Roles
+    parameters:
+      - name: output_format
+        in: query
+        description: Output format (default is "dto").
+        required: false
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+    responses:
+      200:
+        description: List of all roles retrieved from the database.
+      500:
+        description: Server error in case of a problem during role retrieval.
+    """
+    try:
+        all_roles = roles_service.get_roles_not_student_teacher()
+        return all_roles
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

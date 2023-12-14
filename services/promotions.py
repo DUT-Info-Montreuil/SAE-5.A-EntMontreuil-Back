@@ -3,6 +3,7 @@ import connect_pg
 import pandas as pd
 from entities.model.promotionsm import PromotionModel
 from entities.DTO.promotions import Promotion
+from entities.DTO.trainings import Training
 from flask import jsonify
 import datetime
 
@@ -375,6 +376,34 @@ class PromotionService:
 
                 return jsonify({
                     "message": f"Étudiant retiré avec succès du TP, ID : {tp_id}"
+                }), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors du retrait de l'étudiant du TP : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+
+
+    # -------------------- Récuperer les parcours d'une promo --------------------------------------#
+    def get_training_of_promo(self, id_promo):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Vérifier si l'étudiant existe
+                trainings = []
+                cursor.execute("SELECT * FROM ent.Trainings WHERE id_Promotion = %s", (id_promo,))
+                lis_tr = cursor.fetchall()
+                for tr in lis_tr:
+                    # Create instances of the Training class with data from the database
+                    training = Training(id=tr[0], name=tr[1], id_Promotion=tr[2], semester=tr[3])
+                    trainings.append(training)
+                conn.commit()
+
+                # Return a list of Training instances as JSON
+                return jsonify({
+                    "trainings": [training.jsonify() for training in trainings]
                 }), 200
 
         except psycopg2.Error as e:

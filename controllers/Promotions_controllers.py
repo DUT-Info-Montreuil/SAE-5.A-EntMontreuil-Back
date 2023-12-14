@@ -9,6 +9,7 @@ def get_promotion_info(promotion_id):
     output_format = request.args.get("format", default="DTO")
     return promotion_service.get_promotion_info(promotion_id, output_format)
 
+
 @promotions_bp.route("/promotions", methods=["GET"])
 def get_all_promotions():
     output_format = request.args.get("format", default="model")
@@ -34,6 +35,10 @@ def create_td_in_promotion(promotion_id):
     td_name = request.json.get("td_name")
     return promotion_service.create_td_in_promotion(promotion_id, td_name)
 
+
+
+
+
 @promotions_bp.route("/promotions/td/<int:td_id>/tp", methods=["POST"])
 def create_tp_in_td(td_id):
     tp_name = request.json.get("tp_name")
@@ -57,3 +62,7 @@ def remove_student_from_td(student_ine):
 def remove_student_from_tp(student_ine):
     tp_id = request.json.get("tp_id")
     return promotion_service.remove_student_from_tp(student_ine, tp_id)
+
+@promotions_bp.route("/promotions/trainings/<int:id_promo>", methods=["GET"])
+def get_training_of_promo(id_promo):
+    return promotion_service.get_training_of_promo(id_promo)

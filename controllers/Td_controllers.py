@@ -30,19 +30,6 @@ def delete_td(td_id):
 def create_td():
     try:
         data = request.json
-        name = data.get('name')
-        id_promotion = data.get('id_promotion')
-        id_training = data.get('id_training')
-
-        # Création de l'objet TD
-        td = TD(name=name, id_promotion=id_promotion, id_training=id_training)
-        
-        # Ajout du TD à la base de données
-        # Cela dépend de la façon dont vous gérez l'accès à la base de données
-        # Par exemple :
-        # db.session.add(td)
-        # db.session.commit()
-
-        return jsonify({"message": "TD créé avec succès", "td": td.serialize()}), 201
+        return td_service.add_td(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

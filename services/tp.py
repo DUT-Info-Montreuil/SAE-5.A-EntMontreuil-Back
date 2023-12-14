@@ -117,3 +117,30 @@ class TPService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+
+       # -------------------- Ajouter un TP --------------------------------------#
+    def add_tp(self, data):
+        try:
+            conn = connect_pg.connect()
+            
+            if not connect_pg.does_entry_exist('TD', data["id_td"]) :
+                return jsonify({"error": f"L'id td {data.get('id_td')} n'existe pas"}), 400 
+            
+                
+            with conn.cursor() as cursor:
+                cursor.execute("INSERT INTO ent.TP (name, id_Td) VALUES (%s,%s) RETURNING id" , (data["name"], data["id_td"]))
+                id = cursor.fetchone()[0]
+                conn.commit()
+                if id :
+                    return jsonify({
+                        "message": f"TP ajouté avec succès, ID : {id}"
+                    }), 200
+                else:
+                    return jsonify({"error": "Erreur lors de l'ajout du TP"}), 400
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression du TP : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

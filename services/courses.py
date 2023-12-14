@@ -188,27 +188,29 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
-                        if row[10] :
-                            response, status = CoursesFonction.get_group_of_promotion(row[10])
-                            tp = response["tp"]
-                            td = response["td"]
-                            training = response["training"]
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
-                            courses_promotion.append(course_info.jsonify())
+                        response, status = CoursesFonction.get_group_of_promotion(row[10])
+                        tp = response["tp"]
+                        td = response["td"]
+                        training = response["training"]
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
+                        courses_promotion.append(course_info.jsonify())
                         if training : 
                             for id in training :
                                 response, status = self.get_course_by_training(id)
-                                courses_training.append(response["courses"])
+                                if response.get("courses") and len(response["courses"]) > 0:
+                                    courses_training.append(response["courses"])
                         if td :
                             for id in td :
                                 response, status = self.get_course_by_td(id)
-                                courses_td.append(response["courses"])   
+                                if response.get("courses") and len(response["courses"]) > 0:
+                                    courses_td.append(response["courses"])
                         if tp :
                             for id in tp :
                                 response, status = self.get_course_by_tp(id)
-                                courses_tp.append(response["courses"]) 
+                                if response.get("courses") and len(response["courses"]) > 0:
+                                    courses_tp.append(response["courses"])
                     
                     courses_list = {
                         "courses_promotion" : courses_promotion,

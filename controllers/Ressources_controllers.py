@@ -26,3 +26,7 @@ def get_resource_by_id(resource_id):
 @resources_bp.route("/resources", methods=["GET"])
 def get_all_resources():
     return resource_service.get_all_resources()
+
+@resources_bp.route("/resources/training/<int:id_Training>", methods=["GET"])
+def get_resource_by_id_training(id_Training):
+    return resource_service.get_resource_by_id_training(id_Training)

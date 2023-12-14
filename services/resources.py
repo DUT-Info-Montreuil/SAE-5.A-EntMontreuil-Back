@@ -152,3 +152,37 @@ class ResourceService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+
+ # -------------------- Récupérer toutes les ressources pou un id training --------------------------------------#
+    def get_resource_by_id_training(self, id_training):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Requête SQL pour récupérer toutes les ressources
+                sql_query = """
+                    SELECT R.id, R.name, R.id_Training, R.color
+                    FROM ent.Resources R
+                    WHERE R.id_Training = %s
+                """
+
+                cursor.execute(sql_query, (id_training,))
+                rows = cursor.fetchall()
+                resources_list = []
+
+                for row in rows:
+                    resource = {
+                        "id": row[0],
+                        "name": row[1],
+                        "id_Training": row[2],
+                        "color" : row[3]
+                    }
+                    resources_list.append(resource)
+
+                return jsonify(resources_list), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la récupération des ressources : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

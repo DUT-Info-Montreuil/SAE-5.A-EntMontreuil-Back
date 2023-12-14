@@ -362,7 +362,7 @@ def get_cohort_tree():
             cohort_tree.append({
                 "label": degree_name,
                 "icon": "pi pi-fw pi-compass",
-                "data": "degree",
+                "data": "Formation",
                 "url": f"/resp/cohort/degree/{degree_id}",
                 "children": promotion_children
             })

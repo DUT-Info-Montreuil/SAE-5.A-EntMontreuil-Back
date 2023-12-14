@@ -131,7 +131,7 @@ class CourseService:
         finally:
             conn.close()
 
-    #------------------get by classroom!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------
+    #------------------get by classroom-----------------------
     def get_course_by_classroom(self, classroom_name):
         try:
             
@@ -198,18 +198,18 @@ class CourseService:
                         courses_promotion.append(course_info.jsonify())
                         if training : 
                             for id in training :
-                                response, status = self.get_course_by_training(id)
-                                if response.get("courses") and len(response["courses"]) > 0:
+                                if CoursesFonction.verifie_id_in_courses('id_training' , id) :
+                                    response, status = self.get_course_by_training(id)
                                     courses_training.append(response["courses"])
                         if td :
                             for id in td :
-                                response, status = self.get_course_by_td(id)
-                                if response.get("courses") and len(response["courses"]) > 0:
+                                if CoursesFonction.verifie_id_in_courses('id_td' , id) :
+                                    response, status = self.get_course_by_td(id)
                                     courses_td.append(response["courses"])
                         if tp :
                             for id in tp :
-                                response, status = self.get_course_by_tp(id)
-                                if response.get("courses") and len(response["courses"]) > 0:
+                                if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                    response, status = self.get_course_by_tp(id)
                                     courses_tp.append(response["courses"])
                     
                     courses_list = {
@@ -1182,6 +1182,26 @@ class CoursesFonction :
             conn.close()
             
             return {"tp": tps, "td": tds, "training": trainings}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500
+        
+    # verifie si id trainings est present dans la table courses  
+    def verifie_id_in_courses(field, value):
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            
+            query = f"""
+                SELECT COUNT(*)
+                WHERE {table} = %s
+            """
+            cursor.execute(query, (value,))
+            row = cursor.fetchone()[0]
+            
+            return row > 0
+            
+            conn.close()
 
         except Exception as e:
             return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500

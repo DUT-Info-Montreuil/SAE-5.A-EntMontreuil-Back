@@ -172,8 +172,10 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
-
+                    courses_promotion = []
+                    courses_training = []
+                    courses_td = []
+                    courses_tp = []
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
                         if status_code == 200:
@@ -186,28 +188,35 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
-                        
-                            
-                        if row[8] :
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[9] :
-                            response, status = CoursesFonction.get_group_of_td(row[9])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
                         if row[10] :
                             response, status = CoursesFonction.get_group_of_promotion(row[10])
+                            tp = response["tp"]
+                            td = response["td"]
+                            training = response["training"]
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                             id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
-                        if row[11] :
-                            response, status = CoursesFonction.get_group_of_training(row[11])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
-                        courses_list.append(course_info.jsonify())
+                            courses_promotion.append(course_info.jsonify())
+                        if training : 
+                            for id in training :
+                                response, status = self.get_course_by_training(id)
+                                courses_training.append(response["courses"])
+                        if td :
+                            for id in td :
+                                response, status = self.get_course_by_td(id)
+                                courses_td.append(response["courses"])   
+                        if tp :
+                            for id in tp :
+                                response, status = self.get_course_by_tp(id)
+                                courses_tp.append(response["courses"]) 
+                    
+                    courses_list = {
+                        "courses_promotion" : courses_promotion,
+                        "courses_training" : courses_training,
+                        "courses_td" : courses_td,
+                        "courses_tp" : courses_tp
+                    }                  
+                        
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -320,20 +329,6 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        if row[8] :
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[9] :
-                            response, status = CoursesFonction.get_group_of_td(row[9])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[10] :
-                            response, status = CoursesFonction.get_group_of_promotion(row[10])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
                         if row[11] :
                             response, status = CoursesFonction.get_group_of_training(row[11])
                             course_info = CourseModel(
@@ -403,26 +398,12 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
-                            
-                        if row[8] :
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
                         if row[9] :
                             response, status = CoursesFonction.get_group_of_td(row[9])
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                             id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[10] :
-                            response, status = CoursesFonction.get_group_of_promotion(row[10])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
-                        if row[11] :
-                            response, status = CoursesFonction.get_group_of_training(row[11])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
+                        
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:
@@ -473,21 +454,6 @@ class CourseService:
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                             id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[9] :
-                            response, status = CoursesFonction.get_group_of_td(row[9])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        if row[10] :
-                            response, status = CoursesFonction.get_group_of_promotion(row[10])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
-                        if row[11] :
-                            response, status = CoursesFonction.get_group_of_training(row[11])
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_list.append(course_info.jsonify())
                     return {"courses": courses_list}, 200
                 else:

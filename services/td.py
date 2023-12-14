@@ -117,3 +117,33 @@ class TDService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+                
+                
+        # -------------------- Ajouter un TD --------------------------------------#
+    def add_td(self, data):
+        try:
+            conn = connect_pg.connect()
+            
+            if not connect_pg.does_entry_exist('Promotions', data["id_promotion"]) :
+                return jsonify({"error": f"L'id promotion {data.get('id_promotion')} n'existe pas"}), 400 
+            
+            if not connect_pg.does_entry_exist('Trainings', data["id_training"]) :
+                return jsonify({"error": f"L'id training {data.get('id_promotion')} n'existe pas"}), 400 
+                
+            with conn.cursor() as cursor:
+                cursor.execute("INSERT INTO ent.TD (name, id_Training, id_Promotion) VALUES (%s,%s,%s) RETURNING id" , (data["name"], data["id_training"], data["id_promotion"]))
+                id = cursor.fetchone()[0]
+                conn.commit()
+                if id :
+                    return jsonify({
+                        "message": f"TD ajouté avec succès, ID : {id}"
+                    }), 200
+                else:
+                    return jsonify({"error": "Erreur lors de l'ajout du TD"}), 400
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression du TD : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

@@ -24,3 +24,12 @@ def update_tp(tp_id):
 @tp_bp.route('/tp/<int:tp_id>', methods=['DELETE'])
 def delete_tp(tp_id):
     return tp_service.delete_tp(tp_id)
+
+# -------------------- Ajouter un TP --------------------------------------#
+@tp_bp.route('/tp', methods=['POST'])
+def add_tp():
+    try:
+        data = request.json
+        return tp_service.add_tp(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

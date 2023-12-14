@@ -24,3 +24,12 @@ def update_td(td_id):
 @td_bp.route('/td/<int:td_id>', methods=['DELETE'])
 def delete_td(td_id):
     return td_service.delete_td(td_id)
+
+# -------------------- Créer un TD --------------------------------------#
+@td_bp.route('/td', methods=['POST'])
+def create_td():
+    try:
+        data = request.json
+        return td_service.add_td(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

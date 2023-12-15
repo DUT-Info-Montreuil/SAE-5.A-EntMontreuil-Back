@@ -1175,7 +1175,6 @@ class CoursesFonction :
                 SELECT tp.id FROM ent.TD td
                 INNER JOIN ent.TP tp on tp.id_Td = td.id
                 Where td.id = %s
-
             """
             if tds :
                 tps = []
@@ -1217,3 +1216,27 @@ class CoursesFonction :
 
         except Exception as e:
             return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500
+    
+    def get_courses_for_date(self, date):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT * FROM ent.Courses
+                    WHERE date_trunc('day', start_date) = %s
+                """, (date,))
+                rows = cursor.fetchall()
+                courses_list = []
+
+                for row in rows:
+                    course = CourseModel(*row)
+                    courses_list.append(course.jsonify())
+
+                return jsonify(courses_list), 200
+
+        except Exception as e:
+            return jsonify({"error": f"Error getting courses for date: {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

@@ -110,5 +110,8 @@ def delete_course_with_many_day():
     
     return course_service.delete_course_with_many_day(data["startDay"], data["endDay"])
 
-
+@courses_bp.route("/courses/date/<date>", methods=["GET"])
+def get_courses_for_date(date):
+    reponse, http_status = course_service.get_courses_for_date(date)
+    return reponse, http_status
 

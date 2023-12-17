@@ -314,3 +314,18 @@ responses:
         return jsonify(result)
     except Exception as e:
         return jsonify({"message": f"Erreur lors de la suppression du parcours : {str(e)}"}), 500
+
+
+#-------------------get_training_by_id_promotion_and_semester
+
+@training_bp.route('/trainings/<int:id_promotion>/<int:semester>', methods=['GET'])
+def get_training_by_id_promotion_and_semester(id_promotion,semester):
+  
+    try:
+        
+        trainings = training_service.get_training_by_id_promotion_and_semester(id_promotion, semester)
+        return jsonify(trainings), 200
+
+    except Exception as e:
+        # Gestion des erreurs
+        return jsonify({"message": str(e)}), 500

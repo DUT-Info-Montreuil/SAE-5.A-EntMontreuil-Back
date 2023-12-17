@@ -196,3 +196,32 @@ class TrainingService:
 
         finally:
             connect_pg.disconnect(conn)
+
+#--------get trainings by id_promotion and semester -------------
+    def get_training_by_id_promotion_and_semester(self, id_promotion,semester):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT T.id, T.name, T.id_Promotion, P.year, T.semester, P.level, D.id, D.name FROM ent.Trainings T INNER JOIN ent.Promotions P ON T.id_Promotion = P.id INNER JOIN ent.Degrees D on P.id_Degree = D.id WHERE P.id = %s AND T.semester = %s", (id_promotion,semester))
+                rows = cursor.fetchall()
+                trainings = []
+                for row in rows :
+                    if row :
+                        training = TrainingModel(
+                            id = row[0],
+                            name = row[1],
+                            id_Promotion = row[2],
+                            semester = row[4],
+                            promotion_year = row[3],
+                            promotion_level = row[5],
+                            id_Degree = row[6],
+                            degree_name = row[7]
+                        )
+                        trainings.append(training.jsonify())
+                return trainings
+
+        except Exception as e:
+            return None  
+
+        finally:
+            connect_pg.disconnect(conn)

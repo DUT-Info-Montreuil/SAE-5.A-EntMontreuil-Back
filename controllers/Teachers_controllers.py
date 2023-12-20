@@ -510,3 +510,43 @@ def get_teacher_hours_by_resource(id_teacher, id_resource):
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
+    
+
+
+#-----------get_teacher_hours_by_promotion--------------
+# Define the route to get the total hours of a specific teacher by promotion
+@teachers_bp.route('/teachers/<int:id_teacher>/hours/promotion/<int:id_promotion>', methods=['GET'])
+def get_teacher_hours_by_promotion(id_teacher, id_promotion):
+    """
+    Get the hours by promotion of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by promotion.
+        required: true
+        type: integer
+      - name: id_promotion
+        in: path
+        description: ID of the promotion.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_hours_by_promotion(id_teacher, id_promotion)
+
+        # Retournez les données au format JSON
+        return hours_data
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 500

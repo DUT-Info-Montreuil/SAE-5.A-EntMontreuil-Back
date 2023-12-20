@@ -301,7 +301,6 @@ class TeachersService :
 
             return jsonify({'id_Teacher': id_teacher,'total_hours': str(total_hours)}), 200
         except Exception as e:
-            # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
         
 
@@ -337,7 +336,6 @@ class TeachersService :
 
             return jsonify({'id_Teacher': id_teacher, 'hours_left': str(hours_left)}), 200
         except Exception as e:
-            # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
 
     ############ TEACHERS : GET_NUMBER_OF_HOURS_PASSED <int:id_teacher> ############    
@@ -372,14 +370,12 @@ class TeachersService :
 
             return jsonify({'id_Teacher': id_teacher, 'hours_passed': str(hours_passed)}), 200
         except Exception as e:
-            # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
 
 
-    ############ TEACHERS : GET_HOURS_BY_MONTH <int:id_teacher> ############    
+    ############ TEACHERS : GET_HOURS_BY_MONTH ############    
     def get_hours_by_month(self, id_teacher, year, month):
         try:
-            # Votre logique pour vérifier si l'enseignant existe
             if not TeachersFonction.field_exists('id', id_teacher):
                 return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
 
@@ -409,13 +405,11 @@ class TeachersService :
 
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
-            # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
 
-    ############ TEACHERS : GET_HOURS_BY_RESOURCE <int:id_teacher> ############    
+    ############ TEACHERS : GET_HOURS_BY_RESOURCE ############    
     def get_hours_by_resource(self, id_teacher, id_resource):
         try:
-            # Votre logique pour vérifier si l'enseignant existe
             if not TeachersFonction.field_exists('id', id_teacher):
                 return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
 
@@ -443,8 +437,40 @@ class TeachersService :
 
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
-            # Gérez les erreurs selon vos besoins
             return jsonify({'error': str(e)}), 500
+
+    ############ TEACHERS : GET_HOURS_BY_PROMOTION ############    
+    def get_hours_by_promotion(self, id_teacher, id_promotion):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures effectuées par promotion
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s AND ent.Courses.id_promotion = %s
+            """
+            cursor.execute(query, (id_teacher, id_promotion))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
 
 #--------------------------------------------------FONCTION--------------------------------------------------#
 class TeachersFonction :

@@ -151,26 +151,26 @@ class CourseService:
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
     #------------------get by promotion-----------------------
-    def get_course_by_promotion(self, promotion_id):
+    def get_course_by_promotion(self, promotion_id,semester):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist("Promotions", 'id', promotion_id) :
                 return {"error": f"la promotion de : {promotion_id} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
+                 SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training ,trr.semester
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.Trainings trr ON R.id_Training = trr.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    WHERE P.id = %s
+                    WHERE P.id = %s AND trr.semester = %s
                 """
-
-                cursor.execute(sql_query, (promotion_id,))
+                cursor.execute(sql_query, (promotion_id,semester))
                 rows = cursor.fetchall()
-
+       
                 if rows :
                     courses_promotion = []
                     courses_training = []
@@ -626,6 +626,8 @@ class CourseService:
             if not CoursesFonction.field_exist('Courses', 'id', course_id) :
                 return jsonify({"error": f"L'id du cour : {course_id} n'existe pas"}), 400
             with conn.cursor() as cursor:
+                cursor.execute("DELETE FROM ent.courses_classrooms WHERE id_course=%s",(course_id,))
+                cursor.execute("DELETE FROM ent.courses_teachers WHERE id_course=%s",(course_id,))
                 cursor.execute("DELETE FROM ent.Courses WHERE id = %s", (course_id,))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimé avec succès, ID : {course_id}"}), 200

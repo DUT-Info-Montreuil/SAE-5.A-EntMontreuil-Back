@@ -26,10 +26,14 @@ def get_all_courses():
     return reponse, http_status
 
 #get by promotion
-@courses_bp.route("/courses/promotion/<int:promotion_id>", methods=["GET"])
-def get_course_by_promotion(promotion_id):
-    reponse, http_status = course_service.get_course_by_promotion(promotion_id)
+
+
+@courses_bp.route("/courses/promotion/<int:promotion_id>/<int:semester>", methods=["GET"])
+def get_course_by_promotion(promotion_id,semester):
+    reponse, http_status = course_service.get_course_by_promotion(promotion_id,semester)
     return reponse, http_status
+#get by classroom
+
 
 #get by classroom
 @courses_bp.route("/courses/classroom/<string:classroom>", methods=["GET"])

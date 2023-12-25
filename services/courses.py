@@ -731,7 +731,7 @@ class CourseService:
                         INSERT INTO ent.Courses_Classrooms (id_course, id_classoom) VALUES (%s, %s)
                         """,
                         (course_id,id)
-                )
+                    )
                     
                 cursor.execute(
                     """
@@ -747,7 +747,7 @@ class CourseService:
                         INSERT INTO ent.Courses_Classrooms (id_course, id_teacher) VALUES (%s, %s)
                         """,
                         (course_id,id)
-                )
+                    )
                 
                 conn.commit()
 

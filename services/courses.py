@@ -751,7 +751,7 @@ class CourseService:
                 
                 conn.commit()
 
-                return jsonify({"message": f"Cours mis à jour avec succès, ID : {updated_course_id[0]}"}), 200
+                return jsonify({"message": f"Cours mis à jour avec succès, ID : {course_id}"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la mise à jour du cours : {str(e)}"}), 500

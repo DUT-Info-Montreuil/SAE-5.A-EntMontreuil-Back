@@ -470,6 +470,41 @@ class TeachersService :
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+    ############  TEACHERS/GETBYIDUSER/<int:id_user> ################
+    def get_teacher_by_id_user(self, id_user):
+        try:
+            # Vérifiez si l'ID utilisateur est valide
+            if not UsersFonction.field_exists('id', id_user):
+                return jsonify({"error": f"id_user: '{id_user}' not exists"}), 400
+
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour récupérer l'enseignant par id_user
+            query = """
+            SELECT t.id
+            FROM ent.teachers t 
+            INNER JOIN ent.users u ON u.id = t.id_User 
+            INNER JOIN ent.roles r ON r.id = u.id_role 
+            WHERE t.id_User = %s
+            """
+
+            cursor.execute(query, (id_user,))
+            row = cursor.fetchone()
+
+            conn.commit()
+            conn.close()
+
+            if not row:
+                return jsonify({"error": f"No teacher found with id_user: '{id_user}'"}), 404
+
+            return jsonify({'id_Teacher': row[0], 'id_user': id_user}), 200
+
+        except Exception as e:
+            return jsonify({"message": "Error", "error": str(e)}), 400
+
+
 
 
 #--------------------------------------------------FONCTION--------------------------------------------------#

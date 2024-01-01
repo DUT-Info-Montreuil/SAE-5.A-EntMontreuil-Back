@@ -550,3 +550,36 @@ def get_teacher_hours_by_promotion(id_teacher, id_promotion):
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
+    
+#-----------get_teacher_by_id_user--------------
+# Get a teacher by its id user
+@teachers_bp.route('/teachers/getbyiduser/<int:id_user>', methods=['GET'])
+def get_teacher_by_id_user(id_user):
+    """
+    Get a teacher by its id user
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_user
+        in: path
+        description: ID of the user teacher.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Utilisez la fonction du service pour obtenir l'id teacher
+        teacher = teachers_service.get_teacher_by_id_user(id_user)
+
+        # Retournez les données au format JSON
+        return teacher
+    except Exception as e:
+        # Gérez les erreurs
+        return jsonify({"message": "Error", "error": str(e)}), 500

@@ -61,8 +61,7 @@ class TeachersService :
                 "initial": data.get("initial"),
                 "id_User" : user_id
             }
-            if "id" in data : 
-                teacher_data["id"] = data.get("id")
+            teacher_data["id"] = user_id
             
             columns = list(teacher_data.keys())
             values = list(teacher_data.values())

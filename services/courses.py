@@ -1218,8 +1218,8 @@ class CoursesFonction :
             cursor = conn.cursor()
             
             query = f"""
-                SELECT COUNT(*)
-                WHERE {table} = %s
+                SELECT COUNT(*) FROM ent.Courses
+                WHERE {field} = %s
             """
             cursor.execute(query, (value,))
             row = cursor.fetchone()[0]

@@ -348,7 +348,7 @@ class CourseService:
     def get_course_by_teacher(self, teacher_username):
         try:
             if not CoursesFonction.teacher_username_exist(teacher_username) :
-                return {"error": f"l'identifiant : {teacher_usernameesz} n'existe pas"}, 400
+                return {"error": f"l'identifiant : {teacher_username} n'existe pas"}, 400
             response, status = CoursesFonction.get_all_id_courses_with_teacher_username(teacher_username)
             if status == 200 : 
                 all_id_courses = response["courses"]

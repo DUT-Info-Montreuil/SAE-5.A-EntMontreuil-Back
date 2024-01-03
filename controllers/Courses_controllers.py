@@ -108,7 +108,7 @@ def copy_week_courses():
 def update_course(course_id):
     data = request.get_json()
     data["id"] = course_id
-    return course_service.update_course(data)
+    return course_service.update_course(data,course_id)
 
 ##-----------------DELETE----------------
 @courses_bp.route("/courses/id/<int:course_id>", methods=["DELETE"])

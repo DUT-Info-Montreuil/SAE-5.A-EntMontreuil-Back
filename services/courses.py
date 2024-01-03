@@ -692,7 +692,7 @@ class CourseService:
     
     ############################ PATCH ###############################
 
-    def update_course(self, data):
+    def update_course(self, data,course_id):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
@@ -700,35 +700,58 @@ class CourseService:
                     """
                     UPDATE ent.Courses
                     SET startTime = %s, endTime = %s, dateCourse = %s, control = %s,
-                        id_Resource = %s, id_Tp = %s, id_Td = %s, id_Promotion = %s,
-                        id_Teacher = %s, id_classroom = %s
+                        id_Resource = %s, id_Tp = %s, id_Td = %s, id_Promotion = %s, id_Training = %s
                     WHERE id = %s
-                    RETURNING id
                     """,
                     (
                         data["startTime"],
                         data["endTime"],
                         data["dateCourse"],
                         data["control"],
-                        data["resource_id"],
-                        data["tp_id"],
-                        data["td_id"],
-                        data["promotion_id"],
-                        data["teacher_id"],
-                        data["classroom_id"],
-                        data["id"]
+                        data["id_resource"],
+                        data["id_tp"],
+                        data["id_td"],
+                        data["id_promotion"],
+                        data["id_training"],
+                        course_id
                     )
                 )
-                updated_course_id = cursor.fetchone()
-
+                
+                cursor.execute(
+                    """
+                    DELETE from ent.Courses_Classrooms
+                    WHERE id_Course = %s
+                    """,
+                    (course_id,)
+                )
+                
+                for id in data["classrooms"] :
+                    cursor.execute(
+                        """
+                        INSERT INTO ent.Courses_Classrooms (id_course, id_classoom) VALUES (%s, %s)
+                        """,
+                        (course_id,id)
+                    )
+                    
+                cursor.execute(
+                    """
+                    DELETE from ent.Courses_Teachers
+                    WHERE id_Course = %s
+                    """,
+                    (course_id,)
+                )
+                
+                for id in data["teachers"] :
+                    cursor.execute(
+                        """
+                        INSERT INTO ent.Courses_Teachers (id_course, id_teacher) VALUES (%s, %s)
+                        """,
+                        (course_id,id)
+                    )
+                
                 conn.commit()
 
-                if updated_course_id:
-                    return jsonify({
-                        "message": f"Cours mis à jour avec succès, ID : {updated_course_id[0]}"
-                    }), 200
-                else:
-                    return jsonify({"message": "Cours non trouvé ou aucune modification effectuée"}), 404
+                return jsonify({"message": f"Cours mis à jour avec succès, ID : {course_id}"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la mise à jour du cours : {str(e)}"}), 500

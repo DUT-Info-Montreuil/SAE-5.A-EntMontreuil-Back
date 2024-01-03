@@ -744,7 +744,7 @@ class CourseService:
                 for id in data["teachers"] :
                     cursor.execute(
                         """
-                        INSERT INTO ent.Courses_Classrooms (id_course, id_teacher) VALUES (%s, %s)
+                        INSERT INTO ent.Courses_Teachers (id_course, id_teacher) VALUES (%s, %s)
                         """,
                         (course_id,id)
                     )

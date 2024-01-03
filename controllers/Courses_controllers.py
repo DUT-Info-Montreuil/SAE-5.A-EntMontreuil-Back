@@ -80,17 +80,28 @@ def add_course():
 
 @courses_bp.route("/courses/copy-day", methods=["POST"])
 def copy_day_courses():
-    data = request.get_json()
-    source_date = data.get("source_date")
-    target_date = data.get("target_date")
-    return course_service.copy_day_courses(source_date, target_date)
+    try:
+        data = request.json
+        source_date = data.get('source_date')
+        target_date = data.get('target_date')
 
+        response, status_code = course_service.copy_day_courses(source_date, target_date)
+        return jsonify(response), status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @courses_bp.route("/courses/copy-week", methods=["POST"])
 def copy_week_courses():
-    data = request.get_json()
-    source_week_start_date = data.get("source_week_start_date")
-    target_week_start_date = data.get("target_week_start_date")
-    return course_service.copy_week_courses(source_week_start_date, target_week_start_date)
+    try:
+        data = request.json
+        source_week_start_date = data.get('source_week_start_date')
+        target_week_start_date = data.get('target_week_start_date')
+
+        response, status_code = course_service.copy_week_courses(source_week_start_date, target_week_start_date)
+        return jsonify(response), status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 ##-----------------PATCH----------------
 @courses_bp.route("/courses/<int:course_id>", methods=["PATCH"])

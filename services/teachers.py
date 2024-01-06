@@ -373,6 +373,9 @@ class TeachersService :
             return jsonify({'error': str(e)}), 500
 
 
+
+    ##########################################################################################################
+
     ############ TEACHERS : GET_HOURS_BY_MONTH ############    
     def get_hours_by_month(self, id_teacher, year, month):
         try:
@@ -406,6 +409,84 @@ class TeachersService :
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+    
+    ############ TEACHERS : GET_LEFT_HOURS_BY_MONTH ############    
+    def get_left_hours_by_month(self, id_teacher, year, month):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures à effectuer par mois
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND EXTRACT(YEAR FROM ent.Courses.dateCourse) = %s
+                    AND EXTRACT(MONTH FROM ent.Courses.dateCourse) = %s
+                    AND (ent.Courses.dateCourse > CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime > CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, year, month))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_left': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+        
+    ############ TEACHERS : GET_PASSED_HOURS_BY_MONTH ############    
+    def get_passed_hours_by_month(self, id_teacher, year, month):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures effectuées par mois
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND EXTRACT(YEAR FROM ent.Courses.dateCourse) = %s
+                    AND EXTRACT(MONTH FROM ent.Courses.dateCourse) = %s
+                    AND (ent.Courses.dateCourse < CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime <= CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, year, month))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_passed': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+
+
+    ##########################################################################################################
 
     ############ TEACHERS : GET_HOURS_BY_RESOURCE ############    
     def get_hours_by_resource(self, id_teacher, id_resource):
@@ -438,6 +519,81 @@ class TeachersService :
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+    ############ TEACHERS : GET_LEFT_HOURS_BY_RESOURCE ############    
+    def get_left_hours_by_resource(self, id_teacher, id_resource):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures à effectuer par matière
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND ent.Courses.id_Resource = %s
+                    AND (ent.Courses.dateCourse > CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime > CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, id_resource))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_left': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        
+    
+    ############ TEACHERS : GET_PASSED_HOURS_BY_RESOURCE ############    
+    def get_passed_hours_by_resource(self, id_teacher, id_resource):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures effectuées par matière
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND ent.Courses.id_Resource = %s
+                    AND (ent.Courses.dateCourse < CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime <= CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, id_resource))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_passed': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+
+
+    ##########################################################################################################
 
     ############ TEACHERS : GET_HOURS_BY_PROMOTION ############    
     def get_hours_by_promotion(self, id_teacher, id_promotion):
@@ -470,6 +626,78 @@ class TeachersService :
             return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        
+    ############ TEACHERS : GET_LEFT_HOURS_BY_PROMOTION ############    
+    def get_left_hours_by_promotion(self, id_teacher, id_promotion):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures à effectuer par promotion
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND ent.Courses.id_promotion = %s
+                    AND (ent.Courses.dateCourse > CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime > CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, id_promotion))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+     
+     ############ TEACHERS : GET_PASSED_HOURS_BY_PROMOTION ############    
+    def get_passed_hours_by_promotion(self, id_teacher, id_promotion):
+        try:
+            if not TeachersFonction.field_exists('id', id_teacher):
+                return jsonify({"error": f"id_teacher: '{id_teacher}' not exists"}), 400
+
+            # Connexion à la base de données
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+
+            # Requête SQL pour obtenir les heures effectuées par promotion
+            query = """
+                SELECT COALESCE(SUM(EXTRACT(EPOCH FROM ent.Courses.endTime - ent.Courses.startTime)), 0) * INTERVAL '1 second' AS hours_worked
+                FROM ent.Courses
+                JOIN ent.Courses_Teachers ON ent.Courses.id = ent.Courses_Teachers.id_Course
+                WHERE ent.Courses_Teachers.id_Teacher = %s 
+                    AND ent.Courses.id_promotion = %s
+                    AND (ent.Courses.dateCourse < CURRENT_DATE OR 
+                        (ent.Courses.dateCourse = CURRENT_DATE AND ent.Courses.endTime <= CURRENT_TIME))
+            """
+            cursor.execute(query, (id_teacher, id_promotion))
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                hours_worked = result[0]
+            else:
+                hours_worked = 0
+
+            # Fermeture de la connexion
+            conn.close()
+
+            return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+     
+    ##########################################################################################################
         
     ############  TEACHERS/GETBYIDUSER/<int:id_user> ################
     def get_teacher_by_id_user(self, id_user):

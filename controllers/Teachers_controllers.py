@@ -329,7 +329,7 @@ def get_commentary(id_commentary):
 
     
 #-----------get teacher hours number--------------
-# Define the route to get the total hours of a specific teacher
+#route to get the total hours of a specific teacher
 @teachers_bp.route('/teachers/<int:id_teacher>/hours', methods=['GET'])
 def get_teacher_hours_number(id_teacher):
     """
@@ -363,7 +363,7 @@ def get_teacher_hours_number(id_teacher):
 
 
 #-----------get_teacher_number_of_hours_left--------------
-# Define the route to get the total hours left of a specific teacher
+#route to get the total hours left of a specific teacher
 @teachers_bp.route('/teachers/<int:id_teacher>/hoursleft', methods=['GET'])
 def get_teacher_number_of_hours_left(id_teacher):
     """
@@ -396,7 +396,7 @@ def get_teacher_number_of_hours_left(id_teacher):
         return jsonify({"message": "Error", "error": str(e)}), 500
     
 #-----------get_teacher_number_of_hours_passed--------------
-# Define the route to get the total hours passed of a specific teacher
+#route to get the total hours passed of a specific teacher
 @teachers_bp.route('/teachers/<int:id_teacher>/hourspassed', methods=['GET'])
 def get_teacher_number_of_hours_passed(id_teacher):
     """
@@ -419,17 +419,17 @@ def get_teacher_number_of_hours_passed(id_teacher):
         description: Server error in case of a problem during passed hours retrieval.
     """
     try:
-        # Utilisez la fonction du service pour obtenir le nombre d'heures effectuées d'un enseignant
+        # Appel de la fonction du service pour obtenir le nombre d'heures effectuées d'un enseignant
         hours_data = teachers_service.get_number_of_hours_passed(id_teacher)
 
-        # Retournez les données au format JSON
         return hours_data
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
     
+######################################################################################################
+
 #-----------get_teacher_hours_by_month--------------
-# Define the route to get the total hours of a specific teacher by month
+# route to get the total hours of a specific teacher by month
 @teachers_bp.route('/teachers/<int:id_teacher>/hours/<string:year>/<string:month>', methods=['GET'])
 def get_teacher_hours_by_month(id_teacher, year, month):
     """
@@ -462,19 +462,100 @@ def get_teacher_hours_by_month(id_teacher, year, month):
         description: Server error in case of a problem during passed hours retrieval.
     """
     try:
-        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
         hours_data = teachers_service.get_hours_by_month(id_teacher, year, month)
 
-        # Retournez les données au format JSON
         return hours_data
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
 
-  
+#-----------get_teacher_left_hours_by_month--------------
+# route to get the total hours of a specific teacher by month
+@teachers_bp.route('/teachers/<int:id_teacher>/hoursleft/<string:year>/<string:month>', methods=['GET'])
+def get_teacher_left_hours_by_month(id_teacher, year, month):
+    """
+    Get the left hours by month of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by month.
+        required: true
+        type: integer
+      - name: year
+        in: path
+        description: Year you want to get the month from
+        required: true
+        type: string
+      - name: month
+        in: path
+        description: Month you want to get the hours from
+        required: true
+        type: string
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_left_hours_by_month(id_teacher, year, month)
+
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    
+#-----------get_teacher_passed_hours_by_month--------------
+# route to get the total hours of a specific teacher by month
+@teachers_bp.route('/teachers/<int:id_teacher>/hourspassed/<string:year>/<string:month>', methods=['GET'])
+def get_teacher_passed_hours_by_month(id_teacher, year, month):
+    """
+    Get the passed hours by month of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by month.
+        required: true
+        type: integer
+      - name: year
+        in: path
+        description: Year you want to get the month from
+        required: true
+        type: string
+      - name: month
+        in: path
+        description: Month you want to get the hours from
+        required: true
+        type: string
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_passed_hours_by_month(id_teacher, year, month)
+
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+
+
+######################################################################################################
 
 #-----------get_teacher_hours_by_resource--------------
-# Define the route to get the total hours of a specific teacher by resource
+# route to get the total hours of a specific teacher by resource
 @teachers_bp.route('/teachers/<int:id_teacher>/hours/<int:id_resource>', methods=['GET'])
 def get_teacher_hours_by_resource(id_teacher, id_resource):
     """
@@ -502,19 +583,90 @@ def get_teacher_hours_by_resource(id_teacher, id_resource):
         description: Server error in case of a problem during passed hours retrieval.
     """
     try:
-        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
         hours_data = teachers_service.get_hours_by_resource(id_teacher, id_resource)
 
-        # Retournez les données au format JSON
         return hours_data
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
     
+#-----------get_teacher_left_hours_by_resource--------------
+# route to get the total hours of a specific teacher by resource
+@teachers_bp.route('/teachers/<int:id_teacher>/hoursleft/<int:id_resource>', methods=['GET'])
+def get_teacher_left_hours_by_resource(id_teacher, id_resource):
+    """
+    Get the left hours by resource of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by resource.
+        required: true
+        type: integer
+      - name: id_resource
+        in: path
+        description: ID of the resource.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_left_hours_by_resource(id_teacher, id_resource)
 
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    
+  
+  #-----------get_teacher_passed_hours_by_resource--------------
+# route to get the total hours of a specific teacher by resource
+@teachers_bp.route('/teachers/<int:id_teacher>/hourspassed/<int:id_resource>', methods=['GET'])
+def get_teacher_passed_hours_by_resource(id_teacher, id_resource):
+    """
+    Get the passed hours by resource of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by resource.
+        required: true
+        type: integer
+      - name: id_resource
+        in: path
+        description: ID of the resource.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_passed_hours_by_resource(id_teacher, id_resource)
+
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    
+######################################################################################################
 
 #-----------get_teacher_hours_by_promotion--------------
-# Define the route to get the total hours of a specific teacher by promotion
+# route to get the total hours of a specific teacher by promotion
 @teachers_bp.route('/teachers/<int:id_teacher>/hours/promotion/<int:id_promotion>', methods=['GET'])
 def get_teacher_hours_by_promotion(id_teacher, id_promotion):
     """
@@ -542,14 +694,86 @@ def get_teacher_hours_by_promotion(id_teacher, id_promotion):
         description: Server error in case of a problem during passed hours retrieval.
     """
     try:
-        # Utilisez la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
         hours_data = teachers_service.get_hours_by_promotion(id_teacher, id_promotion)
 
-        # Retournez les données au format JSON
         return hours_data
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500
+    
+#-----------get_teacher_left_hours_by_promotion--------------
+# route to get the total hours of a specific teacher by promotion
+@teachers_bp.route('/teachers/<int:id_teacher>/hoursleft/promotion/<int:id_promotion>', methods=['GET'])
+def get_teacher_left_hours_by_promotion(id_teacher, id_promotion):
+    """
+    Get the left hours by promotion of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by promotion.
+        required: true
+        type: integer
+      - name: id_promotion
+        in: path
+        description: ID of the promotion.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_left_hours_by_promotion(id_teacher, id_promotion)
+
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    
+#-----------get_teacher_passed_hours_by_promotion--------------
+# route to get the total hours of a specific teacher by promotion
+@teachers_bp.route('/teachers/<int:id_teacher>/hourspassed/promotion/<int:id_promotion>', methods=['GET'])
+def get_teacher_passed_hours_by_promotion(id_teacher, id_promotion):
+    """
+    Get the passed hours by promotion of a specific teacher by ID.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: id_teacher
+        in: path
+        description: ID of the teacher to retrieve hours by promotion.
+        required: true
+        type: integer
+      - name: id_promotion
+        in: path
+        description: ID of the promotion.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: hours successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during passed hours retrieval.
+    """
+    try:
+        # Appel de la fonction du service pour obtenir le nombre d'heures d'un enseignant
+        hours_data = teachers_service.get_passed_hours_by_promotion(id_teacher, id_promotion)
+
+        return hours_data
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    
+######################################################################################################
     
 #-----------get_teacher_by_id_user--------------
 # Get a teacher by its id user
@@ -575,11 +799,9 @@ def get_teacher_by_id_user(id_user):
         description: Server error in case of a problem during passed hours retrieval.
     """
     try:
-        # Utilisez la fonction du service pour obtenir l'id teacher
+        #Appel de la fonction du service pour obtenir l'id teacher
         teacher = teachers_service.get_teacher_by_id_user(id_user)
 
-        # Retournez les données au format JSON
         return teacher
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 500

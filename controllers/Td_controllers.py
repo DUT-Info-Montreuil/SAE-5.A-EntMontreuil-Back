@@ -9,6 +9,13 @@ td_service = TDService()
 def get_td_by_id(td_id):
     return td_service.get_td_by_id(td_id)
 
+
+
+# -------------------- Récupérer les TD d'un Training --------------------------------------#
+@td_bp.route('/td/training/<int:id_training>', methods=['GET'])
+def get_tds_by_training(id_training):
+    # Call the service method to get TDs by training ID
+    return td_service.get_tds_by_training_id(id_training)
 # -------------------- Récupérer tous les TDs --------------------------------------#
 @td_bp.route('/td', methods=['GET'])
 def get_all_tds():

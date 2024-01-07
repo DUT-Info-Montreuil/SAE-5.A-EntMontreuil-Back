@@ -658,7 +658,7 @@ class TeachersService :
             # Fermeture de la connexion
             conn.close()
 
-            return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
+            return jsonify({'id_Teacher': id_teacher, 'hours_left': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
      
@@ -693,7 +693,7 @@ class TeachersService :
             # Fermeture de la connexion
             conn.close()
 
-            return jsonify({'id_Teacher': id_teacher, 'hours_worked': str(hours_worked)}), 200
+            return jsonify({'id_Teacher': id_teacher, 'hours_passed': str(hours_worked)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
      

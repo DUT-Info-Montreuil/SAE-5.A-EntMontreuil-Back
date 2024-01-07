@@ -733,6 +733,49 @@ class TeachersService :
             return jsonify({"message": "Error", "error": str(e)}), 400
 
 
+    ############  GET_TEACHERS_PROMOTIONS ################
+    def get_teacher_promotions(self, teacher_id):
+        """ Return promotions for a given teacher in JSON format with teacher's ID and promotions data """
+        
+        query = """
+        SELECT DISTINCT p.id, p.year, p.level, d.name
+        FROM ent.promotions p
+        INNER JOIN ent.courses c ON p.id = c.id_Promotion
+        INNER JOIN ent.courses_teachers ct ON c.id = ct.id_Course
+        INNER JOIN ent.teachers t ON ct.id_Teacher = t.id
+        INNER JOIN ent.degrees d ON p.id_Degree = d.id
+        WHERE t.id = %s
+        ORDER BY p.year, p.level;
+        """
+        
+        conn = connect_pg.connect()
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(query, (teacher_id,))
+            
+            rows = cursor.fetchall()
+            
+            promotions_list = []
+            
+            for row in rows:
+                promotion = {
+                    "id": row[0],
+                    "year": row[1],
+                    "level": row[2],
+                    "degree_name": row[3]
+                }
+                promotions_list.append(promotion)
+            
+            result = {
+                "id_teacher": teacher_id,
+                "data": promotions_list
+            }
+
+            connect_pg.disconnect(conn)
+        
+        return jsonify(result)
+
 
 
 #--------------------------------------------------FONCTION--------------------------------------------------#

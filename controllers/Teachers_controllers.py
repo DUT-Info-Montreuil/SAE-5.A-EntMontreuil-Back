@@ -805,3 +805,35 @@ def get_teacher_by_id_user(id_user):
         return teacher
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
+
+
+#-----------get teacher promotions--------------
+@teachers_bp.route('/teachers/<int:teacher_id>/promotions', methods=['GET'])
+def get_teacher_promotions(teacher_id):
+    """
+    Get promotions for a specific teacher.
+    ---
+    tags:
+      - Teachers
+    parameters:
+      - name: teacher_id
+        in: path
+        description: ID of the teacher to fetch promotions for.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Promotions for the specified teacher retrieved from the database.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error in case of a problem during promotion retrieval.
+    """
+    try:
+        data = teachers_service.get_teacher_promotions(teacher_id).json
+
+        return jsonify(data)
+    except ValueError as ve:
+        return jsonify({'error': str(ve)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -33,3 +33,11 @@ def create_td():
         return td_service.add_td(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# -------------------- get tp by TD --------------------------------------#
+@td_bp.route('/td/tp/<int:id_td>', methods=['GET'])
+def get_tp_by_td(id_td):
+    try:
+        return td_service.get_tp_by_td(id_td)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

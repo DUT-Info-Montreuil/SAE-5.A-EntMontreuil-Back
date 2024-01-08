@@ -197,7 +197,7 @@ class TDService:
                 for row in rows :
                     tp = TP(id=row[0], name=row[1], id_Td=row[2]).jsonify()
                     tp_list.append(tp)
-                return jsonify({"tp_list": tp_list}), 400
+                return jsonify(tp_list), 200
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression du TD : {str(e)}"}), 500
 

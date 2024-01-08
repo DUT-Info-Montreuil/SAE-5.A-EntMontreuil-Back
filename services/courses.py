@@ -1059,7 +1059,7 @@ class CoursesFonction :
                     where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})"
                 if tp_list :
                     where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
-                where_clause += ")"  
+         
                 
             if "id_promotion" in data :
                 where_clause = f"AND id_Promotion = {data.get('id_promotion')}"

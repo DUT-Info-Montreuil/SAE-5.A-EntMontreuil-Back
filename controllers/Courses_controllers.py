@@ -90,6 +90,7 @@ def copy_day_courses():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 @courses_bp.route("/courses/copy-week", methods=["POST"])
 def copy_week_courses():
     try:

@@ -468,10 +468,11 @@ def delete_comment(comment_id):
         return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/commentaries/week/<int:week_number>', methods=['GET'])
-def get_commentaries_by_week(week_number):
+@jwt_required()
+def get_commentaries_by_week(week_start_date):
     try:
         output_format = request.args.get('output_format', default='DTO')
-        commentaries = UsersFonction.get_commentary_by_week(week_number, output_format)
-        return jsonify(commentaries)
+        comments = UsersFonction.get_commentary_by_week(week_start_date, output_format)
+        return jsonify(comments)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"message": "ERROR", "error": str(e)}), 500

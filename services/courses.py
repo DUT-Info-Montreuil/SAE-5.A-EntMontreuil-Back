@@ -626,8 +626,6 @@ class CourseService:
             if not CoursesFonction.field_exist('Courses', 'id', course_id) :
                 return jsonify({"error": f"L'id du cour : {course_id} n'existe pas"}), 400
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.courses_classrooms WHERE id_course=%s",(course_id,))
-                cursor.execute("DELETE FROM ent.courses_teachers WHERE id_course=%s",(course_id,))
                 cursor.execute("DELETE FROM ent.Courses WHERE id = %s", (course_id,))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimé avec succès, ID : {course_id}"}), 200
@@ -638,14 +636,23 @@ class CourseService:
         finally:
             conn.close()
     #--------with day -------------    
-    def delete_course_with_day(self, day):
+    def delete_course_with_day(self, day, group):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist('Courses', 'dateCourse', day) :
                 return jsonify({"error": f"Aucun cours trouvé pour ce jour : {day} "}), 400
+            
+            if "id_tp" in group :
+                group_name = "id_tp"
+            if "id_td" in group : 
+                group_name = "id_td"
+            if "id_training" in group : 
+                group_name = "id_training"
+            if "id_promotion" in group : 
+                group_name = "id_promotion"
 
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.Courses WHERE dateCourse = %s", (day,))
+                cursor.execute(f"DELETE FROM ent.Courses WHERE dateCourse = %s AND {group_name} = %s", (day,group.get(group_name)))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimé avec succès, jour : {day}"}), 200
 
@@ -1058,7 +1065,8 @@ class CoursesFonction :
                 if td_list :
                     where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})"
                 if tp_list :
-                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
+                where_clause += ")"
          
                 
             if "id_promotion" in data :
@@ -1077,7 +1085,8 @@ class CoursesFonction :
                 if training_list :
                     where_clause += f" OR id_Training IN ({', '.join(map(str, training_list))})"
                 if tp_list :
-                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})" 
+                where_clause += ")"
                 
                 
 

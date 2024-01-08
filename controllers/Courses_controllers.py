@@ -117,7 +117,8 @@ def delete_course_with_id(course_id):
 
 @courses_bp.route("/courses/day/<day>", methods=["DELETE"])
 def delete_course_with_day(day):
-    return course_service.delete_course_with_day(day)
+    group = request.get_json()
+    return course_service.delete_course_with_day(day, group)
 
 @courses_bp.route("/courses/days", methods=["DELETE"])
 def delete_course_with_many_day():

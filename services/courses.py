@@ -696,7 +696,7 @@ class CourseService:
             conn.close()
             
     #--------with with start day and end day -------------    
-    def delete_course_with_many_day(self, start_day, end_day):
+    def delete_course_with_many_day(self, start_day, end_day, group):
         try:
             conn = connect_pg.connect()
             # Vérification des formats de date
@@ -709,19 +709,62 @@ class CourseService:
             # Vérification si start_day est inférieur ou égal à end_day
             if start_date >= end_date:
                 return jsonify({"error": "La date de début doit être antérieure à la date de fin."}), 400
+            
+            if "id_tp" in group :
+                group_name = "id_tp"
+            if "id_td" in group : 
+                group_name = "id_td"
+            if "id_training" in group : 
+                group_name = "id_training"
+            if "id_promotion" in group : 
+                group_name = "id_promotion"
 
             # Vérification si des cours existent entre les dates spécifiées
             with conn.cursor() as cursor:
-                cursor.execute("SELECT COUNT(*) FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s", (start_day, end_day))
+                cursor.execute(f"SELECT COUNT(*) FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s AND {group_name} = %s", (start_day, end_day, data.get(group_name)))
                 count = cursor.fetchone()[0]
 
                 if count == 0:
-                    return jsonify({"message": "Aucun cours trouvé entre les dates spécifiées."}), 400
+                    return jsonify({"message": "Aucun cours trouvé entre les dates spécifiées pour le groupe."}), 400
 
                 # Suppression des cours entre les deux dates
-                cursor.execute("DELETE FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s", (start_day, end_day))
+                cursor.execute(f"DELETE FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s AND {group_name} = %s", (start_day, end_day, data.get(group_name)))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimés avec succès entre {start_day} et {end_day}"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500
+
+        finally:
+            conn.close()
+        
+    #------------------delete by resource---------------------    
+    def delete_course_with_resource(self, id_resource):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute(f"DELETE FROM ent.Courses WHERE id_resource  = %s", (id_resource,))
+                conn.commit()
+                return jsonify({"message": f"Cours supprimés avec succès pour l'id resource {id_resource}"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500
+
+        finally:
+            conn.close()
+            
+    #------------------delete by teacher---------------------    
+    def delete_course_with_teacher(self, id_teacher):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT id_course from ent.Courses_Teachers where id_teacher = %s", (id_teacher,))
+                rows = cursor.fetchall()
+                all_courses = []
+                for row in rows :
+                    cursor.execute(f"DELETE FROM ent.Courses WHERE id  = %s", (row[0],))
+                conn.commit()
+                return jsonify({"message": f"Cours supprimés avec succès pour l'id teacher {id_teacher}"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500

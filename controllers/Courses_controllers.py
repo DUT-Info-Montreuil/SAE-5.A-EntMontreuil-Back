@@ -124,8 +124,15 @@ def delete_course_with_day(day):
 @courses_bp.route("/courses/days", methods=["DELETE"])
 def delete_course_with_many_day():
     data = request.get_json()
-    
-    return course_service.delete_course_with_many_day(data["startDay"], data["endDay"])
+    return course_service.delete_course_with_many_day(data["startDay"], data["endDay"], data)
+
+@courses_bp.route("/courses/resource/<int:id_resource>", methods=["DELETE"])
+def delete_course_with_resource(id_resource):
+    return course_service.delete_course_with_resource(id_resource)
+
+@courses_bp.route("/courses/teacher/<int:id_teacher>", methods=["DELETE"])
+def delete_course_with_teacher(id_teacher):
+    return course_service.delete_course_with_teacher(id_teacher)
 
 
 

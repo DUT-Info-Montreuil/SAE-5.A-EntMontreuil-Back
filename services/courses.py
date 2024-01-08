@@ -797,7 +797,7 @@ class CourseService:
                 """
 
                 cursor.execute(sql_query, (target_week_start_date, source_week_start_date,
-                                        source_week_start_date, source_week_start_date + 7))
+                                        source_week_start_date, source_week_start_date + 5))
                 conn.commit()
 
                 return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200

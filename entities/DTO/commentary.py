@@ -1,9 +1,9 @@
 class Commentary:
-    def __init__(self, id, id_User, id_Degree, week_number, title, comment_text, modification_date):
+    def __init__(self, id, id_User, id_Degree, date, title, comment_text, modification_date):
         self.id = id
         self.id_User = id_User
         self.id_Degree = id_Degree
-        self.week_number = week_number
+        self.date = date
         self.title = title
         self.comment_text = comment_text
         self.modification_date = modification_date
@@ -16,7 +16,7 @@ class Commentary:
             "id": self.id,
             "id_User": self.id_User,
             "id_Degree": self.id_Degree,
-            "wek_number": self.week_number,
+            "date": self.date,
             "title": self.title,
             "comment_text": self.comment_text,
             "modification_date": str(self.modification_date),

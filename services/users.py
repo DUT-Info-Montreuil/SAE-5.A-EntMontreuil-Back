@@ -5,6 +5,7 @@ import re
 import bcrypt
 import random
 import string
+from datetime import datetime, timedelta
 from entities.DTO.users import Users
 from entities.model.usersm import UsersModel
 from entities.model.remindersm import ReminderModel
@@ -547,71 +548,54 @@ class UsersFonction :
         conn.commit()  # Valider les changements
         conn.close()
 
-   ############ GET /COMMENTARIES ################
     def get_commentaries(self, output_format='DTO'):
-        try:
-            query = """
-                SELECT C.id, C.id_User, C.id_Degree, C.week_number, U.username, C.title, C.comment_text, C.modification_date
-                FROM ent.commentary C
-                INNER JOIN ent.users U ON C.id_User = U.id
-                ORDER BY C.modification_date DESC
-            """
-            conn = connect_pg.connect()
-            rows = connect_pg.get_query(conn, query)
-            commentaries = []
+            try:
+                query = """
+                    SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                    FROM Commentary
+                    ORDER BY modification_date DESC
+                """
+                rows = connect_pg.get_query(query)
+                commentaries = []
 
-            for row in rows:
-                commentary = CommentaryModel(
-                    id=row[0],
-                    id_User=row[1],
-                    id_Degree=row[2],
-                    week_number=row[3],
-                    user_username=row[4],
-                    title=row[5],
-                    comment_text=row[6],
-                    modification_date=row[7],
-                )
-                commentaries.append(commentary.jsonify())
+                for row in rows:
+                    commentary = CommentaryModel(
+                        id=row[0],
+                        id_User=row[1],
+                        id_Degree=row[2],
+                        date=row[3],
+                        title=row[4],
+                        comment_text=row[5],
+                        modification_date=row[6],
+                    )
+                    commentaries.append(commentary.jsonify())
 
-            connect_pg.disconnect(conn)
-            return commentaries
+                return commentaries
 
-        except Exception as e:
-            return jsonify({"message": "ERROR", "error": str(e)}), 500
+            except Exception as e:
+                return jsonify({"message": "ERROR", "error": str(e)}), 500
 
-    ############ GET /COMMENTARIES/<int:id_commentary> ################
     def get_commentary_by_id(self, id_commentary, output_format='DTO'):
         try:
-            # Vérifier si l'identifiant du commentaire existe
-            if not UsersFonction.field_exists('id', id_commentary):
-                raise ValidationError(f"Commentary id: '{id_commentary}' does not exist")
-
             query = """
-                SELECT C.id, C.id_User, C.id_Degree, C.week_number, U.username, C.title, C.comment_text, C.modification_date
-                FROM ent.commentary C
-                INNER JOIN ent.users U ON C.id_User = U.id
-                WHERE C.id = %s
+                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                FROM Commentary
+                WHERE id = %s
             """
 
-            conn = connect_pg.connect()
-            with conn, conn.cursor() as cursor:
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
                 cursor.execute(query, (id_commentary,))
                 row = cursor.fetchone()
-
-                # Si le commentaire n'est pas trouvé, déclencher une exception
                 if not row:
                     raise ValidationError(f"Commentary id: '{id_commentary}' not found")
-
-                # Créer un objet CommentaryModel à partir des résultats de la requête
                 commentary = CommentaryModel(
                     id=row[0],
                     id_User=row[1],
                     id_Degree=row[2],
-                    week_number=row[3],
-                    user_username=row[4],
-                    title=row[5],
-                    comment_text=row[6],
-                    modification_date=row[7],
+                    date=row[3],
+                    title=row[4],
+                    comment_text=row[5],
+                    modification_date=row[6],
                 )
 
                 return commentary.jsonify()
@@ -622,28 +606,24 @@ class UsersFonction :
         except Exception as e:
             return jsonify({"message": "ERROR", "error": str(e)}), 500
 
-    ############ ADD /COMMENTARIES ################
     def add_commentary(self, id_user, data):
         try:
-            # Ensure that the provided user ID matches the authenticated user's ID
             if not UsersFonction.field_exists('id', id_user):
                 raise ValidationError(f"User id: '{id_user}' does not exist")
-
             query = """
-                INSERT INTO ent.commentary (id_User, id_Degree, week_number, title, comment_text, modification_date)
+                INSERT INTO Commentary (id_User, id_Degree, date, title, comment_text, modification_date)
                 VALUES (%s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """
             values = (
                 id_user,
                 data["id_Degree"],
-                data["week_number"],
+                data["date"],
                 data["title"],
                 data["comment_text"],
             )
 
-            conn = connect_pg.connect()
-            with conn, conn.cursor() as cursor:
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 inserted_commentary_id = cursor.fetchone()[0]
 
@@ -658,19 +638,12 @@ class UsersFonction :
         except Exception as e:
             return jsonify({"message": f"Error adding commentary: {str(e)}"}), 500
 
-        finally:
-            if conn:
-                connect_pg.disconnect(conn)
-
-    ############ UPDATE /COMMENTARIES/<int:id_commentary> ################
     def update_commentary(self, id_user, data, id_commentary):
         try:
-            # Assurez-vous que l'ID d'utilisateur fourni correspond à l'ID d'utilisateur authentifié
             if not UsersFonction.field_exists('id', id_user):
                 raise ValidationError(f"User id: '{id_user}' does not exist")
-
             query = """
-                UPDATE ent.commentary
+                UPDATE Commentary
                 SET title = %s, comment_text = %s
                 WHERE id = %s AND id_User = %s
                 RETURNING id
@@ -679,11 +652,10 @@ class UsersFonction :
                 data["title"],
                 data["comment_text"],
                 id_commentary,
-                id_user,  # Assurez-vous que le commentaire appartient à l'utilisateur spécifié
+                id_user,
             )
 
-            conn = connect_pg.connect()
-            with conn, conn.cursor() as cursor:
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 updated_commentary_id = cursor.fetchone()
 
@@ -702,22 +674,14 @@ class UsersFonction :
         except Exception as e:
             return jsonify({"message": f"Error updating commentary: {str(e)}"}), 500
 
-        finally:
-            if conn:
-                connect_pg.disconnect(conn)
-
-    ############ DELETE /COMMENTARIES/<int:id_commentary> ################
     def delete_commentary(self, id_user, id_commentary):
         try:
-            # Assurez-vous que l'ID d'utilisateur fourni correspond à l'ID d'utilisateur authentifié
             if not UsersFonction.field_exists('id', id_user):
                 raise ValidationError(f"User id: '{id_user}' does not exist")
-
-            query = "DELETE FROM ent.commentary WHERE id = %s AND id_User = %s RETURNING id"
+            query = "DELETE FROM Commentary WHERE id = %s AND id_User = %s RETURNING id"
             values = (id_commentary, id_user)
 
-            conn = connect_pg.connect()
-            with conn, conn.cursor() as cursor:
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
                 cursor.execute(query, values)
                 deleted_commentary_id = cursor.fetchone()
 
@@ -735,24 +699,20 @@ class UsersFonction :
         except Exception as e:
             return jsonify({"message": f"Error deleting commentary: {str(e)}"}), 500
 
-        finally:
-            if conn:
-                connect_pg.disconnect(conn)
-
-    ############ GET /COMMENTARIES/WEEK/<int:week_number> ################
-    def get_commentary_by_week(self, week_number, output_format='DTO'):
+    def get_commentary_by_week(self, week_start_date, output_format='DTO'):
         try:
+            week_start_date = datetime.strptime(week_start_date, "%Y-%m-%d")
+            week_end_date = week_start_date + timedelta(days=4)
+
             query = """
-                SELECT C.id, C.id_User, C.id_Degree, C.week_number, U.username, C.title, C.comment_text, C.modification_date
-                FROM ent.commentary C
-                INNER JOIN ent.users U ON C.id_User = U.id
-                WHERE C.week_number = %s
-                ORDER BY C.modification_date DESC
+                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                FROM Commentary
+                WHERE date >= %s AND date <= %s
+                ORDER BY modification_date DESC
             """
 
-            conn = connect_pg.connect()
-            with conn, conn.cursor() as cursor:
-                cursor.execute(query, (week_number,))
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, (week_start_date, week_end_date))
                 rows = cursor.fetchall()
 
                 commentaries = []
@@ -761,11 +721,10 @@ class UsersFonction :
                         id=row[0],
                         id_User=row[1],
                         id_Degree=row[2],
-                        week_number=row[3],
-                        user_username=row[4],
-                        title=row[5],
-                        comment_text=row[6],
-                        modification_date=row[7],
+                        date=row[3],
+                        title=row[4],
+                        comment_text=row[5],
+                        modification_date=row[6],
                     )
                     commentaries.append(commentary.jsonify())
 

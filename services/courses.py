@@ -761,50 +761,62 @@ class CourseService:
                 connect_pg.disconnect(conn)
 
 
-    def copy_day_courses(self, source_date, target_date):
-        try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                    INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                            id_Tp, id_Td, id_Promotion, id_Training)
-                    SELECT startTime, endTime, %s, control, id_Resource,
-                        id_Tp, id_Td, id_Promotion, id_Training
-                    FROM ent.Courses
-                    WHERE dateCourse = %s
-                """
+def copy_day_commentaries(self, source_date, target_date):
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Supprimer les commentaires existants pour le jour cible
+            delete_query = """
+                DELETE FROM ent.Commentary
+                WHERE date = %s
+            """
+            cursor.execute(delete_query, (target_date,))
 
-                cursor.execute(sql_query, (target_date, source_date))
-                conn.commit()
+            # Copier les commentaires pour le jour cible
+            insert_query = """
+                INSERT INTO ent.Commentary (id_User, id_Degree, date, title, comment_text, modification_date)
+                SELECT id_User, id_Degree, %s, title, comment_text, CURRENT_TIMESTAMP
+                FROM ent.Commentary
+                WHERE date = %s
+            """
+            cursor.execute(insert_query, (target_date, source_date))
 
-                return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
-        except Exception as e:
-            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-        finally:
-            conn.close()
+            conn.commit()
 
-    def copy_week_courses(self, source_week_start_date, target_week_start_date):
-        try:
-            conn = connect_pg.connect()
-            with conn.cursor() as cursor:
-                sql_query = """
-                    INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                            id_Tp, id_Td, id_Promotion, id_Training)
-                    SELECT startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
-                        id_Tp, id_Td, id_Promotion, id_Training
-                    FROM ent.Courses
-                    WHERE dateCourse >= %s AND dateCourse < %s
-                """
+            return jsonify({"message": "Commentaires copiés avec succès vers la nouvelle journée"}), 200
+    except Exception as e:
+        return jsonify({"message": f"Erreur lors de la copie des commentaires : {str(e)}"}), 500
+    finally:
+        conn.close()
 
-                cursor.execute(sql_query, (target_week_start_date, source_week_start_date,
-                                        source_week_start_date, source_week_start_date + 5))
-                conn.commit()
+def copy_week_commentaries(self, source_week_start_date, target_week_start_date):
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Supprimer les commentaires existants pour la semaine cible
+            delete_query = """
+                DELETE FROM ent.Commentary
+                WHERE date >= %s AND date < %s
+            """
+            cursor.execute(delete_query, (target_week_start_date, target_week_start_date + 5))
 
-                return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
-        except Exception as e:
-            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-        finally:
-            conn.close()
+            # Copier les commentaires pour la semaine cible
+            insert_query = """
+                INSERT INTO ent.Commentary (id_User, id_Degree, date, title, comment_text, modification_date)
+                SELECT id_User, id_Degree, %s + (date - %s), title, comment_text, CURRENT_TIMESTAMP
+                FROM ent.Commentary
+                WHERE date >= %s AND date < %s
+            """
+            cursor.execute(insert_query, (target_week_start_date, source_week_start_date,
+                                          source_week_start_date, source_week_start_date + 5))
+
+            conn.commit()
+
+            return jsonify({"message": "Commentaires copiés avec succès vers la nouvelle semaine"}), 200
+    except Exception as e:
+        return jsonify({"message": f"Erreur lors de la copie des commentaires : {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
     def _format_courses(self, rows):

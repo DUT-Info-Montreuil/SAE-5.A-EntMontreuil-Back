@@ -316,7 +316,9 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_training = []
+                    courses_td = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -333,10 +335,28 @@ class CourseService:
                             
                         if row[11] :
                             response, status = CoursesFonction.get_group_of_training(row[11])
+                            tp = response["tp"]
+                            td = response["td"]
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
-                        courses_list.append(course_info.jsonify())
+                            id_Tp = tp,id_Td = td ,id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
+                            courses_training.append(course_info.jsonify())
+                            if td :
+                                for id in td :
+                                    if CoursesFonction.verifie_id_in_courses('id_td' , id) :
+                                        response, status = self.get_course_by_td(id)
+                                        courses_td.append(response["courses"])
+                            if tp :
+                                for id in tp :
+                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                        response, status = self.get_course_by_tp(id)
+                                        courses_tp.append(response["courses"])
+                        
+                        courses_list = {
+                            "courses_training" : courses_training,
+                            "courses_td" : courses_td,
+                            "courses_tp" : courses_tp
+                        }                  
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -386,7 +406,8 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_td = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -402,11 +423,22 @@ class CourseService:
                             classrooms = [] 
                         if row[9] :
                             response, status = CoursesFonction.get_group_of_td(row[9])
+                            tp = response["tp"]
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                            id_Tp = tp,id_Td = [row[9]] ,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                            courses_td.append(course_info.jsonify())
+                            if tp :
+                                for id in tp :
+                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                        response, status = self.get_course_by_tp(id)
+                                        courses_tp.append(response["courses"])
                         
-                        courses_list.append(course_info.jsonify())
+                        courses_list = {
+                            "courses_td" : courses_td,
+                            "courses_tp" : courses_tp
+                        }                  
+                        
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200

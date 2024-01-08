@@ -638,8 +638,9 @@ class CourseService:
                     for id in data["classrooms_id"] :
                         cursor.execute(query_sql, (new_course_id, id))
                         conn.commit()
-                    
-                return {"message": "Cours ajouté avec succès" , "id" : new_course_id}, 200
+                new_course=self.get_course_by_id(new_course_id)
+
+                return {"message": "Cours ajouté avec succès" , "id" : new_course_id,"course":new_course}, 200
             else :
                 return {"error": "Une erreur est survenue lors de l'ajout du cours"}, 400
 

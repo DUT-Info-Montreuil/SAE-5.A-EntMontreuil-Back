@@ -1447,7 +1447,7 @@ class CoursesFonction :
             conn.close()
             
     # ----------------- GET COURSES BY TP -----------------------
-    def get_course_by_tp_fonction(self, id_tp):
+    def get_course_by_tp_fonction( id_tp):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist("TP", 'id', id_tp) :

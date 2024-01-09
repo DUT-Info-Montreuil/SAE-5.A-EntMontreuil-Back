@@ -200,17 +200,20 @@ class CourseService:
                             for id in training :
                                 if CoursesFonction.verifie_id_in_courses('id_training' , id) :
                                     response, status = CoursesFonction.get_course_by_training_fonction(id)
-                                    courses_training.append(response["courses"])
+                                    for course in response["courses"] :
+                                        courses_training.append(course)
                         if td :
                             for id in td :
                                 if CoursesFonction.verifie_id_in_courses('id_td' , id) :
                                     response, status = CoursesFonction.get_course_by_td_fonction(id)
-                                    courses_td.append(response["courses"])
+                                    for course in response["courses"] :
+                                        courses_td.append(course)
                         if tp :
                             for id in tp :
                                 if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
                                     response, status = self.get_course_by_tp(id)
-                                    courses_tp.append(response["courses"])
+                                    for course in response["courses"] :
+                                        courses_tp.append(course)
                     
                     courses_list = {
                         "courses_promotion" : courses_promotion,
@@ -345,12 +348,14 @@ class CourseService:
                                 for id in td :
                                     if CoursesFonction.verifie_id_in_courses('id_td' , id) :
                                         response, status = CoursesFonction.get_course_by_td_fonction(id)
-                                        courses_td.append(response["courses"])
+                                        for course in response["courses"] : 
+                                            courses_td.append(course)
                             if tp :
                                 for id in tp :
                                     if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
                                         response, status = self.get_course_by_tp(id)
-                                        courses_tp.append(response["courses"])
+                                        for course in response["courses"] :
+                                            courses_tp.append(course)
                         
                         courses_list = {
                             "courses_training" : courses_training,
@@ -432,7 +437,8 @@ class CourseService:
                                 for id in tp :
                                     if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
                                         response, status = self.get_course_by_tp(id)
-                                        courses_tp.append(response["courses"])
+                                        for course in response["courses"] :
+                                            courses_tp.append(course)
                         
                         courses_list = {
                             "courses_td" : courses_td,

@@ -211,7 +211,7 @@ class CourseService:
                         if tp :
                             for id in tp :
                                 if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
-                                    response, status = self.get_course_by_tp(id)
+                                    response, status = CoursesFonction.get_course_by_tp_fonction(id)
                                     for course in response["courses"] :
                                         courses_tp.append(course)
                     
@@ -353,7 +353,7 @@ class CourseService:
                             if tp :
                                 for id in tp :
                                     if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
-                                        response, status = self.get_course_by_tp(id)
+                                        response, status = CoursesFonction.get_course_by_tp_fonction(id)
                                         for course in response["courses"] :
                                             courses_tp.append(course)
                         
@@ -436,7 +436,7 @@ class CourseService:
                             if tp :
                                 for id in tp :
                                     if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
-                                        response, status = self.get_course_by_tp(id)
+                                        response, status = CoursesFonction.get_course_by_tp_fonction(id)
                                         for course in response["courses"] :
                                             courses_tp.append(course)
                         
@@ -496,8 +496,8 @@ class CourseService:
                             id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
                         courses_tp.append(course_info.jsonify())
                     courses_list = {
-                            "courses_tp" : courses_tp
-                        }     
+                        "courses_tp" : courses_tp
+                    }     
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -1443,5 +1443,55 @@ class CoursesFonction :
                     return {"courses": []}, 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()
+            
+    # ----------------- GET COURSES BY TP -----------------------
+    def get_course_by_tp_fonction(self, id_tp):
+        try:
+            conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("TP", 'id', id_tp) :
+                return {"error": f"l'id' : {id_tp} n'existe pas"}, 400
+            with conn.cursor() as cursor:
+                sql_query = """
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
+                    FROM ent.Courses C
+                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
+                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
+                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
+                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
+                    WHERE C.id_Tp = %s
+                """
+
+                cursor.execute(sql_query, (id_tp,))
+                rows = cursor.fetchall()
+
+                if rows :
+                    courses_list = []
+
+                    for row in rows:
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        if row[8] :
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        courses_list.append(course_info.jsonify())
+                    return {"courses": courses_list}, 200
+                else:
+                    return {"courses": []}, 200
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
         finally:
             conn.close()

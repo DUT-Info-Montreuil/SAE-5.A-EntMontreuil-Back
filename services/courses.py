@@ -475,7 +475,7 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -494,7 +494,10 @@ class CourseService:
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                             id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        courses_list.append(course_info.jsonify())
+                        courses_tp.append(course_info.jsonify())
+                    courses_list = {
+                            "courses_tp" : courses_tp
+                        }     
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200

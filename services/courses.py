@@ -151,26 +151,26 @@ class CourseService:
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
     #------------------get by promotion-----------------------
-    def get_course_by_promotion(self, promotion_id):
+    def get_course_by_promotion(self, promotion_id,semester):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist("Promotions", 'id', promotion_id) :
                 return {"error": f"la promotion de : {promotion_id} n'existe pas"}, 400
             with conn.cursor() as cursor:
                 sql_query = """
-                    SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
+                 SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training ,trr.semester
                     FROM ent.Courses C
                     LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.Trainings trr ON R.id_Training = trr.id
                     LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    WHERE P.id = %s
+                    WHERE P.id = %s AND trr.semester = %s
                 """
-
-                cursor.execute(sql_query, (promotion_id,))
+                cursor.execute(sql_query, (promotion_id,semester))
                 rows = cursor.fetchall()
-
+       
                 if rows :
                     courses_promotion = []
                     courses_training = []
@@ -199,18 +199,21 @@ class CourseService:
                         if training : 
                             for id in training :
                                 if CoursesFonction.verifie_id_in_courses('id_training' , id) :
-                                    response, status = self.get_course_by_training(id)
-                                    courses_training.append(response["courses"])
+                                    response, status = CoursesFonction.get_course_by_training_fonction(id)
+                                    for course in response["courses"] :
+                                        courses_training.append(course)
                         if td :
                             for id in td :
                                 if CoursesFonction.verifie_id_in_courses('id_td' , id) :
-                                    response, status = self.get_course_by_td(id)
-                                    courses_td.append(response["courses"])
+                                    response, status = CoursesFonction.get_course_by_td_fonction(id)
+                                    for course in response["courses"] :
+                                        courses_td.append(course)
                         if tp :
                             for id in tp :
                                 if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
                                     response, status = self.get_course_by_tp(id)
-                                    courses_tp.append(response["courses"])
+                                    for course in response["courses"] :
+                                        courses_tp.append(course)
                     
                     courses_list = {
                         "courses_promotion" : courses_promotion,
@@ -316,7 +319,9 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_training = []
+                    courses_td = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -333,10 +338,30 @@ class CourseService:
                             
                         if row[11] :
                             response, status = CoursesFonction.get_group_of_training(row[11])
+                            tp = response["tp"]
+                            td = response["td"]
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
-                        courses_list.append(course_info.jsonify())
+                            id_Tp = tp,id_Td = td ,id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
+                            courses_training.append(course_info.jsonify())
+                            if td :
+                                for id in td :
+                                    if CoursesFonction.verifie_id_in_courses('id_td' , id) :
+                                        response, status = CoursesFonction.get_course_by_td_fonction(id)
+                                        for course in response["courses"] : 
+                                            courses_td.append(course)
+                            if tp :
+                                for id in tp :
+                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                        response, status = self.get_course_by_tp(id)
+                                        for course in response["courses"] :
+                                            courses_tp.append(course)
+                        
+                        courses_list = {
+                            "courses_training" : courses_training,
+                            "courses_td" : courses_td,
+                            "courses_tp" : courses_tp
+                        }                  
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -348,7 +373,7 @@ class CourseService:
     def get_course_by_teacher(self, teacher_username):
         try:
             if not CoursesFonction.teacher_username_exist(teacher_username) :
-                return {"error": f"l'identifiant : {teacher_usernameesz} n'existe pas"}, 400
+                return {"error": f"l'identifiant : {teacher_username} n'existe pas"}, 400
             response, status = CoursesFonction.get_all_id_courses_with_teacher_username(teacher_username)
             if status == 200 : 
                 all_id_courses = response["courses"]
@@ -386,7 +411,8 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_td = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -402,11 +428,23 @@ class CourseService:
                             classrooms = [] 
                         if row[9] :
                             response, status = CoursesFonction.get_group_of_td(row[9])
+                            tp = response["tp"]
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                            id_Tp = tp,id_Td = [row[9]] ,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                            courses_td.append(course_info.jsonify())
+                            if tp :
+                                for id in tp :
+                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                        response, status = self.get_course_by_tp(id)
+                                        for course in response["courses"] :
+                                            courses_tp.append(course)
                         
-                        courses_list.append(course_info.jsonify())
+                        courses_list = {
+                            "courses_td" : courses_td,
+                            "courses_tp" : courses_tp
+                        }                  
+                        
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -437,7 +475,7 @@ class CourseService:
                 rows = cursor.fetchall()
 
                 if rows :
-                    courses_list = []
+                    courses_tp = []
 
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -456,7 +494,10 @@ class CourseService:
                             course_info = CourseModel(
                             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                             id_Tp = [row[8]],id_Td = None,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                        courses_list.append(course_info.jsonify())
+                        courses_tp.append(course_info.jsonify())
+                    courses_list = {
+                            "courses_tp" : courses_tp
+                        }     
                     return {"courses": courses_list}, 200
                 else:
                     return {"courses": []}, 200
@@ -606,8 +647,9 @@ class CourseService:
                     for id in data["classrooms_id"] :
                         cursor.execute(query_sql, (new_course_id, id))
                         conn.commit()
-                    
-                return {"message": "Cours ajouté avec succès" , "id" : new_course_id}, 200
+                new_course=self.get_course_by_id(new_course_id)
+
+                return {"message": "Cours ajouté avec succès" , "id" : new_course_id,"course":new_course}, 200
             else :
                 return {"error": "Une erreur est survenue lors de l'ajout du cours"}, 400
 
@@ -636,14 +678,23 @@ class CourseService:
         finally:
             conn.close()
     #--------with day -------------    
-    def delete_course_with_day(self, day):
+    def delete_course_with_day(self, day, group):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist('Courses', 'dateCourse', day) :
                 return jsonify({"error": f"Aucun cours trouvé pour ce jour : {day} "}), 400
+            
+            if "id_tp" in group :
+                group_name = "id_tp"
+            if "id_td" in group : 
+                group_name = "id_td"
+            if "id_training" in group : 
+                group_name = "id_training"
+            if "id_promotion" in group : 
+                group_name = "id_promotion"
 
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.Courses WHERE dateCourse = %s", (day,))
+                cursor.execute(f"DELETE FROM ent.Courses WHERE dateCourse = %s AND {group_name} = %s", (day,group.get(group_name)))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimé avec succès, jour : {day}"}), 200
 
@@ -654,7 +705,7 @@ class CourseService:
             conn.close()
             
     #--------with with start day and end day -------------    
-    def delete_course_with_many_day(self, start_day, end_day):
+    def delete_course_with_many_day(self, start_day, end_day, group):
         try:
             conn = connect_pg.connect()
             # Vérification des formats de date
@@ -667,19 +718,62 @@ class CourseService:
             # Vérification si start_day est inférieur ou égal à end_day
             if start_date >= end_date:
                 return jsonify({"error": "La date de début doit être antérieure à la date de fin."}), 400
+            
+            if "id_tp" in group :
+                group_name = "id_tp"
+            if "id_td" in group : 
+                group_name = "id_td"
+            if "id_training" in group : 
+                group_name = "id_training"
+            if "id_promotion" in group : 
+                group_name = "id_promotion"
 
             # Vérification si des cours existent entre les dates spécifiées
             with conn.cursor() as cursor:
-                cursor.execute("SELECT COUNT(*) FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s", (start_day, end_day))
+                cursor.execute(f"SELECT COUNT(*) FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s AND {group_name} = %s", (start_day, end_day, data.get(group_name)))
                 count = cursor.fetchone()[0]
 
                 if count == 0:
-                    return jsonify({"message": "Aucun cours trouvé entre les dates spécifiées."}), 400
+                    return jsonify({"message": "Aucun cours trouvé entre les dates spécifiées pour le groupe."}), 400
 
                 # Suppression des cours entre les deux dates
-                cursor.execute("DELETE FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s", (start_day, end_day))
+                cursor.execute(f"DELETE FROM ent.Courses WHERE dateCourse BETWEEN %s AND %s AND {group_name} = %s", (start_day, end_day, data.get(group_name)))
                 conn.commit()
                 return jsonify({"message": f"Cours supprimés avec succès entre {start_day} et {end_day}"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500
+
+        finally:
+            conn.close()
+        
+    #------------------delete by resource---------------------    
+    def delete_course_with_resource(self, id_resource):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute(f"DELETE FROM ent.Courses WHERE id_resource  = %s", (id_resource,))
+                conn.commit()
+                return jsonify({"message": f"Cours supprimés avec succès pour l'id resource {id_resource}"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500
+
+        finally:
+            conn.close()
+            
+    #------------------delete by teacher---------------------    
+    def delete_course_with_teacher(self, id_teacher):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT id_course from ent.Courses_Teachers where id_teacher = %s", (id_teacher,))
+                rows = cursor.fetchall()
+                all_courses = []
+                for row in rows :
+                    cursor.execute(f"DELETE FROM ent.Courses WHERE id  = %s", (row[0],))
+                conn.commit()
+                return jsonify({"message": f"Cours supprimés avec succès pour l'id teacher {id_teacher}"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression des cours : {str(e)}"}), 500
@@ -690,7 +784,7 @@ class CourseService:
     
     ############################ PATCH ###############################
 
-    def update_course(self, data):
+    def update_course(self, data,course_id):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
@@ -698,35 +792,58 @@ class CourseService:
                     """
                     UPDATE ent.Courses
                     SET startTime = %s, endTime = %s, dateCourse = %s, control = %s,
-                        id_Resource = %s, id_Tp = %s, id_Td = %s, id_Promotion = %s,
-                        id_Teacher = %s, id_classroom = %s
+                        id_Resource = %s, id_Tp = %s, id_Td = %s, id_Promotion = %s, id_Training = %s
                     WHERE id = %s
-                    RETURNING id
                     """,
                     (
                         data["startTime"],
                         data["endTime"],
                         data["dateCourse"],
                         data["control"],
-                        data["resource_id"],
-                        data["tp_id"],
-                        data["td_id"],
-                        data["promotion_id"],
-                        data["teacher_id"],
-                        data["classroom_id"],
-                        data["id"]
+                        data["id_resource"],
+                        data["id_tp"],
+                        data["id_td"],
+                        data["id_promotion"],
+                        data["id_training"],
+                        course_id
                     )
                 )
-                updated_course_id = cursor.fetchone()
-
+                
+                cursor.execute(
+                    """
+                    DELETE from ent.Courses_Classrooms
+                    WHERE id_Course = %s
+                    """,
+                    (course_id,)
+                )
+                
+                for id in data["classrooms"] :
+                    cursor.execute(
+                        """
+                        INSERT INTO ent.Courses_Classrooms (id_course, id_classoom) VALUES (%s, %s)
+                        """,
+                        (course_id,id)
+                    )
+                    
+                cursor.execute(
+                    """
+                    DELETE from ent.Courses_Teachers
+                    WHERE id_Course = %s
+                    """,
+                    (course_id,)
+                )
+                
+                for id in data["teachers"] :
+                    cursor.execute(
+                        """
+                        INSERT INTO ent.Courses_Teachers (id_course, id_teacher) VALUES (%s, %s)
+                        """,
+                        (course_id,id)
+                    )
+                
                 conn.commit()
 
-                if updated_course_id:
-                    return jsonify({
-                        "message": f"Cours mis à jour avec succès, ID : {updated_course_id[0]}"
-                    }), 200
-                else:
-                    return jsonify({"message": "Cours non trouvé ou aucune modification effectuée"}), 404
+                return jsonify({"message": f"Cours mis à jour avec succès, ID : {course_id}"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la mise à jour du cours : {str(e)}"}), 500
@@ -735,51 +852,72 @@ class CourseService:
             if conn:
                 connect_pg.disconnect(conn)
 
-
     def copy_day_courses(self, source_date, target_date):
-            try:
-                conn = connect_pg.connect()
-                with conn.cursor() as cursor:
-                    sql_query = """
-                        INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                                id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
-                        SELECT startTime, endTime, %s, control, id_Resource,
-                            id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
-                        FROM ent.Courses
-                        WHERE dateCourse = %s
-                    """
-
-                    cursor.execute(sql_query, (target_date, source_date))
-                    conn.commit()
-
-                    return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
-            except Exception as e:
-                return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-            finally:
-                conn.close()
-
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Supprimer les cours existants pour le jour cible
+                delete_query = """
+                    DELETE FROM ent.Courses
+                    WHERE dateCourse = %s
+                """
+                cursor.execute(delete_query, (target_date,))
+    
+                # Copier les cours pour le jour cible
+                insert_query = """
+                    INSERT INTO ent.Courses (
+                        startTime, endTime, dateCourse, control, id_Resource,
+                        id_Tp, id_Td, id_Promotion, id_Training
+                    )
+                    SELECT
+                        startTime, endTime, %s, control, id_Resource,
+                        id_Tp, id_Td, id_Promotion, id_Training
+                    FROM ent.Courses
+                    WHERE dateCourse = %s
+                """
+                cursor.execute(insert_query, (target_date, source_date))
+    
+                conn.commit()
+    
+                return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
+        except Exception as e:
+            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
+        finally:
+            conn.close()
+    
     def copy_week_courses(self, source_week_start_date, target_week_start_date):
-            try:
-                conn = connect_pg.connect()
-                with conn.cursor() as cursor:
-                    sql_query = """
-                        INSERT INTO ent.Courses (startTime, endTime, dateCourse, control, id_Resource,
-                                                id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom)
-                        SELECT startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
-                            id_Tp, id_Td, id_Promotion, id_Teacher, id_classroom
-                        FROM ent.Courses
-                        WHERE dateCourse >= %s AND dateCourse < %s
-                    """
-
-                    cursor.execute(sql_query, (target_week_start_date, source_week_start_date,
-                                            source_week_start_date, source_week_start_date + 7))
-                    conn.commit()
-
-                    return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
-            except Exception as e:
-                return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
-            finally:
-                conn.close()
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Supprimer les cours existants pour la semaine cible
+                delete_query = """
+                    DELETE FROM ent.Courses
+                    WHERE dateCourse >= %s AND dateCourse < %s
+                """
+                cursor.execute(delete_query, (target_week_start_date, target_week_start_date + 5))
+    
+                # Copier les cours pour la semaine cible
+                insert_query = """
+                    INSERT INTO ent.Courses (
+                        startTime, endTime, dateCourse, control, id_Resource,
+                        id_Tp, id_Td, id_Promotion, id_Training
+                    )
+                    SELECT
+                        startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
+                        id_Tp, id_Td, id_Promotion, id_Training
+                    FROM ent.Courses
+                    WHERE dateCourse >= %s AND dateCourse < %s
+                """
+                cursor.execute(insert_query, (target_week_start_date, source_week_start_date,
+                                              source_week_start_date, source_week_start_date + 5))
+    
+                conn.commit()
+    
+                return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
+        except Exception as e:
+            return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
+        finally:
+            conn.close()
 
 
     def _format_courses(self, rows):
@@ -1012,8 +1150,10 @@ class CoursesFonction :
                 if td_list :
                     where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})"
                 if tp_list :
-                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
-                  
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
+                where_clause += ")"
+         
+                
             if "id_promotion" in data :
                 where_clause = f"AND id_Promotion = {data.get('id_promotion')}"
                 group = f"la promotion {data.get('id_promotion')}"
@@ -1030,7 +1170,8 @@ class CoursesFonction :
                 if training_list :
                     where_clause += f" OR id_Training IN ({', '.join(map(str, training_list))})"
                 if tp_list :
-                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))}))" 
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})" 
+                where_clause += ")"
                 
                 
 
@@ -1193,8 +1334,8 @@ class CoursesFonction :
             cursor = conn.cursor()
             
             query = f"""
-                SELECT COUNT(*)
-                WHERE {table} = %s
+                SELECT COUNT(*) FROM ent.Courses
+                WHERE {field} = %s
             """
             cursor.execute(query, (value,))
             row = cursor.fetchone()[0]
@@ -1205,3 +1346,102 @@ class CoursesFonction :
 
         except Exception as e:
             return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500
+        
+        
+    #------------------ GET COURSES BY TD ------------------
+    def get_course_by_td_fonction( id_td):
+        try:
+            conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("TD", 'id', id_td) :
+                return {"error": f"l'id' : {id_td} n'existe pas"}, 400
+            with conn.cursor() as cursor:
+                sql_query = """
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
+                    FROM ent.Courses C
+                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
+                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
+                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
+                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
+                    WHERE C.id_Td = %s
+                """
+                cursor.execute(sql_query, (id_td,))
+                rows = cursor.fetchall()
+                if rows :
+                    courses_list = []
+                    for row in rows:
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                        if row[9] :
+                            response, status = CoursesFonction.get_group_of_td(row[9])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = [row[9]],id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        
+                        courses_list.append(course_info.jsonify())
+                    return {"courses": courses_list}, 200
+                else:
+                    return {"courses": []}, 200
+        except Exception as e:
+            return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
+        finally:
+            conn.close()
+
+    # ---------------------------- GET COURSES BY TRAINING --------------------------
+    def get_course_by_training_fonction(training_id):
+        try:
+            conn = connect_pg.connect()
+            if not CoursesFonction.field_exist("Trainings", 'id', training_id) :
+                return {"error": f"l'id : {training_id} n'existe pas"}, 400
+            with conn.cursor() as cursor:
+                # Supposons que la date soit au format 'YYYY-MM-DD'
+                sql_query = '''
+                     SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training
+                    FROM ent.Courses C
+                    LEFT JOIN ent.Resources R ON C.id_Resource = R.id
+                    LEFT JOIN ent.TP TP ON C.id_Tp = TP.id
+                    LEFT JOIN ent.TD TD ON C.id_Td = TD.id
+                    LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
+                    LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
+                    WHERE tr.id = %s
+                '''
+                
+                cursor.execute(sql_query, (training_id,))
+                rows = cursor.fetchall()
+                if rows :
+                    courses_list = []
+                    for row in rows:
+                        teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            teachers = teachers_result["teachers"]
+                        else:
+                            teachers = [] 
+                            
+                        classrooms_result, status_code = CoursesFonction.get_all_classroom_courses_with_id_courses(row[0])
+                        if status_code == 200:
+                            classrooms = classrooms_result["classrooms"]
+                        else:
+                            classrooms = [] 
+                            
+                        if row[11] :
+                            response, status = CoursesFonction.get_group_of_training(row[11])
+                            course_info = CourseModel(
+                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                            id_Tp = response["tp"],id_Td = response["td"],id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
+                        courses_list.append(course_info.jsonify())
+                    return {"courses": courses_list}, 200
+                else:
+                    return {"courses": []}, 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()

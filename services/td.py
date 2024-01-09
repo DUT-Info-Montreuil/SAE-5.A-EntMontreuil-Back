@@ -1,6 +1,7 @@
 import psycopg2
 import connect_pg
 from flask import jsonify
+from entities.DTO.tp import TP
 
 class TDService:
     # -------------------- Récupérer un TD par ID --------------------------------------#
@@ -47,6 +48,40 @@ class TDService:
                 """
 
                 cursor.execute(sql_query)
+                rows = cursor.fetchall()
+                tds_list = []
+
+                for row in rows:
+                    td = {
+                        "id": row[0],
+                        "name": row[1],
+                        "id_Promotion": row[2]
+                    }
+                    tds_list.append(td)
+
+                return jsonify(tds_list), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la récupération des TDs : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+
+
+ # -------------------- Récupérer tous les TDs par id_training -------------------#
+    def get_tds_by_training_id(self, id_training):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Requête SQL pour récupérer tous les TDs liés à un id_training spécifique
+                sql_query = """
+                    SELECT id, name, id_Promotion
+                    FROM ent.TD
+                    WHERE id_Training = %s
+                """
+
+                cursor.execute(sql_query, (id_training,))
                 rows = cursor.fetchall()
                 tds_list = []
 
@@ -141,6 +176,28 @@ class TDService:
                 else:
                     return jsonify({"error": "Erreur lors de l'ajout du TD"}), 400
 
+        except psycopg2.Error as e:
+            return jsonify({"message": f"Erreur lors de la suppression du TD : {str(e)}"}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+                
+    # -------------------- Get td by tp--------------------------------------#       
+    def get_tp_by_td(self, id_td):
+        try:
+            conn = connect_pg.connect()
+            if not connect_pg.does_entry_exist('TP', id_td) :
+                return jsonify({"error": f"L'id td {id_td} n'existe pas"}), 400 
+                
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT id, name, id_td FROM ent.TP Where id_Td = %s" , (id_td,))
+                rows = cursor.fetchall()
+                tp_list = []
+                for row in rows :
+                    tp = TP(id=row[0], name=row[1], id_Td=row[2]).jsonify()
+                    tp_list.append(tp)
+                return jsonify(tp_list), 200
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression du TD : {str(e)}"}), 500
 

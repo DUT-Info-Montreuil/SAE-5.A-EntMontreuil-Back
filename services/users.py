@@ -5,9 +5,11 @@ import re
 import bcrypt
 import random
 import string
+from datetime import datetime, timedelta
 from entities.DTO.users import Users
 from entities.model.usersm import UsersModel
 from entities.model.remindersm import ReminderModel
+from entities.model.commentarym import CommentaryModel
 from entities.model.notificationsm import NotificationModel
 from services.roles import RolesFonction
 
@@ -546,6 +548,194 @@ class UsersFonction :
         conn.commit()  # Valider les changements
         conn.close()
 
+    def get_commentaries(self, output_format='DTO'):
+            try:
+                query = """
+                    SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                    FROM Commentary
+                    ORDER BY modification_date DESC
+                """
+                rows = connect_pg.get_query(query)
+                commentaries = []
+
+                for row in rows:
+                    commentary = CommentaryModel(
+                        id=row[0],
+                        id_User=row[1],
+                        id_Degree=row[2],
+                        date=row[3],
+                        title=row[4],
+                        comment_text=row[5],
+                        modification_date=row[6],
+                    )
+                    commentaries.append(commentary.jsonify())
+
+                return commentaries
+
+            except Exception as e:
+                return jsonify({"message": "ERROR", "error": str(e)}), 500
+
+    def get_commentary_by_id(self, id_commentary, output_format='DTO'):
+        try:
+            query = """
+                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                FROM Commentary
+                WHERE id = %s
+            """
+
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, (id_commentary,))
+                row = cursor.fetchone()
+                if not row:
+                    raise ValidationError(f"Commentary id: '{id_commentary}' not found")
+                commentary = CommentaryModel(
+                    id=row[0],
+                    id_User=row[1],
+                    id_Degree=row[2],
+                    date=row[3],
+                    title=row[4],
+                    comment_text=row[5],
+                    modification_date=row[6],
+                )
+
+                return commentary.jsonify()
+
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
+        except Exception as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 500
+
+    def add_commentary(self, id_user, data):
+        try:
+            if not UsersFonction.field_exists('id', id_user):
+                raise ValidationError(f"User id: '{id_user}' does not exist")
+            query = """
+                INSERT INTO Commentary (id_User, id_Degree, date, title, comment_text, modification_date)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                RETURNING id
+            """
+            values = (
+                id_user,
+                data["id_Degree"],
+                data["date"],
+                data["title"],
+                data["comment_text"],
+            )
+
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, values)
+                inserted_commentary_id = cursor.fetchone()[0]
+
+            return jsonify({
+                "message": f"Commentary added successfully, ID: {inserted_commentary_id}",
+                "id": inserted_commentary_id
+            }), 200
+
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
+        except Exception as e:
+            return jsonify({"message": f"Error adding commentary: {str(e)}"}), 500
+
+    def update_commentary(self, id_user, data, id_commentary):
+        try:
+            if not UsersFonction.field_exists('id', id_user):
+                raise ValidationError(f"User id: '{id_user}' does not exist")
+            query = """
+                UPDATE Commentary
+                SET title = %s, comment_text = %s
+                WHERE id = %s AND id_User = %s
+                RETURNING id
+            """
+            values = (
+                data["title"],
+                data["comment_text"],
+                id_commentary,
+                id_user,
+            )
+
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, values)
+                updated_commentary_id = cursor.fetchone()
+
+            conn.commit()
+
+            if updated_commentary_id:
+                return jsonify({
+                    "message": f"Commentary updated successfully, ID: {updated_commentary_id[0]}"
+                }), 200
+            else:
+                return jsonify({"message": "Commentary not found or no changes made"}), 404
+
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
+        except Exception as e:
+            return jsonify({"message": f"Error updating commentary: {str(e)}"}), 500
+
+    def delete_commentary(self, id_user, id_commentary):
+        try:
+            if not UsersFonction.field_exists('id', id_user):
+                raise ValidationError(f"User id: '{id_user}' does not exist")
+            query = "DELETE FROM Commentary WHERE id = %s AND id_User = %s RETURNING id"
+            values = (id_commentary, id_user)
+
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, values)
+                deleted_commentary_id = cursor.fetchone()
+
+            conn.commit()
+            if deleted_commentary_id:
+                return jsonify({
+                    "message": f"Commentary deleted successfully, ID: {deleted_commentary_id[0]}"
+                }), 200
+            else:
+                return jsonify({"message": "Commentary not found or already deleted"}), 404
+
+        except ValidationError as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 404
+
+        except Exception as e:
+            return jsonify({"message": f"Error deleting commentary: {str(e)}"}), 500
+
+    def get_commentary_by_week(self, week_start_date, output_format='DTO'):
+        try:
+            week_start_date = datetime.strptime(week_start_date, "%Y-%m-%d")
+            week_end_date = week_start_date + timedelta(days=4)
+
+            query = """
+                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                FROM Commentary
+                WHERE date >= %s AND date <= %s
+                ORDER BY modification_date DESC
+            """
+
+            with connect_pg.connect() as conn, conn.cursor() as cursor:
+                cursor.execute(query, (week_start_date, week_end_date))
+                rows = cursor.fetchall()
+
+                commentaries = []
+                for row in rows:
+                    commentary = CommentaryModel(
+                        id=row[0],
+                        id_User=row[1],
+                        id_Degree=row[2],
+                        date=row[3],
+                        title=row[4],
+                        comment_text=row[5],
+                        modification_date=row[6],
+                    )
+                    commentaries.append(commentary.jsonify())
+
+                return commentaries
+
+        except Exception as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 500
+
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
 #----------------------------------ERROR-------------------------------------
 class ValidationError(Exception) :
     pass

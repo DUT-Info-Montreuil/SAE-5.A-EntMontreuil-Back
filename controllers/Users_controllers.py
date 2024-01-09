@@ -411,3 +411,68 @@ def delete_all_user_notifications():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/comments', methods=['GET'])
+@jwt_required()
+def get_all_comments():
+    try:
+        output_format = request.args.get('output_format', default='DTO')
+        all_comments = UsersFonction.get_commentaries(output_format)
+        return jsonify(all_comments)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/comments/<int:comment_id>', methods=['GET'])
+@jwt_required()
+def get_comment_by_id(comment_id):
+    try:
+        output_format = request.args.get('output_format', default='DTO')
+        comment = UsersFonction.get_commentary_by_id(comment_id, output_format)
+        return jsonify(comment)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/comments', methods=['POST'])
+@jwt_required()
+def add_comment():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+        data = request.json
+        response, https_status = UsersFonction.add_commentary(user_id, data)
+        return response, https_status
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/comments/<int:comment_id>', methods=['PUT'])
+@jwt_required()
+def update_comment(comment_id):
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+        data = request.json
+        response, https_status = UsersFonction.update_commentary(user_id, comment_id, data)
+        return response, https_status
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/users/comments/<int:comment_id>', methods=['DELETE'])
+@jwt_required()
+def delete_comment(comment_id):
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user["id"]
+        response, https_status = UsersFonction.delete_commentary(user_id, comment_id)
+        return response, https_status
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/commentaries/week/<int:week_number>', methods=['GET'])
+@jwt_required()
+def get_commentaries_by_week(week_start_date):
+    try:
+        output_format = request.args.get('output_format', default='DTO')
+        comments = UsersFonction.get_commentary_by_week(week_start_date, output_format)
+        return jsonify(comments)
+    except Exception as e:
+        return jsonify({"message": "ERROR", "error": str(e)}), 500

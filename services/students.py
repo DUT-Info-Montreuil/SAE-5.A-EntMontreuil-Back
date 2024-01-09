@@ -134,15 +134,6 @@ class StudentsServices :
             "ine" : data["ine"],
             "nip" : data["nip"]
         }
-        
-        # Recuperation du user id
-        # Si id est present
-        if "id" in data :
-            # Verification si id existe deja
-            if StudentsFonction.field_exists('id', data["id"]) :
-                return jsonify({"error": f"Id for student '{data.get('id')}' already exist"}), 400
-            else :
-                student_data["id"] = data["id"]
         user_response, http_status = UsersFonction.add_users(user_data)  # Appel de la fonction add_users
         # Si la requette user_add reussi
         if http_status != 200 :
@@ -152,7 +143,8 @@ class StudentsServices :
             password = user_response.json.get("password")
             
             user_id = user_response.json.get("id")
-            student_data["id_User"] = user_id,
+            student_data["id"] = user_id
+            student_data["id_User"] = user_id
             columns = list(student_data.keys())
             values = list(student_data.values())
             # Etablissez la connexion a la base de donnees
@@ -321,6 +313,7 @@ class StudentsFonction :
             password = user_response.json.get("password")
             user_id = user_response.json.get("id")
             student_data["id_User"] = user_id
+            student_data["id"] = user_id
             columns = list(student_data.keys())
             values = list(student_data.values())
             conn = connect_pg.connect()

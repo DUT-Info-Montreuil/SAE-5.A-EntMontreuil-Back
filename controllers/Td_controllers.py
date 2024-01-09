@@ -9,6 +9,13 @@ td_service = TDService()
 def get_td_by_id(td_id):
     return td_service.get_td_by_id(td_id)
 
+
+
+# -------------------- Récupérer les TD d'un Training --------------------------------------#
+@td_bp.route('/td/training/<int:id_training>', methods=['GET'])
+def get_tds_by_training(id_training):
+    # Call the service method to get TDs by training ID
+    return td_service.get_tds_by_training_id(id_training)
 # -------------------- Récupérer tous les TDs --------------------------------------#
 @td_bp.route('/td', methods=['GET'])
 def get_all_tds():
@@ -31,5 +38,13 @@ def create_td():
     try:
         data = request.json
         return td_service.add_td(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+# -------------------- get tp by TD --------------------------------------#
+@td_bp.route('/td/tp/<int:id_td>', methods=['GET'])
+def get_tp_by_td(id_td):
+    try:
+        return td_service.get_tp_by_td(id_td)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -336,26 +336,26 @@ class CourseService:
                         else:
                             classrooms = [] 
                             
-                        if row[11] :
-                            response, status = CoursesFonction.get_group_of_training(row[11])
-                            tp = response["tp"]
-                            td = response["td"]
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = tp,id_Td = td ,id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
-                            courses_training.append(course_info.jsonify())
-                            if td :
-                                for id in td :
-                                    if CoursesFonction.verifie_id_in_courses('id_td' , id) :
-                                        response, status = CoursesFonction.get_course_by_td_fonction(id)
-                                        for course in response["courses"] : 
-                                            courses_td.append(course)
-                            if tp :
-                                for id in tp :
-                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
-                                        response, status = CoursesFonction.get_course_by_tp_fonction(id)
-                                        for course in response["courses"] :
-                                            courses_tp.append(course)
+
+                        response, status = CoursesFonction.get_group_of_training(row[11])
+                        tp = response["tp"]
+                        td = response["td"]
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = tp,id_Td = td ,id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
+                        courses_training.append(course_info.jsonify())
+                        if td :
+                            for id in td :
+                                if CoursesFonction.verifie_id_in_courses('id_td' , id) :
+                                    response, status = CoursesFonction.get_course_by_td_fonction(id)
+                                    for course in response["courses"] : 
+                                        courses_td.append(course)
+                        if tp :
+                            for id in tp :
+                                if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                    response, status = CoursesFonction.get_course_by_tp_fonction(id)
+                                    for course in response["courses"] :
+                                        courses_tp.append(course)
                         
                         courses_list = {
                             "courses_training" : courses_training,
@@ -426,20 +426,19 @@ class CourseService:
                             classrooms = classrooms_result["classrooms"]
                         else:
                             classrooms = [] 
-                        if row[9] :
-                            response, status = CoursesFonction.get_group_of_td(row[9])
-                            tp = response["tp"]
-                            course_info = CourseModel(
-                            row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-                            id_Tp = tp,id_Td = [row[9]] ,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
-                            courses_td.append(course_info.jsonify())
-                            if tp :
-                                for id in tp :
-                                    if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
-                                        response, status = CoursesFonction.get_course_by_tp_fonction(id)
-                                        for course in response["courses"] :
-                                            courses_tp.append(course)
-                        
+                        response, status = CoursesFonction.get_group_of_td(row[9])
+                        tp = response["tp"]
+                        course_info = CourseModel(
+                        row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
+                        id_Tp = tp,id_Td = [row[9]] ,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
+                        courses_td.append(course_info.jsonify())
+                        if tp :
+                            for id in tp :
+                                if CoursesFonction.verifie_id_in_courses('id_tp' , id) :
+                                    response, status = CoursesFonction.get_course_by_tp_fonction(id)
+                                    for course in response["courses"] :
+                                        courses_tp.append(course)
+                    
                         courses_list = {
                             "courses_td" : courses_td,
                             "courses_tp" : courses_tp

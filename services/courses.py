@@ -176,6 +176,9 @@ class CourseService:
                 courses_td = []
                 courses_tp = []
                 response, status = CoursesFonction.get_group_of_promotion(promotion_id)
+                tp = response["tp"]
+                td = response["td"]
+                training = response["training"]
                 if rows :
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -194,10 +197,6 @@ class CourseService:
                         id_Tp = response["tp"],id_Td = response["td"],id_Promotion = [row[10]],id_Training = response["training"], teacher = teachers, classroom= classrooms)
                         courses_promotion.append(course_info.jsonify())
                         
-                tp = response["tp"]
-                td = response["td"]
-                training = response["training"]
-                
                 if training : 
                     for id in training :
                         if CoursesFonction.verifie_id_in_courses('id_training' , id) :
@@ -321,6 +320,8 @@ class CourseService:
                 courses_td = []
                 courses_tp = []
                 response, status = CoursesFonction.get_group_of_training(training_id)
+                tp = response["tp"]
+                td = response["td"]
                 if rows :
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -339,10 +340,6 @@ class CourseService:
                         row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
                         id_Tp = tp,id_Td = td ,id_Promotion = None,id_Training = [row[11]], teacher = teachers, classroom= classrooms)
                         courses_training.append(course_info.jsonify())
-
-                        
-                tp = response["tp"]
-                td = response["td"]
                 
                 if td :
                     for id in td :
@@ -410,6 +407,7 @@ class CourseService:
                 courses_td = []
                 courses_tp = []
                 response, status = CoursesFonction.get_group_of_td(id_td)
+                tp = response["tp"]
                 if rows :
                     for row in rows:
                         teachers_result, status_code = CoursesFonction.get_all_teacher_courses_with_id_courses(row[0])
@@ -429,7 +427,6 @@ class CourseService:
                         id_Tp = tp,id_Td = [row[9]] ,id_Promotion = None,id_Training = None, teacher = teachers, classroom= classrooms)
                         courses_td.append(course_info.jsonify())
                     
-                tp = response["tp"]
                 if tp :
                     for id in tp :
                         if CoursesFonction.verifie_id_in_courses('id_tp' , id) :

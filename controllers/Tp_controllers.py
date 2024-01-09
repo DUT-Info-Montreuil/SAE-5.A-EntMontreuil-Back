@@ -33,3 +33,11 @@ def add_tp():
         return tp_service.add_tp(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# -------------------- Ajouter students à TP --------------------------------------#
+@tp_bp.route('/tp/<int:tp_id>/add-students', methods=['POST'])
+def add_students_to_tp(tp_id):
+    student_ids = request.json.get('student_ids')
+    if not student_ids:
+        return jsonify({"error": "Aucun identifiant d'étudiant fourni"}), 400
+    return tp_service.add_students_to_tp(tp_id, student_ids)

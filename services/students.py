@@ -106,6 +106,29 @@ class StudentsServices :
                 raise e
             finally:
                 conn.close()
+                
+                
+    ############  ############
+    def get_students_without_td_tp(self):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                SELECT s.*, u.username, u.last_name, u.first_name, u.email 
+                FROM ent.students s
+                JOIN ent.users u ON s.id_user = u.id
+                WHERE s.id_td IS NULL AND s.id_tp IS NULL;
+                """
+                cursor.execute(sql_query)
+                students = cursor.fetchall()
+                students_list = [{"student_id": row[0], "apprentice": row[1], "id_td": row[5], "id_tp": row[6], "id_promotion": row[7], "username": row[8], "last_name": row[9], "first_name": row[10], "email": row[11]} for row in students]
+                return jsonify(students_list), 200
+
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+                
     ############ STUDENTS/ADD ############
     def add_students(self, datas):
         data = datas["datas"]

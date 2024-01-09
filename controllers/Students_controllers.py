@@ -364,3 +364,7 @@ def csv_verify_students():
     except Exception as e:
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
+      
+@students_bp.route('/students/no-td-tp', methods=['GET'])
+def get_students_without_td_tp():
+    return students_services.get_students_without_td_tp()

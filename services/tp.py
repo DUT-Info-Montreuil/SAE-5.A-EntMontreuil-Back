@@ -144,3 +144,28 @@ class TPService:
         finally:
             if conn:
                 connect_pg.disconnect(conn)
+
+       # -------------------- Ajouter students à TP --------------------------------------#
+    def add_students_to_tp(self, tp_id, student_ids):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Trouver l'identifiant du TD associé
+                cursor.execute("SELECT id_td FROM ent.TP WHERE id = %s", (tp_id,))
+                td_id = cursor.fetchone()
+                if not td_id:
+                    return jsonify({"error": "TP non trouvé"}), 404
+
+                # Mettre à jour les étudiants
+                for student_id in student_ids:
+                    cursor.execute("UPDATE ent.Students SET id_tp = %s, id_td = %s WHERE id = %s",
+                                   (tp_id, td_id[0], student_id))
+
+                conn.commit()
+                return jsonify({"message": "Étudiants ajoutés avec succès au TP et au TD associé"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)

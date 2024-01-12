@@ -150,19 +150,29 @@ class TPService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                # Trouver l'identifiant du TD associé
-                cursor.execute("SELECT id_td FROM ent.TP WHERE id = %s", (tp_id,))
-                td_id = cursor.fetchone()
-                if not td_id:
-                    return jsonify({"error": "TP non trouvé"}), 404
+                # Trouver l'identifiant du TD associé et la promotion liée
+                cursor.execute("""
+                    SELECT td.id, td.id_promotion 
+                    FROM ent.TP tp 
+                    JOIN ent.TD td ON tp.id_td = td.id 
+                    WHERE tp.id = %s
+                """, (tp_id,))
+                td_info = cursor.fetchone()
+                if not td_info:
+                    return jsonify({"error": "TP ou TD associé non trouvé"}), 404
+
+                td_id, promotion_id = td_info
 
                 # Mettre à jour les étudiants
                 for student_id in student_ids:
-                    cursor.execute("UPDATE ent.Students SET id_tp = %s, id_td = %s WHERE id = %s",
-                                   (tp_id, td_id[0], student_id))
+                    cursor.execute("""
+                        UPDATE ent.Students 
+                        SET id_tp = %s, id_td = %s, id_promotion = %s 
+                        WHERE id = %s
+                    """, (tp_id, td_id, promotion_id, student_id))
 
                 conn.commit()
-                return jsonify({"message": "Étudiants ajoutés avec succès au TP et au TD associé"}), 200
+                return jsonify({"message": "Étudiants ajoutés avec succès au TP, au TD associé et à la promotion"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"error": str(e)}), 500

@@ -109,7 +109,42 @@ class StudentsServices :
                 
                 
     ############  ############
-    def get_students_without_td_tp(self):
+    def get_all_students_in_promo(self, promotion_id):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                SELECT s.*, u.username, u.last_name, u.first_name, u.email, 
+                   td.name AS td_name, tp.name AS tp_name,
+                   p.year, p.level, d.name AS degree_name
+                FROM ent.students s
+                JOIN ent.users u ON s.id_user = u.id
+                LEFT JOIN ent.tp tp ON s.id_tp = tp.id
+                LEFT JOIN ent.td td ON tp.id_td = td.id
+                JOIN ent.promotions p ON s.id_promotion = p.id
+                JOIN ent.degrees d ON p.id_degree = d.id
+                WHERE s.id_promotion = %s;
+                """
+                cursor.execute(sql_query, (promotion_id,))
+                students = cursor.fetchall()
+                students_list = [
+                    {
+                        "student_id": row[0], "apprentice": row[1], 
+                        "username": row[8], "last_name": row[9], 
+                        "first_name": row[10], "email": row[11],
+                        "td_name": row[12], "tp_name": row[13],
+                        "promotion_year": row[14], "promotion_level": row[15], 
+                        "degree_name": row[16]
+                    } 
+                    for row in students
+            ]
+                return jsonify(students_list), 200
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+            
+    def get_all_students_without_td_tp(self):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
@@ -123,7 +158,7 @@ class StudentsServices :
                 students = cursor.fetchall()
                 students_list = [{"student_id": row[0], "apprentice": row[1], "id_td": row[5], "id_tp": row[6], "id_promotion": row[7], "username": row[8], "last_name": row[9], "first_name": row[10], "email": row[11]} for row in students]
                 return jsonify(students_list), 200
-
+            
         except Exception as e:
             raise e
         finally:

@@ -134,25 +134,27 @@ class TDService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.TD WHERE id = %s RETURNING id", (td_id,))
+                # Mettre à jour les étudiants en définissant id_td et id_tp à NULL
+                cursor.execute("UPDATE ent.students SET id_td = NULL, id_tp = NULL WHERE id_td = %s", (td_id,))
+
+                # Supprimer les TP associés au TD
+                cursor.execute("DELETE FROM ent.tp WHERE id_td = %s", (td_id,))
+
+                # Supprimer le TD
+                cursor.execute("DELETE FROM ent.td WHERE id = %s RETURNING id", (td_id,))
                 deleted_td_id = cursor.fetchone()
 
                 conn.commit()
 
                 if deleted_td_id:
-                    return jsonify({
-                        "message": f"TD supprimé avec succès, ID : {deleted_td_id[0]}"
-                    }), 200
+                    return jsonify({ "message": f"TD supprimé avec succès, ID : {deleted_td_id[0]}"}), 200
                 else:
                     return jsonify({"message": "TD non trouvé ou déjà supprimé"}), 404
-
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression du TD : {str(e)}"}), 500
-
         finally:
             if conn:
                 connect_pg.disconnect(conn)
-                
                 
         # -------------------- Ajouter un TD --------------------------------------#
     def add_td(self, data):

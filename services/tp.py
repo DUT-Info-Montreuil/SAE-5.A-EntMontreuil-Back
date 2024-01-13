@@ -99,17 +99,21 @@ class TPService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.TP WHERE id = %s RETURNING id", (tp_id,))
+                # Mettre à jour les étudiants en définissant id_tp à NULL
+                cursor.execute("UPDATE ent.students SET id_tp = NULL, id_td = NULL WHERE id_tp = %s", (tp_id,))
+
+                # Supprimer le TP
+                cursor.execute("DELETE FROM ent.tp WHERE id = %s RETURNING id", (tp_id,))
                 deleted_tp_id = cursor.fetchone()
 
                 conn.commit()
 
-                if deleted_tp_id:
-                    return jsonify({
-                        "message": f"TP supprimé avec succès, ID : {deleted_tp_id[0]}"
-                    }), 200
-                else:
-                    return jsonify({"message": "TP non trouvé ou déjà supprimé"}), 404
+            if deleted_tp_id:
+                return jsonify({
+                    "message": f"TP supprimé avec succès, ID : {deleted_tp_id[0]}"
+                }), 200
+            else:
+                return jsonify({"message": "TP non trouvé ou déjà supprimé"}), 404
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression du TP : {str(e)}"}), 500

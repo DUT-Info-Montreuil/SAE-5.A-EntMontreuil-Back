@@ -150,14 +150,14 @@ class StudentsServices :
             with conn.cursor() as cursor:
                 sql_query = """
                 SELECT s.*, u.username, u.last_name, u.first_name, u.email, 
-               td.name AS td_name, tp.name AS tp_name,
-               p.year, p.level, d.name AS degree_name
+                td.name AS td_name, tp.name AS tp_name,
+                p.year, p.level, d.name AS degree_name
                 FROM ent.students s
                 JOIN ent.users u ON s.id_user = u.id
                 LEFT JOIN ent.tp tp ON s.id_tp = tp.id
                 LEFT JOIN ent.td td ON tp.id_td = td.id
-                JOIN ent.promotions p ON s.id_promotion = p.id
-                JOIN ent.degrees d ON p.id_degree = d.id;
+                LEFT JOIN ent.promotions p ON s.id_promotion = p.id
+                LEFT JOIN ent.degrees d ON p.id_degree = d.id;      
                 """
                 cursor.execute(sql_query)
                 students = cursor.fetchall()
@@ -167,12 +167,13 @@ class StudentsServices :
                         "username": row[8], "last_name": row[9], 
                         "first_name": row[10], "email": row[11],
                         "td_name": row[12], "tp_name": row[13],
-                        "promotion_year": row[14], "promotion_level": row[15], 
-                        "degree_name": row[16]
+                        "promotion_year": row[14] if row[14] else None,  # Gère les valeurs NULL
+                        "promotion_level": row[15] if row[15] else None,  # Gère les valeurs NULL
+                        "degree_name": row[16] if row[16] else None  # Gère les valeurs NULL
                     } 
                 for row in students
-            ]
-                return jsonify(students_list), 200
+        ]
+            return jsonify(students_list), 200
         except Exception as e:
             raise e
         finally:

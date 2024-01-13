@@ -145,7 +145,7 @@ class TPService:
             if conn:
                 connect_pg.disconnect(conn)
 
-       # -------------------- Ajouter students à TP --------------------------------------#
+    # -------------------- Ajouter students à TP --------------------------------------#
     def add_students_to_tp(self, tp_id, student_ids):
         try:
             conn = connect_pg.connect()
@@ -173,6 +173,27 @@ class TPService:
 
                 conn.commit()
                 return jsonify({"message": "Étudiants ajoutés avec succès au TP, au TD associé et à la promotion"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+                
+    # -------------------- Supprimer students à TP --------------------------------------#
+    def remove_student_from_tp_td_promotion(self, student_id):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Mettre à jour l'étudiant en définissant les champs à NULL
+                cursor.execute("""
+                    UPDATE ent.Students 
+                    SET id_tp = NULL, id_td = NULL, id_promotion = NULL 
+                    WHERE id = %s
+                """, (student_id,))
+
+                conn.commit()
+                return jsonify({"message": "Étudiant retiré du TP, TD et promotion avec succès"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"error": str(e)}), 500

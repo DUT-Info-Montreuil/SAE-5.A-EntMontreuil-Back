@@ -41,3 +41,8 @@ def add_students_to_tp(tp_id):
     if not student_ids:
         return jsonify({"error": "Aucun identifiant d'étudiant fourni"}), 400
     return tp_service.add_students_to_tp(tp_id, student_ids)
+
+# -------------------- Supprimer students à TP --------------------------------------#
+@tp_bp.route('/tp/remove_student/<int:student_id>', methods=['GET'])
+def remove_student(student_id):
+    return tp_service.remove_student_from_tp_td_promotion(student_id)

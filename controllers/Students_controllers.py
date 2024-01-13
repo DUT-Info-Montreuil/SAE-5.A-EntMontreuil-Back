@@ -366,11 +366,18 @@ def csv_verify_students():
         return jsonify({"message": "Error", "error": str(e)}), 400
       
       
-      
-      
 @students_bp.route('/students/promotion/<int:promotion_id>', methods=['GET'])
 def get_students_in_promotion(promotion_id):
     try:
         return students_services.get_all_students_in_promo(promotion_id)
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
+      
+
+@students_bp.route('/students/all', methods=['GET'])
+def get_all_students():
+    try:
+        return students_services.get_all_students()
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+      

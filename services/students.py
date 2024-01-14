@@ -144,7 +144,7 @@ class StudentsServices :
         finally:
             conn.close()
             
-    def get_all_students(self):
+    def get_all_students_cohort(self):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
@@ -178,6 +178,47 @@ class StudentsServices :
             raise e
         finally:
             conn.close()
+            
+    def get_all_students(self, output_format):
+        """ Return all students in JSON format """
+        query = """SELECT
+                                        S.id, S.nip, S.apprentice, S.ine,
+                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin,
+                                        TD.id,TD.name as td_name,
+                                        TP.id,TP.name as tp_name,
+                                        P.id, P.year as promotion_year, P.level as promotion_level,
+                                        D.id as degree_id, D.name as degree_name,
+                                        R.id as role_id, R.name as role_name,
+                                        U.id
+                    FROM
+                        ent.Students S
+                    INNER JOIN
+                        ent.Users U ON S.id_User = U.id
+                    LEFT JOIN
+                        ent.TD TD ON S.id_Td = TD.id
+                    LEFT JOIN
+                        ent.TP TP ON S.id_Tp = TP.id
+                    LEFT JOIN
+                        ent.Promotions P ON S.id_Promotion = P.id
+                    LEFT JOIN
+                        ent.Degrees D ON P.id_Degree = D.id
+                    LEFT JOIN
+                        ent.Roles R ON U.id_Role = R.id
+                    order  by s.id asc"""
+        conn = connect_pg.connect()
+        rows = connect_pg.get_query(conn, query)
+        returnStatement = []
+        for row in rows:
+            if output_format == 'dto' :
+                student = Students(row[0], row[1], row[2], row[20], row[9], row[11], row[13], row[3])
+            elif output_format == 'model' :
+                student =  StudentsModel(*row[:-1])
+
+            else :
+                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
+            returnStatement.append(student.jsonify())
+        connect_pg.disconnect(conn)
+        return jsonify(returnStatement)
 
    
     def get_all_students_without_td_tp(self):

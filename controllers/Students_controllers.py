@@ -375,9 +375,9 @@ def get_students_in_promotion(promotion_id):
       
 
 @students_bp.route('/students/all', methods=['GET'])
-def get_all_students():
+def get_all_students_cohort():
     try:
-        return students_services.get_all_students()
+        return students_services.get_all_students_cohort()
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
       

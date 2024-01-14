@@ -812,7 +812,7 @@ class CourseService:
                 for id in data["classrooms"] :
                     cursor.execute(
                         """
-                        INSERT INTO ent.Courses_Classrooms (id_course, id_classoom) VALUES (%s, %s)
+                        INSERT INTO ent.Courses_Classrooms (id_course, id_classroom) VALUES (%s, %s)
                         """,
                         (course_id,id)
                     )

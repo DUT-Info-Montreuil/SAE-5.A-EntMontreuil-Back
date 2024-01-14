@@ -109,7 +109,119 @@ class StudentsServices :
                 
                 
     ############  ############
-    def get_students_without_td_tp(self):
+    def get_all_students_in_promo(self, promotion_id):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                SELECT s.*, u.username, u.last_name, u.first_name, u.email, 
+                   td.name AS td_name, tp.name AS tp_name,
+                   p.year, p.level, d.name AS degree_name
+                FROM ent.students s
+                JOIN ent.users u ON s.id_user = u.id
+                LEFT JOIN ent.tp tp ON s.id_tp = tp.id
+                LEFT JOIN ent.td td ON tp.id_td = td.id
+                JOIN ent.promotions p ON s.id_promotion = p.id
+                JOIN ent.degrees d ON p.id_degree = d.id
+                WHERE s.id_promotion = %s;
+                """
+                cursor.execute(sql_query, (promotion_id,))
+                students = cursor.fetchall()
+                students_list = [
+                    {
+                        "student_id": row[0], "apprentice": row[1], 
+                        "username": row[8], "last_name": row[9], 
+                        "first_name": row[10], "email": row[11],
+                        "td_name": row[12], "tp_name": row[13],
+                        "promotion_year": row[14], "promotion_level": row[15], 
+                        "degree_name": row[16]
+                    } 
+                    for row in students
+            ]
+                return jsonify(students_list), 200
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+            
+    def get_all_students_cohort(self):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = """
+                SELECT s.*, u.username, u.last_name, u.first_name, u.email, 
+                td.name AS td_name, tp.name AS tp_name,
+                p.year, p.level, d.name AS degree_name
+                FROM ent.students s
+                JOIN ent.users u ON s.id_user = u.id
+                LEFT JOIN ent.tp tp ON s.id_tp = tp.id
+                LEFT JOIN ent.td td ON tp.id_td = td.id
+                LEFT JOIN ent.promotions p ON s.id_promotion = p.id
+                LEFT JOIN ent.degrees d ON p.id_degree = d.id;      
+                """
+                cursor.execute(sql_query)
+                students = cursor.fetchall()
+                students_list = [
+                    {
+                        "student_id": row[0], "apprentice": row[1], 
+                        "username": row[8], "last_name": row[9], 
+                        "first_name": row[10], "email": row[11],
+                        "td_name": row[12], "tp_name": row[13],
+                        "promotion_year": row[14] if row[14] else None,  # Gère les valeurs NULL
+                        "promotion_level": row[15] if row[15] else None,  # Gère les valeurs NULL
+                        "degree_name": row[16] if row[16] else None  # Gère les valeurs NULL
+                    } 
+                for row in students
+        ]
+            return jsonify(students_list), 200
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+            
+    def get_all_students(self, output_format):
+        """ Return all students in JSON format """
+        query = """SELECT
+                                        S.id, S.nip, S.apprentice, S.ine,
+                                        U.username, U.last_name, U.first_name, U.email, U.isAdmin,
+                                        TD.id,TD.name as td_name,
+                                        TP.id,TP.name as tp_name,
+                                        P.id, P.year as promotion_year, P.level as promotion_level,
+                                        D.id as degree_id, D.name as degree_name,
+                                        R.id as role_id, R.name as role_name,
+                                        U.id
+                    FROM
+                        ent.Students S
+                    INNER JOIN
+                        ent.Users U ON S.id_User = U.id
+                    LEFT JOIN
+                        ent.TD TD ON S.id_Td = TD.id
+                    LEFT JOIN
+                        ent.TP TP ON S.id_Tp = TP.id
+                    LEFT JOIN
+                        ent.Promotions P ON S.id_Promotion = P.id
+                    LEFT JOIN
+                        ent.Degrees D ON P.id_Degree = D.id
+                    LEFT JOIN
+                        ent.Roles R ON U.id_Role = R.id
+                    order  by s.id asc"""
+        conn = connect_pg.connect()
+        rows = connect_pg.get_query(conn, query)
+        returnStatement = []
+        for row in rows:
+            if output_format == 'dto' :
+                student = Students(row[0], row[1], row[2], row[20], row[9], row[11], row[13], row[3])
+            elif output_format == 'model' :
+                student =  StudentsModel(*row[:-1])
+
+            else :
+                raise ValueError("Invalid output_format. Should be 'dto' or 'model'.")
+            returnStatement.append(student.jsonify())
+        connect_pg.disconnect(conn)
+        return jsonify(returnStatement)
+
+   
+    def get_all_students_without_td_tp(self):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
@@ -123,7 +235,7 @@ class StudentsServices :
                 students = cursor.fetchall()
                 students_list = [{"student_id": row[0], "apprentice": row[1], "id_td": row[5], "id_tp": row[6], "id_promotion": row[7], "username": row[8], "last_name": row[9], "first_name": row[10], "email": row[11]} for row in students]
                 return jsonify(students_list), 200
-
+            
         except Exception as e:
             raise e
         finally:

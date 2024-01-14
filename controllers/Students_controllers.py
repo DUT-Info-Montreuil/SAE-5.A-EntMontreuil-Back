@@ -365,6 +365,19 @@ def csv_verify_students():
         # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
       
-@students_bp.route('/students/no-td-tp', methods=['GET'])
-def get_students_without_td_tp():
-    return students_services.get_students_without_td_tp()
+      
+@students_bp.route('/students/promotion/<int:promotion_id>', methods=['GET'])
+def get_students_in_promotion(promotion_id):
+    try:
+        return students_services.get_all_students_in_promo(promotion_id)
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+      
+
+@students_bp.route('/students/all', methods=['GET'])
+def get_all_students_cohort():
+    try:
+        return students_services.get_all_students_cohort()
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+      

@@ -99,17 +99,21 @@ class TPService:
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM ent.TP WHERE id = %s RETURNING id", (tp_id,))
+                # Mettre à jour les étudiants en définissant id_tp à NULL
+                cursor.execute("UPDATE ent.students SET id_tp = NULL, id_td = NULL WHERE id_tp = %s", (tp_id,))
+
+                # Supprimer le TP
+                cursor.execute("DELETE FROM ent.tp WHERE id = %s RETURNING id", (tp_id,))
                 deleted_tp_id = cursor.fetchone()
 
                 conn.commit()
 
-                if deleted_tp_id:
-                    return jsonify({
-                        "message": f"TP supprimé avec succès, ID : {deleted_tp_id[0]}"
-                    }), 200
-                else:
-                    return jsonify({"message": "TP non trouvé ou déjà supprimé"}), 404
+            if deleted_tp_id:
+                return jsonify({
+                    "message": f"TP supprimé avec succès, ID : {deleted_tp_id[0]}"
+                }), 200
+            else:
+                return jsonify({"message": "TP non trouvé ou déjà supprimé"}), 404
 
         except psycopg2.Error as e:
             return jsonify({"message": f"Erreur lors de la suppression du TP : {str(e)}"}), 500
@@ -145,24 +149,55 @@ class TPService:
             if conn:
                 connect_pg.disconnect(conn)
 
-       # -------------------- Ajouter students à TP --------------------------------------#
+    # -------------------- Ajouter students à TP --------------------------------------#
     def add_students_to_tp(self, tp_id, student_ids):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
-                # Trouver l'identifiant du TD associé
-                cursor.execute("SELECT id_td FROM ent.TP WHERE id = %s", (tp_id,))
-                td_id = cursor.fetchone()
-                if not td_id:
-                    return jsonify({"error": "TP non trouvé"}), 404
+                # Trouver l'identifiant du TD associé et la promotion liée
+                cursor.execute("""
+                    SELECT td.id, td.id_promotion 
+                    FROM ent.TP tp 
+                    JOIN ent.TD td ON tp.id_td = td.id 
+                    WHERE tp.id = %s
+                """, (tp_id,))
+                td_info = cursor.fetchone()
+                if not td_info:
+                    return jsonify({"error": "TP ou TD associé non trouvé"}), 404
+
+                td_id, promotion_id = td_info
 
                 # Mettre à jour les étudiants
                 for student_id in student_ids:
-                    cursor.execute("UPDATE ent.Students SET id_tp = %s, id_td = %s WHERE id = %s",
-                                   (tp_id, td_id[0], student_id))
+                    cursor.execute("""
+                        UPDATE ent.Students 
+                        SET id_tp = %s, id_td = %s, id_promotion = %s 
+                        WHERE id = %s
+                    """, (tp_id, td_id, promotion_id, student_id))
 
                 conn.commit()
-                return jsonify({"message": "Étudiants ajoutés avec succès au TP et au TD associé"}), 200
+                return jsonify({"message": "Étudiants ajoutés avec succès au TP, au TD associé et à la promotion"}), 200
+
+        except psycopg2.Error as e:
+            return jsonify({"error": str(e)}), 500
+        finally:
+            if conn:
+                connect_pg.disconnect(conn)
+                
+    # -------------------- Supprimer students à TP --------------------------------------#
+    def remove_student_from_tp_td_promotion(self, student_id):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Mettre à jour l'étudiant en définissant les champs à NULL
+                cursor.execute("""
+                    UPDATE ent.Students 
+                    SET id_tp = NULL, id_td = NULL, id_promotion = NULL 
+                    WHERE id = %s
+                """, (student_id,))
+
+                conn.commit()
+                return jsonify({"message": "Étudiant retiré du TP, TD et promotion avec succès"}), 200
 
         except psycopg2.Error as e:
             return jsonify({"error": str(e)}), 500

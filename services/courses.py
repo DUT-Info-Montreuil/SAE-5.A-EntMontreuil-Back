@@ -1102,6 +1102,9 @@ class CoursesFonction :
     # check si il y a deja un cours présent
     def check_course_overlap( data):
         try:
+            response, status =  CoursesFonction.check_course_overlap(data) 
+            if status != 200 :
+                return response, status
             conn = connect_pg.connect()
             cursor = conn.cursor()
             
@@ -1113,14 +1116,14 @@ class CoursesFonction :
             where_clause = ""
             group = ""
         
-            if "id_tp" in data :
+            if "id_tp" in data and data["id_tp"] is not None:
                 group = f"le tp {data.get('id_tp')}"
                 response , status = CoursesFonction.get_group_of_tp(data["id_tp"])
                 if status != 200 :
                     return response , status
                 where_clause = f"AND (id_Tp = {data.get('id_tp')} OR id_Training = {response.get('training')} OR id_Promotion = {response.get('promotion')} OR id_Td = {response.get('td')})"
                 
-            if "id_td" in data :
+            if "id_td" in data and data["id_td"] is not None:
                 group = f"le td {data.get('id_td')}"
                 response , status = CoursesFonction.get_group_of_td(data["id_td"])
                 if status != 200 :
@@ -1131,7 +1134,7 @@ class CoursesFonction :
                     where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
                 where_clause += ")"   
                 
-            if "id_training" in data :
+            if "id_training" in data and data["id_training"] is not None:
                 group = f"le parcour {data.get('id_training')}"
                 response , status = CoursesFonction.get_group_of_training(data["id_training"])
                 if status != 200 :
@@ -1146,7 +1149,7 @@ class CoursesFonction :
                 where_clause += ")"
          
                 
-            if "id_promotion" in data :
+            if "id_promotion" in data and data["id_promotion"] is not None:
                 where_clause = f"AND id_Promotion = {data.get('id_promotion')}"
                 group = f"la promotion {data.get('id_promotion')}"
                 response , status = CoursesFonction.get_group_of_promotion(data["id_promotion"])

@@ -329,3 +329,59 @@ def get_training_by_id_promotion_and_semester(id_promotion,semester):
     except Exception as e:
         # Gestion des erreurs
         return jsonify({"message": str(e)}), 500
+      
+#---------------- récuperer tout les trainings -------------------#
+@training_bp.route('/trainings_gb', methods=['GET'])
+def get_all_trainings_gb():
+    """
+Récupérer tous les parcours.
+
+---
+tags:
+  - Trainings
+parameters:
+  - name: output_format
+    in: /trainings?output_format=model
+    description: Le format de sortie des données (par défaut "model").
+    required: false
+    type: string
+    default: "model"
+    enum: ["DTO", "model"]
+  - name: id_Degree
+    in: /trainings?is_degree=1
+    description: L'identifiant de la formation pour filtrer les parcours (optionnel).
+    required: false
+    type: integer
+responses:
+  200:
+    description: Liste des parcours récupérés depuis la base de données (model).
+    examples:
+      application/json:
+        [
+            {
+                "degree_name": "GAGO",
+                "id": 2,
+                "id_Degree": 2,
+                "name": "Formation2"
+            },
+            {
+                "degree_name": "INFO",
+                "id": 2,
+                "id_Degree": 1,
+                "name": "PARCOUR A"
+            }
+        ]
+    
+  500:
+    description: Erreur serveur en cas de problème lors de la récupération des parcours.
+"""
+
+    try:
+
+        trainings = training_service.get_all_trainings_gb()
+        
+        return jsonify(trainings), 200
+
+    except Exception as e:
+        # Gestion des erreurs
+        return jsonify({"message": str(e)}), 500

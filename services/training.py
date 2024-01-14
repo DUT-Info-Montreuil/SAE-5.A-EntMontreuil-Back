@@ -225,3 +225,31 @@ class TrainingService:
 
         finally:
             connect_pg.disconnect(conn)
+            
+            
+#------------------ Récuperer tous les parcours --------------------------------#
+    def get_all_trainings_gb(self):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                sql_query = "Select T.id_Promotion, T.semester, D.name FROM ent.Trainings T INNER JOIN ent.Promotions P ON T.id_Promotion = P.id INNER JOIN ent.Degrees D on P.id_Degree = D.id group by T.id_Promotion, T.semester, D.name order by D.name"
+                cursor.execute(sql_query)
+                    
+                rows = cursor.fetchall()
+                trainings_list = []
+
+                for row in rows:
+                    
+                    training = {
+                        "id_promotion": row[0],
+                        "semester": row[1],
+                        "degree_name": row[2],
+                        
+                    }
+                    trainings_list.append(training)
+
+                return trainings_list
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()

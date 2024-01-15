@@ -778,6 +778,9 @@ class CourseService:
 
     def update_course(self, data,course_id):
         try:
+            response, status =  CoursesFonction.check_course_overlap(data) 
+            if status != 200 :
+                return response, status
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -1102,9 +1105,7 @@ class CoursesFonction :
     # check si il y a deja un cours présent
     def check_course_overlap( data):
         try:
-            response, status =  CoursesFonction.check_course_overlap(data) 
-            if status != 200 :
-                return response, status
+           
             conn = connect_pg.connect()
             cursor = conn.cursor()
             

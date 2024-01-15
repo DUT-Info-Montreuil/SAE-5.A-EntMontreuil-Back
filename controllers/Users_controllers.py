@@ -332,11 +332,11 @@ def get_reminder_by_id(id_user):
     try:
         current_user = get_jwt_identity()
         id_user = current_user["id"]
-        output_format = request.args.get('output_format', default='dto')
-        reminder = UsersFonction.get_reminder_by_id(id_user, output_format)
-        return jsonify(reminder)
+        output_format = request.args.get('output_format', default='DTO')
+        reminders = UsersFonction.get_reminder_by_id(id_user, output_format)
+        return jsonify(reminders), 200
     except ValidationError as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': str(e)}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

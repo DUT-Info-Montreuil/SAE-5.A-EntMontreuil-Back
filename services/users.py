@@ -317,43 +317,40 @@ class UsersFonction :
 
     def get_reminder_by_id(id_User, output_format='DTO'):
         try:
-            # Vérifier si l'identifiant du rappel existe
             if not UsersFonction.field_exists('id', id_User):
                 raise ValidationError(f"User id: '{id_User}' does not exist")
-
-            # Requête SQL pour récupérer les détails du rappel pour un utilisateur spécifique
+            
             query = """
-                SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
-                FROM ent.reminders R
-                INNER JOIN ent.users U ON R.id_User = U.id
-                WHERE R.id_User = %s
+            SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
+            FROM ent.reminders R
+            INNER JOIN ent.users U ON R.id_User = U.id
+            WHERE R.id_User = %s
+            ORDER BY R.id DESC
             """
-
-            # Établir la connexion à la base de données
             with connect_pg.connect() as conn, conn.cursor() as cursor:
-                cursor.execute(query, (id_User))
-                row = cursor.fetchone()
-
-                # Si le rappel n'est pas trouvé, déclencher une exception
-                if not row:
+                cursor.execute(query, (id_User,))
+                rows = cursor.fetchall()
+                if not rows:
                     raise ValidationError(f"User id: '{id_User}' not found")
+                
+                reminders = []
+                for row in rows:
+                    reminder = ReminderModel(
+                        id=row[0],
+                        id_User=row[1],
+                        user_username=row[2],
+                        title=row[3],
+                        reminder_text=row[4],
+                        reminder_date=row[5],
+                    )
+                    reminders.append(reminder.jsonify())
 
-                # Créer un objet ReminderModel à partir des résultats de la requête
-                reminder = ReminderModel(
-                    id_User=row[1],
-                    user_username=row[2],
-                    title=row[3],
-                    reminder_text=row[4],
-                    reminder_date=row[5],
-                )
-
-                return reminder.jsonify()
-
+                return reminders  # Ne pas utiliser jsonify ici
         except ValidationError as e:
-            return jsonify({"message": "ERROR", "error": str(e)}), 404
+            return {"message": "ERROR", "error": str(e)}, 404
 
         except Exception as e:
-            return jsonify({"message": "ERROR", "error": str(e)}), 500
+            return {"message": "ERROR", "error": str(e)}, 500
 
     def add_reminder(id_User, data):
         try:

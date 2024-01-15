@@ -330,8 +330,6 @@ class UsersFonction :
             with connect_pg.connect() as conn, conn.cursor() as cursor:
                 cursor.execute(query, (id_User,))
                 rows = cursor.fetchall()
-                if not rows:
-                    raise ValidationError(f"User id: '{id_User}' not found")
                 
                 reminders = []
                 for row in rows:
@@ -345,7 +343,7 @@ class UsersFonction :
                     )
                     reminders.append(reminder.jsonify())
 
-                return reminders  # Ne pas utiliser jsonify ici
+                return reminders 
         except ValidationError as e:
             return {"message": "ERROR", "error": str(e)}, 404
 

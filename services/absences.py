@@ -99,30 +99,20 @@ class AbsencesService:
                 absences_list = []
                 
                 for row in rows:
-                    if output_format == "DTO":
-                        absence = Absences(
-                            id_Student=row[0],
-                            id_Course=row[1],
-                            reason=row[2],
-                            document=row[3],
-                            justify=row[4]
-                        )
-                        absences_list.append(absence.jsonify())
-                    elif output_format == "model":
-                        absence = AbsencesModel(
-                            id_Student=row[0],
-                            id_Course=row[1],
-                            reason=row[2],
-                            document=row[3],
-                            justify=row[4],
-                            student_last_name=row[8],
-                            student_first_name=row[9],
-                            course_start_time=row[6],
-                            course_end_time=row[7],
-                            resource_name=row[10],
-                            course_date=row[5]
-                        )
-                        absences_list.append(absence.jsonify())
+                    absence = AbsencesModel(
+                        id_Student=row[0],
+                        id_Course=row[1],
+                        reason=row[2],
+                        document=row[3],
+                        justify=row[4],
+                        student_last_name=row[8],
+                        student_first_name=row[9],
+                        course_start_time=row[6],
+                        course_end_time=row[7],
+                        resource_name=row[10],
+                        course_date=row[5]
+                    )
+                    absences_list.append(absence.jsonify())
 
                 return absences_list
         except Exception as e:

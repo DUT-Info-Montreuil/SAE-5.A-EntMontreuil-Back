@@ -1178,7 +1178,7 @@ class CoursesFonction :
                 AND (
                     (startTime < %s AND endTime > %s)
                     OR (startTime < %s AND endTime > %s)
-                    OR (startTime = %s AND endTime = %s)
+                    OR (startTime >= %s AND endTime <= %s)
                 ) 
             """ + where_clause 
 

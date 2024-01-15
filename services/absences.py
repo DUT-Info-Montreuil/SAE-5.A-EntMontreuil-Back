@@ -71,6 +71,65 @@ class AbsencesService:
         finally:
             conn.close()
 
+#-------------------- récuperer les abences injustifiées d'un étudiant --------------------------------------#
+    def get_student_unjustified_absences(self, student_identifier, justified=None, output_format="DTO"):
+        try:
+            conn = connect_pg.connect()
+            with conn.cursor() as cursor:
+                # Modification de la requête pour supporter la recherche par id_student ou username
+                sql_query = """
+         SELECT A.id_Student, A.id_Course, A.reason, A.document, A.justify, C.dateCourse, 
+                       C.startTime, C.endTime, U.last_name, U.first_name, R.name, C.datecourse
+                FROM ent.Absences A 
+                INNER JOIN ent.Courses C ON A.id_Course = C.id 
+                INNER JOIN ent.Students S ON A.id_Student = S.id 
+                INNER JOIN ent.Users U ON S.id_User = U.id
+                INNER JOIN ent.Resources R ON C.id_Resource = R.id
+                WHERE A.justify = false """
+
+                # Déterminer si student_identifier est un ID ou un username
+                if isinstance(student_identifier, int):
+                    sql_query += "AND A.id_Student = %s "
+                else:
+                    sql_query += "AND U.username = %s "
+
+                sql_query += "ORDER BY C.dateCourse DESC, C.startTime DESC"
+                cursor.execute(sql_query, (student_identifier,))
+                rows = cursor.fetchall()
+                absences_list = []
+                
+                for row in rows:
+                    if output_format == "DTO":
+                        absence = Absences(
+                            id_Student=row[0],
+                            id_Course=row[1],
+                            reason=row[2],
+                            document=row[3],
+                            justify=row[4]
+                        )
+                        absences_list.append(absence.jsonify())
+                    elif output_format == "model":
+                        absence = AbsencesModel(
+                            id_Student=row[0],
+                            id_Course=row[1],
+                            reason=row[2],
+                            document=row[3],
+                            justify=row[4],
+                            student_last_name=row[8],
+                            student_first_name=row[9],
+                            course_start_time=row[6],
+                            course_end_time=row[7],
+                            resource_name=row[10],
+                            course_date=row[5]
+                        )
+                        absences_list.append(absence.jsonify())
+
+                return absences_list
+        except Exception as e:
+            raise e
+        finally:
+            conn.close()
+
 
 #-------------------- Récuperer toutes les absences --------------------------------------#
     def get_all_absences(self, justified=None, output_format="DTO"):

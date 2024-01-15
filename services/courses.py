@@ -778,10 +778,11 @@ class CourseService:
 
     def update_course(self, data,course_id):
         try:
+
+            conn = connect_pg.connect()
             response, status =  CoursesFonction.check_course_overlap(data) 
             if status != 200 :
                 return response, status
-            conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 cursor.execute(
                     """

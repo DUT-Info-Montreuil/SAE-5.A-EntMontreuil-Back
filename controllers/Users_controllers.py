@@ -326,13 +326,14 @@ def get_all_reminders():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@users_bp.route('/users/reminders/<int:reminder_id>', methods=['GET'])
+@users_bp.route('/users/reminders/<int:id_user>', methods=['GET'])
 @jwt_required()
-def get_reminder_by_id(reminder_id):
+def get_reminder_by_id(id_user):
     try:
         current_user = get_jwt_identity()
+        id_user = current_user["id"]
         output_format = request.args.get('output_format', default='dto')
-        reminder = UsersFonction.get_reminder_by_id(current_user['id'], reminder_id, output_format)
+        reminder = UsersFonction.get_reminder_by_id(id_user, output_format)
         return jsonify(reminder)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400

@@ -780,7 +780,7 @@ class CourseService:
         try:
 
             conn = connect_pg.connect()
-            response, status =  CoursesFonction.check_course_overlap(data) 
+            response, status =  CoursesFonction.check_course_overlap_update(data, course_id) 
             if status != 200 :
                 return response, status
             with conn.cursor() as cursor:
@@ -1183,6 +1183,94 @@ class CoursesFonction :
             """ + where_clause 
 
             cursor.execute(query, (date_course, start_time, start_time, end_time, end_time, start_time, end_time))
+            overlapping_courses = cursor.fetchall()
+            if not overlapping_courses :
+                return {"message": f"Validation , le cour peut etre ajouté"}, 200
+            return {"error": f"Un cours est déjà présent"}, 400
+
+        except Exception as e:
+            return {"message": f"Erreur dans check_course_overlap : {str(e)}"}, 500
+
+
+
+    def check_course_overlap_update(data, course_id):
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            
+            # Convertir les dates et heures en objets datetime pour la comparaison
+            start_time = datetime.strptime(data['startTime'], '%H:%M').time()
+            end_time = datetime.strptime(data['endTime'], '%H:%M').time()
+            date_course = datetime.strptime(data['dateCourse'], '%Y-%m-%d').date()
+            
+            where_clause = ""
+            group = ""
+        
+            if "id_tp" in data and data["id_tp"] is not None:
+                group = f"le tp {data.get('id_tp')}"
+                response , status = CoursesFonction.get_group_of_tp(data["id_tp"])
+                if status != 200 :
+                    return response , status
+                where_clause = f"AND (id_Tp = {data.get('id_tp')} OR id_Training = {response.get('training')} OR id_Promotion = {response.get('promotion')} OR id_Td = {response.get('td')})"
+                
+            if "id_td" in data and data["id_td"] is not None:
+                group = f"le td {data.get('id_td')}"
+                response , status = CoursesFonction.get_group_of_td(data["id_td"])
+                if status != 200 :
+                    return response , status
+                tp_list = response["tp"]
+                where_clause = f"AND (id_Td = {data.get('id_td')} OR id_Training = {response.get('training')} OR id_Promotion = {response.get('promotion')}"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
+                where_clause += ")"   
+                
+            if "id_training" in data and data["id_training"] is not None:
+                group = f"le parcour {data.get('id_training')}"
+                response , status = CoursesFonction.get_group_of_training(data["id_training"])
+                if status != 200 :
+                    return response , status
+                td_list = response["td"]
+                tp_list = response["tp"]
+                where_clause = f"AND (id_Training = {data.get('id_training')} OR id_Promotion = {response.get('promotion')}"
+                if td_list :
+                    where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})"
+                where_clause += ")"
+         
+                
+            if "id_promotion" in data and data["id_promotion"] is not None:
+                where_clause = f"AND id_Promotion = {data.get('id_promotion')}"
+                group = f"la promotion {data.get('id_promotion')}"
+                response , status = CoursesFonction.get_group_of_promotion(data["id_promotion"])
+                if status != 200 :
+                    return response , status
+                td_list = response["td"]
+                tp_list = response["tp"]
+                training_list = response["training"]
+                
+                where_clause = f"AND (id_Promotion = {data.get('id_promotion')}"
+                if td_list :
+                    where_clause += f" OR id_Td IN ({', '.join(map(str, td_list))})" 
+                if training_list :
+                    where_clause += f" OR id_Training IN ({', '.join(map(str, training_list))})"
+                if tp_list :
+                    where_clause += f" OR id_Tp IN ({', '.join(map(str, tp_list))})" 
+                where_clause += ")"
+                
+                
+
+            query = """
+                SELECT * FROM ent.Courses
+                WHERE dateCourse = %s
+                AND (
+                    (startTime < %s AND endTime > %s)
+                    OR (startTime < %s AND endTime > %s)
+                    OR (startTime = %s AND endTime = %s)
+                ) 
+            """ + where_clause + """AND id != %s"""
+
+            cursor.execute(query, (date_course, start_time, start_time, end_time, end_time, start_time, end_time, course_id))
             overlapping_courses = cursor.fetchall()
             if not overlapping_courses :
                 return {"message": f"Validation , le cour peut etre ajouté"}, 200

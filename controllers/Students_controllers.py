@@ -381,3 +381,21 @@ def get_all_students_cohort():
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
       
+@students_bp.route('/students/no-promotion', methods=['GET'])
+def get_students_without_promotion():
+    try:
+        return students_services.get_students_without_promotion()
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+
+
+@students_bp.route('/students/set-promotion', methods=['POST'])
+def set_students_promotion_route():
+    data = request.json
+    promotion_id = data.get('promotion_id')
+    student_ids = data.get('student_ids')
+
+    if not promotion_id or not student_ids:
+        return jsonify({"error": "Promotion ID ou identifiants d'étudiants non fournis"}), 400
+
+    return students_services.set_students_promotion(promotion_id, student_ids)

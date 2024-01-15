@@ -151,11 +151,12 @@ class CourseService:
         except Exception as e:
             return {"message": f"Erreur lors de la récupération du cours : {str(e)}"}, 500
     #------------------get by promotion-----------------------
-    def get_course_by_promotion(self, promotion_id,semester):
+    def get_course_by_promotion(self, promotion_id,semester, startDate):
         try:
             conn = connect_pg.connect()
             if not CoursesFonction.field_exist("Promotions", 'id', promotion_id) :
                 return {"error": f"la promotion de : {promotion_id} n'existe pas"}, 400
+            endDate = startDate + datetime.timedelta(days=4)
             with conn.cursor() as cursor:
                 sql_query = """
                  SELECT C.id, C.startTime, C.endTime, C.dateCourse, C.control, C.id_Resource, R.name, R.color, C.id_Tp, C.id_Td, C.id_Promotion, C.id_Training ,trr.semester
@@ -166,9 +167,9 @@ class CourseService:
                     LEFT JOIN ent.TD TD ON C.id_Td = TD.id
                     LEFT JOIN ent.Promotions P ON C.id_Promotion = P.id
                     LEFT JOIN ent.Trainings tr ON C.id_Training = tr.id
-                    WHERE P.id = %s AND trr.semester = %s
+                    WHERE P.id = %s AND trr.semester = %s AND C.dateCourse BETWEEN %s AND %s
                 """
-                cursor.execute(sql_query, (promotion_id,semester))
+                cursor.execute(sql_query, (promotion_id,semester, startDate, endDate))
                 rows = cursor.fetchall()
        
                 courses_promotion = []

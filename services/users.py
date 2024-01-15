@@ -315,28 +315,28 @@ class UsersFonction :
         connect_pg.disconnect(conn)
         return reminders
 
-    def get_reminder_by_id(id_User, reminder_id, output_format='DTO'):
+    def get_reminder_by_id(id_User, output_format='DTO'):
         try:
             # Vérifier si l'identifiant du rappel existe
-            if not UsersFonction.field_exists('id', reminder_id):
-                raise ValidationError(f"Reminder id: '{reminder_id}' does not exist")
+            if not UsersFonction.field_exists('id', id_User):
+                raise ValidationError(f"User id: '{id_User}' does not exist")
 
             # Requête SQL pour récupérer les détails du rappel pour un utilisateur spécifique
             query = """
                 SELECT R.id, R.id_User, U.username, R.title, R.reminder_text, R.reminder_date
                 FROM ent.reminders R
                 INNER JOIN ent.users U ON R.id_User = U.id
-                WHERE R.id = %s AND R.id_User = %s
+                WHERE R.id_User = %s
             """
 
             # Établir la connexion à la base de données
             with connect_pg.connect() as conn, conn.cursor() as cursor:
-                cursor.execute(query, (reminder_id, id_User))
+                cursor.execute(query, (id_User))
                 row = cursor.fetchone()
 
                 # Si le rappel n'est pas trouvé, déclencher une exception
                 if not row:
-                    raise ValidationError(f"Reminder id: '{reminder_id}' not found")
+                    raise ValidationError(f"User id: '{id_User}' not found")
 
                 # Créer un objet ReminderModel à partir des résultats de la requête
                 reminder = ReminderModel(

@@ -322,10 +322,42 @@ def delete_student_course_absence(id_student, id_course):
 
 @absences_bp.route('/absences/submit_justification_document', methods=['POST'])
 def submit_justification_document():
+    """
+    Soumet un justificatif de document pour une absence d'un étudiant à un cours donné.
+
+    ---
+    tags:
+      - Absences
+    parameters:
+      - name: student_id
+        in: formData
+        type: integer
+        required: true
+        description: ID de l'étudiant.
+      - name: id_course
+        in: formData
+        type: integer
+        required: true
+        description: ID du cours.
+      - name: document
+        in: formData
+        type: file
+        required: true
+        description: Document justificatif à téléverser.
+    responses:
+      201:
+        description: Justificatif envoyé avec succès.
+      400:
+        description: Données manquantes ou incorrectes dans le formulaire.
+      404:
+        description: L'absence, le cours ou l'étudiant spécifié n'existe pas.
+      500:
+        description: Erreur serveur lors de l'envoi du justificatif.
+    """
     try:
         # Assurez-vous que le formulaire a les données nécessaires
         if 'student_id' not in request.form or 'id_course' not in request.form or 'document' not in request.files:
-            return jsonify({"message": "Données manquantes"}), 400
+            return jsonify({"message": "Données manquantes ou incorrectes dans le formulaire"}), 400
 
         student_id = int(request.form['student_id'])
         id_course = int(request.form['id_course'])

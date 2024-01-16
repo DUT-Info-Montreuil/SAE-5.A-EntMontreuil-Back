@@ -317,6 +317,26 @@ def delete_user(id_user):
 
 @users_bp.route('/users/reminders', methods=['GET'])
 def get_all_reminders():
+    """
+    Get all reminders.
+    ---
+    tags:
+      - Reminders
+    parameters:
+      - name: output_format
+        in: query
+        type: string
+        default: "dto"
+        enum: ["dto", "model"]
+        description: Output format (default is "dto").
+    responses:
+      200:
+        description: List of all reminders.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error.
+    """
     try:
         output_format = request.args.get('output_format', default='dto')
         all_reminders = UsersFonction.get_all_reminders(output_format)
@@ -329,20 +349,65 @@ def get_all_reminders():
 @users_bp.route('/users/reminders/<int:id_user>', methods=['GET'])
 @jwt_required()
 def get_reminder_by_id(id_user):
-    try:
-        current_user = get_jwt_identity()
-        id_user = current_user["id"]
-        output_format = request.args.get('output_format', default='DTO')
-        reminders = UsersFonction.get_reminder_by_id(id_user, output_format)
-        return jsonify(reminders), 200
-    except ValidationError as e:
-        return jsonify({'error': str(e)}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+  """
+    Get reminder by ID.
+    ---
+    tags:
+      - Reminders
+    parameters:
+      - name: id_user
+        in: path
+        type: integer
+        required: true
+        description: ID of the user.
+      - name: output_format
+        in: query
+        type: string
+        default: "DTO"
+        description: Output format (default is "DTO").
+    responses:
+      200:
+        description: Reminder information.
+      404:
+        description: Reminder not found.
+      500:
+        description: Server error.
+    """
+  try:
+      current_user = get_jwt_identity()
+      id_user = current_user["id"]
+      output_format = request.args.get('output_format', default='DTO')
+      reminders = UsersFonction.get_reminder_by_id(id_user, output_format)
+      return jsonify(reminders), 200
+  except ValidationError as e:
+      return jsonify({'error': str(e)}), 404
+  except Exception as e:
+      return jsonify({'error': str(e)}), 500
 
 @users_bp.route('/users/reminders', methods=['POST'])
 @jwt_required()
 def add_reminder():
+    """
+    Add a new reminder.
+    ---
+    tags:
+      - Reminders
+    parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            # ... (add properties based on your JSON structure)
+    responses:
+      200:
+        description: Reminder successfully added.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error during reminder addition.
+    """
     try:
         current_user = get_jwt_identity()
         data = request.json
@@ -356,6 +421,32 @@ def add_reminder():
 @users_bp.route('/users/reminders/<int:reminder_id>', methods=['PUT'])
 @jwt_required()
 def update_reminder(reminder_id):
+    """
+    Update reminder by ID.
+    ---
+    tags:
+      - Reminders
+    parameters:
+      - name: reminder_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the reminder to update.
+      - name: data
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            # ... (add properties based on your JSON structure)
+    responses:
+      200:
+        description: Reminder successfully updated.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error during reminder update.
+    """
     try:
         current_user = get_jwt_identity()
         data = request.json
@@ -369,6 +460,25 @@ def update_reminder(reminder_id):
 @users_bp.route('/users/reminders/<int:reminder_id>', methods=['DELETE'])
 @jwt_required()
 def delete_reminder(reminder_id):
+    """
+    Delete reminder by ID.
+    ---
+    tags:
+      - Reminders
+    parameters:
+      - name: reminder_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the reminder to delete.
+    responses:
+      204:
+        description: Reminder successfully deleted.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error during reminder deletion.
+    """
     try:
         current_user = get_jwt_identity()
         response, https_status = UsersFonction.delete_reminder(current_user['id'], reminder_id)
@@ -381,6 +491,30 @@ def delete_reminder(reminder_id):
 @users_bp.route('/user/notifications', methods=['GET'])
 @jwt_required()
 def get_user_notifications():
+    """
+    Get user notifications.
+    ---
+    tags:
+      - Notifications
+    parameters:
+      - name: reading
+        in: query
+        type: string
+        default: "false"
+        enum: ["true", "false"]
+        description: Mark notifications as read if set to "true".
+      - name: display
+        in: query
+        type: string
+        description: Display parameter.
+    responses:
+      200:
+        description: User notifications successfully retrieved.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error during notification retrieval.
+    """
     try:
         current_user = get_jwt_identity()
         user_id = current_user["id"]
@@ -401,6 +535,19 @@ def get_user_notifications():
 @users_bp.route('/user/notifications', methods=['DELETE'])
 @jwt_required()
 def delete_all_user_notifications():
+    """
+    Delete all user notifications.
+    ---
+    tags:
+      - Notifications
+    responses:
+      200:
+        description: All notifications deleted successfully.
+      400:
+        description: Bad request or validation error.
+      500:
+        description: Server error during notification deletion.
+    """
     try:
         current_user = get_jwt_identity()
         user_id = current_user["id"]
@@ -416,6 +563,23 @@ def delete_all_user_notifications():
 @users_bp.route('/users/comments', methods=['GET'])
 @jwt_required()
 def get_all_comments():
+    """
+    Get all comments.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: output_format
+        in: query
+        type: string
+        default: "DTO"
+        description: Output format.
+    responses:
+      200:
+        description: All comments retrieved successfully.
+      500:
+        description: Server error during comment retrieval.
+    """
     try:
         output_format = request.args.get('output_format', default='DTO')
         all_comments = UsersFonction.get_commentaries(output_format)
@@ -426,6 +590,28 @@ def get_all_comments():
 @users_bp.route('/users/comments/<int:comment_id>', methods=['GET'])
 @jwt_required()
 def get_comment_by_id(comment_id):
+    """
+    Get a comment by ID.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: comment_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the comment to retrieve.
+      - name: output_format
+        in: query
+        type: string
+        default: "DTO"
+        description: Output format.
+    responses:
+      200:
+        description: Comment retrieved successfully.
+      500:
+        description: Server error during comment retrieval.
+    """
     try:
         output_format = request.args.get('output_format', default='DTO')
         comment = UsersFonction.get_commentary_by_id(comment_id, output_format)
@@ -436,6 +622,25 @@ def get_comment_by_id(comment_id):
 @users_bp.route('/users/comments', methods=['POST'])
 @jwt_required()
 def add_comment():
+    """
+    Add a new comment.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: data
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            # ... (add properties based on your JSON structure)
+    responses:
+      200:
+        description: Comment added successfully.
+      500:
+        description: Server error during comment addition.
+    """
     try:
         current_user = get_jwt_identity()
         user_id = current_user["id"]
@@ -448,6 +653,30 @@ def add_comment():
 @users_bp.route('/users/comments/<int:comment_id>', methods=['PUT'])
 @jwt_required()
 def update_comment(comment_id):
+    """
+    Update a comment by ID.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: comment_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the comment to update.
+      - name: data
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            # ... (add properties based on your JSON structure)
+    responses:
+      200:
+        description: Comment updated successfully.
+      500:
+        description: Server error during comment update.
+    """
     try:
         current_user = get_jwt_identity()
         user_id = current_user["id"]
@@ -460,6 +689,23 @@ def update_comment(comment_id):
 @users_bp.route('/users/comments/<int:comment_id>', methods=['DELETE'])
 @jwt_required()
 def delete_comment(comment_id):
+    """
+    Delete a comment by ID.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: comment_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the comment to delete.
+    responses:
+      200:
+        description: Comment deleted successfully.
+      500:
+        description: Server error during comment deletion.
+    """
     try:
         current_user = get_jwt_identity()
         user_id = current_user["id"]
@@ -471,6 +717,28 @@ def delete_comment(comment_id):
 @users_bp.route('/commentaries/week/<int:week_number>', methods=['GET'])
 @jwt_required()
 def get_commentaries_by_week(week_start_date):
+    """
+    Get commentaries by week.
+    ---
+    tags:
+      - Comments
+    parameters:
+      - name: week_start_date
+        in: path
+        type: string
+        required: true
+        description: Start date of the week.
+      - name: output_format
+        in: query
+        type: string
+        default: "DTO"
+        description: Output format.
+    responses:
+      200:
+        description: Commentaries retrieved successfully.
+      500:
+        description: Server error during commentary retrieval.
+    """
     try:
         output_format = request.args.get('output_format', default='DTO')
         comments = UsersFonction.get_commentary_by_week(week_start_date, output_format)

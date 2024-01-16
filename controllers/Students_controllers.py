@@ -333,64 +333,158 @@ def update_students(id_student):
 #-----------update students--------------
 @students_bp.route('/students/add_csv', methods=['POST'])
 def csv_add_students():
+    """
+    Ajoutez des étudiants à partir d'un fichier CSV.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Fichier CSV contenant les données des étudiants.
+    responses:
+      200:
+        description: Étudiants ajoutés avec succès.
+      400:
+        description: Aucune partie de fichier ou fichier non sélectionné.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
-      
         if 'file' not in request.files:
-          return jsonify({'message': 'No file part'}), 400
-      
+            return jsonify({'message': 'No file part'}), 400
+
         file = request.files['file']
         if file.filename == '':
             return jsonify({'message': 'No selected file'}), 400
+
         message, status_code = students_services.csv_add_students(file)
-        # Retournez la réponse au format JSON
         return message, status_code
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
-      
+
 @students_bp.route('/students/verify_csv', methods=['POST'])
 def csv_verify_students():
+    """
+    Vérifiez la validité du fichier CSV pour l'ajout d'étudiants.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Fichier CSV à vérifier.
+    responses:
+      200:
+        description: Fichier CSV valide.
+      400:
+        description: Aucune partie de fichier ou fichier non sélectionné.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
-      
         if 'file' not in request.files:
-          return jsonify({'message': 'No file part'}), 400
-      
+            return jsonify({'message': 'No file part'}), 400
+
         file = request.files['file']
         if file.filename == '':
             return jsonify({'message': 'No selected file'}), 400
+
         message, status_code = students_services.verification_csv_file(file)
-        # Retournez la réponse au format JSON
         return message, status_code
     except Exception as e:
-        # Gérez les erreurs
         return jsonify({"message": "Error", "error": str(e)}), 400
-      
-      
+
 @students_bp.route('/students/promotion/<int:promotion_id>', methods=['GET'])
 def get_students_in_promotion(promotion_id):
+    """
+    Obtenez la liste des étudiants dans une promotion spécifique.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: promotion_id
+        in: path
+        type: integer
+        required: true
+        description: ID de la promotion.
+    responses:
+      200:
+        description: Liste des étudiants dans la promotion récupérée avec succès.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
         return students_services.get_all_students_in_promo(promotion_id)
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
-      
 
 @students_bp.route('/students/all', methods=['GET'])
 def get_all_students_cohort():
+    """
+    Obtenez la liste de tous les étudiants dans la cohorte.
+    ---
+    tags:
+      - Students
+    responses:
+      200:
+        description: Liste de tous les étudiants récupérée avec succès.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
         return students_services.get_all_students_cohort()
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
-      
+
 @students_bp.route('/students/no-promotion', methods=['GET'])
 def get_students_without_promotion():
+    """
+    Obtenez la liste des étudiants sans promotion.
+    ---
+    tags:
+      - Students
+    responses:
+      200:
+        description: Liste des étudiants sans promotion récupérée avec succès.
+      500:
+        description: Erreur serveur interne.
+    """
     try:
         return students_services.get_students_without_promotion()
     except Exception as e:
         return jsonify({"message": "Error", "error": str(e)}), 500
 
-
 @students_bp.route('/students/set-promotion', methods=['POST'])
 def set_students_promotion_route():
+    """
+    Associez des étudiants à une promotion spécifique.
+    ---
+    tags:
+      - Students
+    parameters:
+      - name: promotion_id
+        in: body
+        type: integer
+        required: true
+        description: ID de la promotion à laquelle associer les étudiants.
+      - name: student_ids
+        in: body
+        type: array
+        items:
+          type: integer
+        required: true
+        description: Liste des ID des étudiants à associer à la promotion.
+    responses:
+      200:
+        description: Étudiants associés à la promotion avec succès.
+      400:
+        description: ID de promotion ou ID d'étudiant non fournis.
+    """
     data = request.json
     promotion_id = data.get('promotion_id')
     student_ids = data.get('student_ids')

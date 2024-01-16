@@ -849,17 +849,17 @@ class CourseService:
             if conn:
                 connect_pg.disconnect(conn)
 
-    def copy_day_courses(self, source_date, target_date):
+    def copy_day_courses(self, source_date, target_date, target_promotion_id):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 # Supprimer les cours existants pour le jour cible
                 delete_query = """
                     DELETE FROM ent.Courses
-                    WHERE dateCourse = %s
+                    WHERE dateCourse = %s AND id_Promotion = %s
                 """
-                cursor.execute(delete_query, (target_date,))
-    
+                cursor.execute(delete_query, (target_date, target_promotion_id))
+
                 # Copier les cours pour le jour cible
                 insert_query = """
                     INSERT INTO ent.Courses (
@@ -870,29 +870,29 @@ class CourseService:
                         startTime, endTime, %s, control, id_Resource,
                         id_Tp, id_Td, id_Promotion, id_Training
                     FROM ent.Courses
-                    WHERE dateCourse = %s
+                    WHERE dateCourse = %s AND id_Promotion = %s
                 """
-                cursor.execute(insert_query, (target_date, source_date))
-    
+                cursor.execute(insert_query, (target_date, source_date, target_promotion_id))
+
                 conn.commit()
-    
+
                 return jsonify({"message": "Cours copiés avec succès vers la nouvelle journée"}), 200
         except Exception as e:
             return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
         finally:
             conn.close()
-    
-    def copy_week_courses(self, source_week_start_date, target_week_start_date):
+
+    def copy_week_courses(self, source_week_start_date, target_week_start_date, target_promotion_id):
         try:
             conn = connect_pg.connect()
             with conn.cursor() as cursor:
                 # Supprimer les cours existants pour la semaine cible
                 delete_query = """
                     DELETE FROM ent.Courses
-                    WHERE dateCourse >= %s AND dateCourse < %s
+                    WHERE dateCourse >= %s AND dateCourse < %s AND id_Promotion = %s
                 """
-                cursor.execute(delete_query, (target_week_start_date, target_week_start_date + 5))
-    
+                cursor.execute(delete_query, (target_week_start_date, target_week_start_date + 5, target_promotion_id))
+
                 # Copier les cours pour la semaine cible
                 insert_query = """
                     INSERT INTO ent.Courses (
@@ -903,19 +903,18 @@ class CourseService:
                         startTime, endTime, %s + (dateCourse - %s), control, id_Resource,
                         id_Tp, id_Td, id_Promotion, id_Training
                     FROM ent.Courses
-                    WHERE dateCourse >= %s AND dateCourse < %s
+                    WHERE dateCourse >= %s AND dateCourse < %s AND id_Promotion = %s
                 """
                 cursor.execute(insert_query, (target_week_start_date, source_week_start_date,
-                                              source_week_start_date, source_week_start_date + 5))
-    
+                                            source_week_start_date, source_week_start_date + 5, target_promotion_id))
+
                 conn.commit()
-    
+
                 return jsonify({"message": "Cours copiés avec succès vers la nouvelle semaine"}), 200
         except Exception as e:
             return jsonify({"message": f"Erreur lors de la copie des cours : {str(e)}"}), 500
         finally:
             conn.close()
-
 
     def _format_courses(self, rows):
         courses_list = []

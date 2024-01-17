@@ -560,11 +560,11 @@ def delete_all_user_notifications():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@users_bp.route('/users/comments', methods=['GET'])
+@users_bp.route('/users/commentaries', methods=['GET'])
 @jwt_required()
-def get_all_comments():
+def get_commentaries():
     """
-    Get all comments.
+    Get commentaries.
     ---
     tags:
       - Comments
@@ -574,18 +574,26 @@ def get_all_comments():
         type: string
         default: "DTO"
         description: Output format.
+      - name: id_promotion
+        in: query
+        type: integer
+        description: ID of the promotion to filter comments (optional).
     responses:
       200:
-        description: All comments retrieved successfully.
+        description: Commentaries retrieved successfully.
       500:
-        description: Server error during comment retrieval.
+        description: Server error during commentary retrieval.
     """
     try:
         output_format = request.args.get('output_format', default='DTO')
-        all_comments = UsersFonction.get_commentaries(output_format)
-        return jsonify(all_comments)
+        id_promotion = request.args.get('id_promotion', type=int)
+
+        comments = UsersFonction.get_commentaries(id_promotion, output_format)
+
+        return jsonify(comments)
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"message": "ERROR", "error": str(e)}), 500
 
 @users_bp.route('/users/comments/<int:comment_id>', methods=['GET'])
 @jwt_required()
@@ -714,7 +722,7 @@ def delete_comment(comment_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@users_bp.route('/commentaries/week/<int:week_number>', methods=['GET'])
+@users_bp.route('/users/commentaries/week/<int:week_start_date>', methods=['GET'])
 @jwt_required()
 def get_commentaries_by_week(week_start_date):
     """
@@ -725,14 +733,18 @@ def get_commentaries_by_week(week_start_date):
     parameters:
       - name: week_start_date
         in: path
-        type: string
+        type: int
         required: true
-        description: Start date of the week.
+        description: Start date of the week in timestamp format.
       - name: output_format
         in: query
         type: string
         default: "DTO"
         description: Output format.
+      - name: id_promotion
+        in: query
+        type: integer
+        description: ID of the promotion to filter comments (optional).
     responses:
       200:
         description: Commentaries retrieved successfully.
@@ -741,7 +753,14 @@ def get_commentaries_by_week(week_start_date):
     """
     try:
         output_format = request.args.get('output_format', default='DTO')
-        comments = UsersFonction.get_commentary_by_week(week_start_date, output_format)
+        id_promotion = request.args.get('id_promotion', type=int)
+        
+        if id_promotion is not None:
+            comments = UsersFonction.get_commentary_by_week(week_start_date, id_promotion, output_format)
+        else:
+            comments = UsersFonction.get_commentary_by_week(week_start_date, output_format)
+
         return jsonify(comments)
+
     except Exception as e:
         return jsonify({"message": "ERROR", "error": str(e)}), 500

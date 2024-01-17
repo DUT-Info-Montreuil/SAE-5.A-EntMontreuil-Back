@@ -4,6 +4,7 @@ Gestionnaire d'emploi du temps conçu pour l'IUT de Montreuil
 ## Installation
 
 ### Docker
+Le docker compose doit être placer à la racine des 3 projet (voir les liens des autres repo)
 
 Lancement du back (DockerFile BACK)
 ```bash
@@ -14,12 +15,12 @@ Lancement du front (DockerFile FRONT)
 Docker run -d ismailskr/sae-front:latest
 ```
 
-Docker compose : 
+Docker compose :
 ```bash
 Docker compose up –build
 ```
 
-Lien des autres repositories : 
+## Lien des autres repositories : 
 
 [FRONT](https://github.com/DUT-Info-Montreuil/SAE-5.A-EntMontreuil-Front) : repo du front
 

@@ -28,7 +28,11 @@ Quant au dossier "entities", il renferme les modèles SQLAlchemy, consolidant la
 
 ## 👷  Participants
 • [@PriyankSolanki](https://github.com/PriyankSolanki) : Priyank Solanki
+
 • [@stvenchg](https://github.com/stvenchg) : Steven Ching
+
 • [@YanisTTC](https://github.com/YanisTTC) : Yanis Hamani
+
 • [@ecyriaque](https://github.com/ecyriaque) : Emilio Cyriaque
+
 • [@IsmailSKR](https://github.com/IsmailSKR) : Ismaïl Gada

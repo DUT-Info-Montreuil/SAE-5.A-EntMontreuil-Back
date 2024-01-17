@@ -1398,7 +1398,7 @@ class CoursesFonction :
                 LEFT JOIN ent.TP tp ON td.id = tp.id_td
                 WHERE tr.id_promotion = %s
             """
-            cursor.execute(query, (id_promotion))
+            cursor.execute(query, (id_promotion,))
             rows = cursor.fetchall()
             
             trainings = list(set([row[0] for row in rows if row[0] is not None]))

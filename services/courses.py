@@ -176,7 +176,7 @@ class CourseService:
                 courses_training = []
                 courses_td = []
                 courses_tp = []
-                response, status = CoursesFonction.get_group_of_promotion(promotion_id, semester)
+                response, status = CoursesFonction.get_group_of_promotion_with_semester(promotion_id, semester)
                 tp = response["tp"]
                 td = response["td"]
                 training = response["training"]
@@ -1386,7 +1386,34 @@ class CoursesFonction :
             return {"message": f"Erreur get_group_of_training : {str(e)}"}, 500
         
     # recuperation des groupes liés a une promotion  
-    def get_group_of_promotion(id_promotion, semester):
+    def get_group_of_promotion(id_promotion):
+        try:
+            conn = connect_pg.connect()
+            cursor = conn.cursor()
+            
+            query = """
+                SELECT tr.id AS training_id, td.id AS td_id, tp.id AS tp_id 
+                FROM ent.Trainings tr
+                LEFT JOIN ent.TD td ON tr.id = td.id_training
+                LEFT JOIN ent.TP tp ON td.id = tp.id_td
+                WHERE tr.id_promotion = %s
+            """
+            cursor.execute(query, (id_promotion))
+            rows = cursor.fetchall()
+            
+            trainings = list(set([row[0] for row in rows if row[0] is not None]))
+            tds = list(set([row[1] for row in rows if row[1] is not None]))
+            tps = list(set([row[2] for row in rows if row[2] is not None]))
+            
+            conn.close()
+            
+            return {"tp": tps, "td": tds, "training": trainings}, 200
+
+        except Exception as e:
+            return {"message": f"Erreur get_group_of_promotion : {str(e)}"}, 500
+        
+     # recuperation des groupes liés a une promotion  
+    def get_group_of_promotion_with_semester(id_promotion, semester):
         try:
             conn = connect_pg.connect()
             cursor = conn.cursor()

@@ -381,3 +381,62 @@ def submit_justification_document():
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+      
+      
+@absences_bp.route('/absences/create-absences', methods=['POST'])
+def create_absences():
+    """
+    Crée des absences pour une liste d'étudiants pour un cours spécifique.
+    ---
+    tags:
+      - Absences
+    parameters:
+      - name: course_id
+        in: body
+        type: integer
+        required: true
+        description: ID du cours pour lequel créer les absences.
+      - name: student_ids
+        in: body
+        type: array
+        items:
+          type: integer
+        required: true
+        description: Liste des ID des étudiants pour lesquels créer les absences.
+    responses:
+      200:
+        description: Absences créées avec succès.
+      400:
+        description: Données requises non fournies.
+    """
+    data = request.json
+    course_id = data.get('course_id')
+    student_ids = data.get('student_ids')
+
+    if not course_id or not student_ids:
+        return jsonify({"error": "Course ID ou identifiants d'étudiants non fournis"}), 400
+
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Supprimer les absences existantes pour le cours
+            cursor.execute("""
+                DELETE FROM ent.Absences 
+                WHERE id_course = %s
+            """, (course_id,))
+
+            # Créer de nouvelles absences
+            for student_id in student_ids:
+                cursor.execute("""
+                    INSERT INTO ent.Absences (id_student, id_course, justify)
+                    VALUES (%s, %s, false)
+                """, (student_id, course_id))
+
+        conn.commit()
+        return jsonify({"message": "Absences créées avec succès"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            connect_pg.disconnect(conn)

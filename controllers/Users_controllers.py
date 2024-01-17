@@ -587,9 +587,7 @@ def get_commentaries():
     try:
         output_format = request.args.get('output_format', default='DTO')
         id_promotion = request.args.get('id_promotion', type=int)
-
         comments = UsersFonction.get_commentaries(id_promotion, output_format)
-
         return jsonify(comments)
 
     except Exception as e:

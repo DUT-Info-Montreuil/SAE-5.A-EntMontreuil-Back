@@ -546,7 +546,7 @@ class UsersFonction :
     def get_commentaries(self, id_promotion, output_format='DTO'):
         try:
             query = """
-                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
+                SELECT id, id_User, id_Promotion, date, username, title, comment_text, modification_date
                 FROM Commentary
                 WHERE id_Promotion = %s
                 ORDER BY modification_date DESC
@@ -556,13 +556,14 @@ class UsersFonction :
 
             for row in rows:
                 commentary = CommentaryModel(
-                    id=row[0],
-                    id_User=row[1],
-                    id_Promotion=row[2],
-                    date=row[3],
-                    title=row[4],
-                    comment_text=row[5],
-                    modification_date=row[6],
+                id=row[0],
+                id_User=row[1],
+                id_Promotion=row[2],
+                date=row[3],
+                user_username=row[4],  
+                title=row[5], 
+                comment_text=row[6],
+                modification_date=row[7],
                 )
                 commentaries.append(commentary.jsonify())
 
@@ -574,7 +575,7 @@ class UsersFonction :
     def get_commentary_by_id(self, id_commentary, output_format='DTO'):
         try:
             query = """
-                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
+                SELECT id, id_User, id_Promotion, date, username, title, comment_text, modification_date
                 FROM Commentary
                 WHERE id = %s
             """
@@ -585,15 +586,15 @@ class UsersFonction :
                 if not row:
                     raise ValidationError(f"Commentary id: '{id_commentary}' not found")
                 commentary = CommentaryModel(
-                    id=row[0],
-                    id_User=row[1],
-                    id_Promotion=row[2],
-                    date=row[3],
-                    title=row[4],
-                    comment_text=row[5],
-                    modification_date=row[6],
+                id=row[0],
+                id_User=row[1],
+                id_Promotion=row[2],
+                date=row[3],
+                user_username=row[4],  # Assuming 'username' is the correct column name
+                title=row[5],  # Assuming 'title' is the correct column name
+                comment_text=row[6],
+                modification_date=row[7],
                 )
-
                 return commentary.jsonify()
 
         except ValidationError as e:
@@ -607,7 +608,7 @@ class UsersFonction :
             if not UsersFonction.field_exists('id', id_user):
                 raise ValidationError(f"User id: '{id_user}' does not exist")
             query = """
-                INSERT INTO Commentary (id_User, id_Promotion, date, title, comment_text, modification_date)
+                INSERT INTO Commentary (id_User, id_Promotion, date, username, title, comment_text, modification_date)
                 VALUES (%s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """
@@ -615,6 +616,7 @@ class UsersFonction :
                 id_user,
                 data["id_Promotion"],
                 data["date"],
+                data["username"],
                 data["title"],
                 data["comment_text"],
             )
@@ -701,7 +703,7 @@ class UsersFonction :
             week_end_date = week_start_date + timedelta(days=4)
 
             query = """
-                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
+                SELECT id, id_User, id_Promotion, date, username, title, comment_text, modification_date
                 FROM Commentary
                 WHERE id_Promotion = %s AND date >= %s AND date <= %s
                 ORDER BY modification_date DESC
@@ -718,9 +720,10 @@ class UsersFonction :
                         id_User=row[1],
                         id_Promotion=row[2],
                         date=row[3],
-                        title=row[4],
-                        comment_text=row[5],
-                        modification_date=row[6],
+                        user_username=row[4],
+                        title=row[5],
+                        comment_text=row[6],
+                        modification_date=row[7],
                     )
                     commentaries.append(commentary.jsonify())
 

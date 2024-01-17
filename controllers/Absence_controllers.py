@@ -471,7 +471,7 @@ def create_absences():
     course_id = data.get('course_id')
     student_ids = data.get('student_ids')
 
-    if not course_id or not student_ids:
+    if not course_id or student_ids is None:
         return jsonify({"error": "Course ID ou identifiants d'étudiants non fournis"}), 400
 
     try:
@@ -483,15 +483,16 @@ def create_absences():
                 WHERE id_course = %s
             """, (course_id,))
 
-            # Créer de nouvelles absences
-            for student_id in student_ids:
-                cursor.execute("""
-                    INSERT INTO ent.Absences (id_student, id_course, justify)
-                    VALUES (%s, %s, false)
-                """, (student_id, course_id))
+            # Si student_ids n'est pas vide, créer de nouvelles absences
+            if student_ids:
+                for student_id in student_ids:
+                    cursor.execute("""
+                        INSERT INTO ent.Absences (id_student, id_course, justify)
+                        VALUES (%s, %s, false)
+                    """, (student_id, course_id))
 
         conn.commit()
-        return jsonify({"message": "Absences créées avec succès"}), 200
+        return jsonify({"message": "Absences gérées avec succès"}), 200
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500

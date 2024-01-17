@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    image: ismailskr/sae-back
+    ports:
+      - "5050:5050"
+    volumes:
+      - data-volume:/modules/logs
+    depends_on:
+      - postgres-db
+    environment:
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=sae
+      - DB_PASSWORD=1234
+
+  front-end:
+    image: ismailskr/sae-front
+    ports:
+      - "4200:4200"
+    environment:
+      - WS_BACK_URL=http://localhost:5050
+
+  postgres-db:
+    image: ismailskr/sae-bd 
+    container_name: bd
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: sae
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  data-volume:
+  pg_data:

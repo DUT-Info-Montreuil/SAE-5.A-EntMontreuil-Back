@@ -117,6 +117,64 @@ def get_student_absences(id_student):
         return jsonify({"message": str(e)}), 500
 
 
+#--------------------Récuperer les absences injustifiées d'un étudiant via son id--------------------------------------#
+
+@absences_bp.route('/absences/student/unjustified/<int:id_student>', methods=['GET'])
+def get_student_unjustified_absences(id_student):
+    """
+    Récupère les absences injustifiées d'un étudiant spécifié par son ID.
+
+    ---
+    tags:
+      - Absences
+    parameters:
+      - name: id_student
+        in: path
+        type: integer
+        required: true
+        description: L'identifiant unique de l'étudiant pour lequel récupérer les absences.
+      - name: justified
+        in: query
+        type: integer
+        required: false
+        description: 1 pour les absences justifiées, 0 pour les absences non justifiées. Laisser vide pour toutes les absences.
+      - name: output_format
+        in: query
+        type: string
+        required: false
+        default: 'DTO'
+        description: Format de sortie des données ('DTO' ou 'model').
+    responses:
+      200:
+        description: Liste des absences de l'étudiant récupérées depuis la base de données.
+        examples:
+          application/json: [
+            {
+              "id": 1,
+              "student_id": 123,
+              "date": "2023-01-01",
+              "justified": true,
+              # ... autres champs
+            },
+            # ... autres absences
+          ]
+      404:
+        description: L'étudiant spécifié n'existe pas.
+      500:
+        description: Erreur serveur en cas de problème lors de la récupération des absences.
+    """
+    justified = request.args.get('justified', default=None, type=int)
+    output_format = request.args.get('output_format', default='DTO', type=str)
+    
+    if not connect_pg.does_entry_exist("Students", id_student):
+        return jsonify({"message": "L'étudiant spécifié n'existe pas."}), 404
+
+    try:
+        absences_list = absences_service.get_student_unjustified_absences(id_student, justified=justified, output_format=output_format)
+        return jsonify(absences_list), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
 
 #--------------------Modifier une  absence--------------------------------------#
 
@@ -381,3 +439,63 @@ def submit_justification_document():
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+      
+      
+@absences_bp.route('/absences/create-absences', methods=['POST'])
+def create_absences():
+    """
+    Crée des absences pour une liste d'étudiants pour un cours spécifique.
+    ---
+    tags:
+      - Absences
+    parameters:
+      - name: course_id
+        in: body
+        type: integer
+        required: true
+        description: ID du cours pour lequel créer les absences.
+      - name: student_ids
+        in: body
+        type: array
+        items:
+          type: integer
+        required: true
+        description: Liste des ID des étudiants pour lesquels créer les absences.
+    responses:
+      200:
+        description: Absences créées avec succès.
+      400:
+        description: Données requises non fournies.
+    """
+    data = request.json
+    course_id = data.get('course_id')
+    student_ids = data.get('student_ids')
+
+    if not course_id or student_ids is None:
+        return jsonify({"error": "Course ID ou identifiants d'étudiants non fournis"}), 400
+
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+            # Supprimer les absences existantes pour le cours
+            cursor.execute("""
+                DELETE FROM ent.Absences 
+                WHERE id_course = %s
+            """, (course_id,))
+
+            # Si student_ids n'est pas vide, créer de nouvelles absences
+            if student_ids:
+                for student_id in student_ids:
+                    cursor.execute("""
+                        INSERT INTO ent.Absences (id_student, id_course, justify)
+                        VALUES (%s, %s, false)
+                    """, (student_id, course_id))
+
+        conn.commit()
+        return jsonify({"message": "Absences gérées avec succès"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            connect_pg.disconnect(conn)

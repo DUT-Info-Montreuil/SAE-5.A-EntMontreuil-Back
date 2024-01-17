@@ -1,9 +1,9 @@
 
 class CommentaryModel:
-    def __init__(self, id, id_User, id_Degree, date, user_username, title, comment_text, modification_date):
+    def __init__(self, id, id_User, id_Promotion, date, user_username, title, comment_text, modification_date):
         self.id = id
         self.id_User = id_User
-        self.id_Degree = id_Degree
+        self.id_Promotion = id_Promotion
         self.date = date
         self.user_username = user_username
         self.title = title
@@ -18,7 +18,7 @@ class CommentaryModel:
             "commentary": {
                 "id": self.id,
                 "id_User": self.id_User,
-                "id_Degree": self.id_Degree,    
+                "id_Promotion": self.id_Promotion,    
                 "date": self.date,
                 "username": self.user_username,
                 "title": self.title,

@@ -189,7 +189,7 @@ class TDService:
     def get_tp_by_td(self, id_td):
         try:
             conn = connect_pg.connect()
-            if not connect_pg.does_entry_exist('TP', id_td) :
+            if not connect_pg.does_entry_exist('TD', id_td) :
                 return jsonify({"error": f"L'id td {id_td} n'existe pas"}), 400 
                 
             with conn.cursor() as cursor:

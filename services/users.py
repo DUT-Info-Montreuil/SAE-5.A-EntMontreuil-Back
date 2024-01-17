@@ -543,37 +543,38 @@ class UsersFonction :
         conn.commit()  # Valider les changements
         conn.close()
 
-    def get_commentaries(self, output_format='DTO'):
-            try:
-                query = """
-                    SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
-                    FROM Commentary
-                    ORDER BY modification_date DESC
-                """
-                rows = connect_pg.get_query(query)
-                commentaries = []
+    def get_commentaries(self, id_promotion, output_format='DTO'):
+        try:
+            query = """
+                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
+                FROM Commentary
+                WHERE id_Promotion = %s
+                ORDER BY modification_date DESC
+            """
+            rows = connect_pg.get_query(query, (id_promotion,))
+            commentaries = []
 
-                for row in rows:
-                    commentary = CommentaryModel(
-                        id=row[0],
-                        id_User=row[1],
-                        id_Degree=row[2],
-                        date=row[3],
-                        title=row[4],
-                        comment_text=row[5],
-                        modification_date=row[6],
-                    )
-                    commentaries.append(commentary.jsonify())
+            for row in rows:
+                commentary = CommentaryModel(
+                    id=row[0],
+                    id_User=row[1],
+                    id_Promotion=row[2],
+                    date=row[3],
+                    title=row[4],
+                    comment_text=row[5],
+                    modification_date=row[6],
+                )
+                commentaries.append(commentary.jsonify())
 
-                return commentaries
+            return commentaries
 
-            except Exception as e:
-                return jsonify({"message": "ERROR", "error": str(e)}), 500
+        except Exception as e:
+            return jsonify({"message": "ERROR", "error": str(e)}), 500
 
     def get_commentary_by_id(self, id_commentary, output_format='DTO'):
         try:
             query = """
-                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
                 FROM Commentary
                 WHERE id = %s
             """
@@ -586,7 +587,7 @@ class UsersFonction :
                 commentary = CommentaryModel(
                     id=row[0],
                     id_User=row[1],
-                    id_Degree=row[2],
+                    id_Promotion=row[2],
                     date=row[3],
                     title=row[4],
                     comment_text=row[5],
@@ -606,13 +607,13 @@ class UsersFonction :
             if not UsersFonction.field_exists('id', id_user):
                 raise ValidationError(f"User id: '{id_user}' does not exist")
             query = """
-                INSERT INTO Commentary (id_User, id_Degree, date, title, comment_text, modification_date)
+                INSERT INTO Commentary (id_User, id_Promotion, date, title, comment_text, modification_date)
                 VALUES (%s, %s, %s, %s, %s, NOW())
                 RETURNING id
             """
             values = (
                 id_user,
-                data["id_Degree"],
+                data["id_Promotion"],
                 data["date"],
                 data["title"],
                 data["comment_text"],
@@ -694,20 +695,20 @@ class UsersFonction :
         except Exception as e:
             return jsonify({"message": f"Error deleting commentary: {str(e)}"}), 500
 
-    def get_commentary_by_week(self, week_start_date, output_format='DTO'):
+    def get_commentary_by_week(self, week_start_date, id_promotion, output_format='DTO'):
         try:
             week_start_date = datetime.strptime(week_start_date, "%Y-%m-%d")
             week_end_date = week_start_date + timedelta(days=4)
 
             query = """
-                SELECT id, id_User, id_Degree, date, title, comment_text, modification_date
+                SELECT id, id_User, id_Promotion, date, title, comment_text, modification_date
                 FROM Commentary
-                WHERE date >= %s AND date <= %s
+                WHERE id_Promotion = %s AND date >= %s AND date <= %s
                 ORDER BY modification_date DESC
             """
 
             with connect_pg.connect() as conn, conn.cursor() as cursor:
-                cursor.execute(query, (week_start_date, week_end_date))
+                cursor.execute(query, (id_promotion, week_start_date, week_end_date))
                 rows = cursor.fetchall()
 
                 commentaries = []
@@ -715,7 +716,7 @@ class UsersFonction :
                     commentary = CommentaryModel(
                         id=row[0],
                         id_User=row[1],
-                        id_Degree=row[2],
+                        id_Promotion=row[2],
                         date=row[3],
                         title=row[4],
                         comment_text=row[5],

@@ -1,6 +1,7 @@
 from flask import request, jsonify, Blueprint
 from services.students import StudentsServices , ValidationError
 from services.absences import AbsencesService
+import connect_pg
 import json
 from flask_jwt_extended import get_jwt_identity , jwt_required
 from decorators.students_decorator import StudentsDecorators
@@ -493,3 +494,69 @@ def set_students_promotion_route():
         return jsonify({"error": "Promotion ID ou identifiants d'étudiants non fournis"}), 400
 
     return students_services.set_students_promotion(promotion_id, student_ids)
+
+@students_bp.route('/students/group', methods=['GET'])
+def get_students_by_group():
+    group_type = request.args.get('groupType')
+    group_id = request.args.get('id')
+    course_id = request.args.get('courseId')
+
+    if not group_type or not group_id:
+      return jsonify({"message": "Invalid request"}), 400
+
+    try:
+        conn = connect_pg.connect()
+        with conn.cursor() as cursor:
+        # Requête de base pour récupérer les étudiants
+          base_query = """
+          SELECT s.*, u.username, u.last_name, u.first_name, u.email, 
+               CASE WHEN a.id_course IS NOT NULL THEN TRUE ELSE FALSE END as is_absent
+          FROM ent.students s
+          JOIN ent.users u ON s.id_user = u.id
+          LEFT JOIN ent.absences a ON s.id = a.id_student AND a.id_course = %s
+          """
+         # Ajout de conditions spécifiques en fonction du type de groupe
+          if group_type == 'promotion':
+              sql_query = base_query + "WHERE s.id_promotion = %s;"
+          elif group_type == 'training':
+              sql_query = base_query + """
+              JOIN ent.td ON s.id_td = ent.td.id
+              WHERE ent.td.id_training = %s;
+              """
+          elif group_type == 'td':
+              sql_query = base_query + "WHERE s.id_td = %s;"
+          elif group_type == 'tp':
+              sql_query = base_query + "WHERE s.id_tp = %s;"
+          else:
+              return jsonify({"message": "Invalid group type"}), 400
+
+          # Exécution de la requête SQL avec les paramètres group_id et course_id
+          cursor.execute(sql_query, (course_id, group_id))
+          students = cursor.fetchall()
+        
+          students_list = [
+              {
+                  "student_id": row[0],
+                  "apprentice": row[1],
+                  "username": row[8],
+                  "last_name": row[9],
+                  "first_name": row[10],
+                  "email": row[11],
+                  "is_absent": row[12]  # Ajout du champ is_absent
+              } 
+              for row in students
+          ]
+        
+        # Structuration de la réponse
+        response = {
+            "group_type": group_type,
+            "group_id": group_id,
+            "course_id": course_id,
+            "students": students_list
+        }
+
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"message": "Error", "error": str(e)}), 500
+    finally:
+      conn.close()

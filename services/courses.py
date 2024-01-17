@@ -176,7 +176,7 @@ class CourseService:
                 courses_training = []
                 courses_td = []
                 courses_tp = []
-                response, status = CoursesFonction.get_group_of_promotion(promotion_id)
+                response, status = CoursesFonction.get_group_of_promotion(promotion_id, semester)
                 tp = response["tp"]
                 td = response["td"]
                 training = response["training"]
@@ -1386,7 +1386,7 @@ class CoursesFonction :
             return {"message": f"Erreur get_group_of_training : {str(e)}"}, 500
         
     # recuperation des groupes liés a une promotion  
-    def get_group_of_promotion(id_promotion):
+    def get_group_of_promotion(id_promotion, semester):
         try:
             conn = connect_pg.connect()
             cursor = conn.cursor()
@@ -1396,9 +1396,9 @@ class CoursesFonction :
                 FROM ent.Trainings tr
                 LEFT JOIN ent.TD td ON tr.id = td.id_training
                 LEFT JOIN ent.TP tp ON td.id = tp.id_td
-                WHERE tr.id_promotion = %s
+                WHERE tr.id_promotion = %s AND tr.semester = %s
             """
-            cursor.execute(query, (id_promotion,))
+            cursor.execute(query, (id_promotion,semester))
             rows = cursor.fetchall()
             
             trainings = list(set([row[0] for row in rows if row[0] is not None]))
